@@ -2,7 +2,7 @@
 
 from django.http import HttpResponse
 from iip_search_app import common
-from iip_search_app.forms import SearchForm
+# from iip_search_app.forms import SearchForm
 
 
 def hello( request ):
@@ -67,5 +67,3 @@ def _get_GET_context( request ):
         u'session_authz_info': request.session[u'authz_info'],
         u'settings_app': settings_app }
     return context
-
-
