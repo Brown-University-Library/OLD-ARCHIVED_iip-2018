@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import solr
 from django import forms
-from iip_search_app import common
+from iip_search_app import common, settings_app
+
 # from iipSearch import common, settings_app
 # import solr
 # import re, urllib

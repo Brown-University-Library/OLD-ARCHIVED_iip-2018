@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
 
+import logging
 from django.http import HttpResponse
 from iip_search_app import common
 # from iip_search_app.forms import SearchForm
 
+log = logging.getLogger(__name__)
+
 
 def hello( request ):
     """ Testing url handoff. """
+    log.debug( u'hello() starting' )
+    log.info( u'about to return' )
     return HttpResponse( u'HELLO_WORLD!' )
 
 
 def iip_results( request ):
     """ Handles /search/ GET, POST, and ajax-GET. """
     try:
-        log_identifier = common.get_log_identifier( request.session )
+        log_id = common.get_log_identifier( request.session )
         if not u'authz_info' in request.session:
             request.session[u'authz_info'] = { u'authorized': False }
         if request.method == u'POST':  # form has been submitted by user
