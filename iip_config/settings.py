@@ -157,15 +157,15 @@ LOGGING = {
             'formatter': 'standard',
         },
         'console':{
-            'level':'INFO',
+            'level':'DEBUG',
             'class':'logging.StreamHandler',
             'formatter': 'standard'
         },
     },
     'loggers': {
         'iip_search_app': {
-            # 'handlers': ['console', 'logfile'],
-            'handlers': ['logfile'],
+            'handlers': ['console', 'logfile'],
+            # 'handlers': ['logfile'],
             'level': 'DEBUG',
         },
     }

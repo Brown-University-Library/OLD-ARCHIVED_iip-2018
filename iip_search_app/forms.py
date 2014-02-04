@@ -1,26 +1,21 @@
 # -*- coding: utf-8 -*-
 
+import logging
 import solr
 from django import forms
 from iip_search_app import common, settings_app
 
-# from iipSearch import common, settings_app
-# import solr
-# import re, urllib
+log = logging.getLogger(__name__)
 
 
 def facetResults(facet):
-  try:
-    s = solr.SolrConnection( settings_app.SOLR_URL )
-    # common.updateLog( '- in forms.facetResults(); s is: %s -- s.__dict__ is: %s' % (s, s.__dict__) )
-    q = s.query('*:*', **{'facet':'true','facet.field':facet})
-    # common.updateLog( '- in forms.facetResults(); facet is: %s; q.__dict__ is: %s' % (facet, q.__dict__) )
-    fc =q.facet_counts['facet_fields'][facet]
-    return fc
-  except:
-    message = common.makeErrorString()
-    common.updateLog( '- in forms.facetResults(); error: %s' % message, message_importance='high' )
-    return { 'error_message': message }
+    try:
+        s = solr.SolrConnection( settings_app.SOLR_URL )
+        q = s.select('*:*', **{'facet':'true','facet.field':facet})
+        fc =q.facet_counts['facet_fields'][facet]
+        return fc
+    except Exception as e:
+        log.error( u'in forms.facetResults(); exception, %s' % unicode(repr(e)) )
 
 
 def doDateEra(self,f,v):

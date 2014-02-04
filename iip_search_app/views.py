@@ -2,8 +2,9 @@
 
 import logging
 from django.http import HttpResponse
-from iip_search_app import common
-# from iip_search_app.forms import SearchForm
+from django.shortcuts import render_to_response
+from iip_search_app import common, settings_app
+from iip_search_app.forms import SearchForm
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +19,9 @@ def hello( request ):
 def iip_results( request ):
     """ Handles /search/ GET, POST, and ajax-GET. """
     try:
+        log.debug( u'in views.iip_results(); starting' )
         log_id = common.get_log_identifier( request.session )
+        log.debug( u'in views.iip_results(); log_id, %s' % log_id )
         if not u'authz_info' in request.session:
             request.session[u'authz_info'] = { u'authorized': False }
         if request.method == u'POST':  # form has been submitted by user
@@ -28,12 +31,13 @@ def iip_results( request ):
             return_unistring = _get_ajax_unistring( request )
             return HttpResponse( return_unistring )
         else:  # regular GET
-            get_context = _get_GET_context( request )
-            return render_to_response( u'search_form.html', context )
+            log.debug( u'in views.iip_results(); regular GET' )
+            context = _get_GET_context( request )
+            return render_to_response( u'iip_search_templates/search_form.html', context )
     except Exception as e:
       # message = common.makeErrorString()
       # todo: update log
-      return HttpResponse( 'oops; unhandled error: %s' % unicode(repr(e)), mimetype=u'text/javascript' )
+      return HttpResponse( 'oops; unhandled error: %s' % unicode(repr(e)), content_type=u'application/javascript; charset=utf-8' )
       # return HttpResponse( 'unhandled problem; see logs' )
     # end def iipResults()
 
@@ -66,9 +70,12 @@ def _get_GET_context( request ):
         Called by iip_results() """
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
+    log.debug( u'in views._get_GET_context(); about to instantiate form' )
     form = SearchForm()  # an unbound form
+    log.debug( u'in views._get_GET_context(); form instantiated' )
     context = {
         u'form': form,
         u'session_authz_info': request.session[u'authz_info'],
         u'settings_app': settings_app }
+    log.debug( u'in views._get_GET_context(); context, %s' % context )
     return context
