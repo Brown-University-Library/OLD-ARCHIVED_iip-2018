@@ -2,7 +2,7 @@
 
 import logging
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, render
 from iip_search_app import common, settings_app
 from iip_search_app.forms import SearchForm
 
@@ -33,7 +33,8 @@ def iip_results( request ):
         else:  # regular GET
             log.debug( u'in views.iip_results(); regular GET' )
             context = _get_GET_context( request )
-            return render_to_response( u'iip_search_templates/search_form.html', context )
+            # return render_to_response( u'iip_search_templates/search_form.html', context )
+            return render( request, u'iip_search_templates/search_form.html', context )
     except Exception as e:
       # message = common.makeErrorString()
       # todo: update log
