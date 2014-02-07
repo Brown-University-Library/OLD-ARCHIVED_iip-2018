@@ -72,11 +72,13 @@ MEDIA_URL = ''
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = ''
+# STATIC_ROOT = ''
+STATIC_ROOT = unicode( os.environ.get(u'IIP_STATIC_ROOT', u'') )  # Note: different for runserver vs mod_wsgi
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
+# STATIC_URL = '/static/'
+STATIC_URL = unicode( os.environ.get(u'IIP_STATIC_URL', u'') )  # Note: different for runserver vs mod_wsgi
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -164,8 +166,8 @@ LOGGING = {
     },
     'loggers': {
         'iip_search_app': {
-            'handlers': ['console', 'logfile'],
-            # 'handlers': ['logfile'],
+            # 'handlers': ['console', 'logfile'],
+            'handlers': ['logfile'],
             'level': 'DEBUG',
         },
     }
