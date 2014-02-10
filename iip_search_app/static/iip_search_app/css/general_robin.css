@@ -13,11 +13,11 @@ eeeddb	beige
 b1af89	olive
 f5f3dd	sand (background)
 */
-	
+
 html,body {
 	margin:0px;
 	font-family:Helvetica,Arial,Sans-serif;
-	background-image:url('images/left_bg_darker.jpg');
+	background-image:url('images/left_bg_darker_bb.jpg');
 	background-repeat:repeat-y;
 	background-color:#f5f3dd;
 	height:100%;
@@ -49,7 +49,7 @@ h1 {
 	margin:0px;
 	}
 
-.h1ital {	
+.h1ital {
 	font-size:1.6em;
 	font-weight:bold;
 	font-style:italic;
@@ -83,7 +83,7 @@ li {
 img {
 	border:0px;
 	}
-	
+
 #top {
 	background-image:url('images/top_bg_darker.jpg');
 	background-repeat:repeat-x;
@@ -187,7 +187,7 @@ img.right {
 	margin-bottom:10px;
 	}
 
-	
+
 /* ---------- Search page ---------- */
 
 
@@ -196,7 +196,7 @@ table#search_box {
 	border-collapse:collapse;
 	background-color:#d9e3d0;
 	width:80%;
-	min-width:550px; 
+	min-width:550px;
 	max-width:800px;
 	margin-top:20px;
 	border:0px;
@@ -212,7 +212,7 @@ td {
 tr {
 	border:0px;
 	}
-	
+
 .left_search_col {
 	border-right:10px solid #f5f3dd;
 	width:48%;
@@ -269,7 +269,7 @@ table#search_results {
 	float:left;
 	border-collapse:collapse;
 	width:75%;
-	max-width:800px; 
+	max-width:800px;
 	min-width:450px;
 	margin-top:20px;
 	border:0px;
@@ -336,8 +336,8 @@ ul.narrow_results_list {
 	margin-left:-20px;
 	line-height:1.5em;
 	}
-	
-	
+
+
 /* ---------- Bibliography ---------- */
 
 table#bibliography {
@@ -355,7 +355,7 @@ td.bibliography {
 	margin:0px;
 	/* vertical-align: top; */
 	}
-	
+
 tr.bibliography {
 	padding:0px;
 	border:0px;
