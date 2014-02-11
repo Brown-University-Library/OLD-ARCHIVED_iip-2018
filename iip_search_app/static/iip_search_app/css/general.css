@@ -13,20 +13,20 @@ eeeddb	beige
 b1af89	olive
 f5f3dd	sand (background)
 */
-	
+
 html,body {
 	margin:0px;
 	font-family:Helvetica,Arial,Sans-serif;
-	background-image:url('/django_media/iip_media/iip_search/images/left_bg_darker.jpg');
+	background-image:url('../images/left_bg_darker.jpg');
 	background-repeat:repeat-y;
 	background-color:#f5f3dd;
 	height:100%;
 	}
-	
+
 ul {
     list-style: none;
     }
-    
+
 a:link {
 	text-decoration:underline;
 	color:#476757;
@@ -46,7 +46,7 @@ a:hover {
 	margin:0px;
 	}
 
-.h1ital {	
+.h1ital {
 	font-size:1.6em;
 	font-weight:bold;
 	font-style:italic;
@@ -71,9 +71,9 @@ h3 {
 img {
 	border:0px;
 	}
-	
+
 #top {
-	background-image:url('/django_media/iip_media/iip_search/images/top_bg_darker.jpg');
+	background-image:url('../images/top_bg_darker.jpg');
 	background-repeat:repeat-x;
 	margin:0px;
 	height:256px;
@@ -148,7 +148,7 @@ a.leftcol_search:hover {
 	position:relative;
 	top:40px;
 	}
-	
+
 #admin {
 	margin-top: 90px;
 	font-size: 0.8em;
@@ -159,7 +159,7 @@ a.leftcol_search:hover {
 	text-decoration:none;
 }
 
-	
+
 /* ---------- Search page ---------- */
 
 
@@ -168,14 +168,14 @@ table.search_box, table#search_results {
 	border-collapse:collapse;
 	background-color:#d9e3d0;
 	width:98%;
-	min-width:550px; 
+	min-width:550px;
 	max-width:800px;
 	margin-top:10px;
 	border:0px;
 	text-align:left;
-	
+
 	}
-	
+
 .search_box td{
     vertical-align: top;
 }
@@ -185,19 +185,19 @@ td {
 	border:0px;
 	/* vertical-align: top; */
 	}
-	
+
 td p{
 	padding:0px;
 	border:0px;
 	margin-top: 4px;
 	margin-bottom: 4px;
 	/* vertical-align: top; */
-	}	
+	}
 
 tr {
 	border:0px;
 	}
-	
+
 .left_search_col {
 	border-right:10px solid #f5f3dd;
 	width:48%;
@@ -254,13 +254,13 @@ option {
 	float:left;
 	border-collapse:collapse;
 	width:100%;
-	max-width:1000px; 
+	max-width:1000px;
 	min-width:450px;
 	border:0px;
 	text-align:left;
 	padding-top: 12px;
 	}
-	
+
 .search_results_header, #page_list {
     font-weight: bold;
     padding-top: 10px;
@@ -347,16 +347,16 @@ ul.narrow_results_list ul{
 }
 
 .facetMenuClosed {
-    background-image: url('/django_media/iip_media/iip_search/images/right_arrow.gif');
+    background-image: url('../images/right_arrow.gif');
     background-repeat: no-repeat;
 }
 
 .facetMenuOpened {
-    background-image: url('/django_media/iip_media/iip_search/images/down_arrow.gif');
+    background-image: url('../images/down_arrow.gif');
     background-repeat: no-repeat;
 }
 
-	
+
 #id_notBefore, #id_notAfter {
     width: 5.0em;
 }
@@ -368,7 +368,7 @@ ul.narrow_results_list ul{
     padding: 0;
 }
 
-.dateForm tr td ul { 
+.dateForm tr td ul {
 list-style: none;
 margin-bottom: 5px;
 margin-top: 0px;
@@ -376,11 +376,11 @@ padding-left: 10px;
 position: absolute;
 float: left;
  }
- 
- .dateForm tr td ul li{ 
+
+ .dateForm tr td ul li{
 display: inline;
  }
- 
+
  #single_inscription {
 	float:left;
 	width:100%;
@@ -432,7 +432,7 @@ ul.bibliography {
 }
 
 td.openImg {
-    background-image: url('/django_media/iip_media/iip_search/images/down_arrow.png');
+    background-image: url('../images/down_arrow.png');
     background-repeat: no-repeat;
     /*background-position:center; */
     background-position: 5px 15px;
@@ -440,7 +440,7 @@ td.openImg {
 }
 
 td.loadingImg {
-    background-image: url('/django_media/iip_media/iip_search/images/loader.gif');
+    background-image: url('../images/loader.gif');
     background-repeat: no-repeat;
     /*background-position:center; */
     background-position: 5px 15px;
@@ -448,7 +448,7 @@ td.loadingImg {
 }
 
 td.closeImg {
-    background-image: url('/django_media/iip_media/iip_search/images/up_arrow.png');
+    background-image: url('../images/up_arrow.png');
     background-repeat: no-repeat;
     background-position: 5px 15px;
      /*background-position:center; */
@@ -461,7 +461,7 @@ td.closeImg {
     text-align: left;
     /*margin-left: 3em;*/
     }
-    
+
     /* ---------- Bibliography ---------- */
 
 table#bibliography {
@@ -479,13 +479,13 @@ td.bibliography {
 	margin:0px;
 	/* vertical-align: top; */
 	}
-	
+
 tr.bibliography {
 	padding:0px;
 	border:0px;
 	margin:0px;
 	}
-	
+
 .thumbnail {
     float: right;
     clear: right;

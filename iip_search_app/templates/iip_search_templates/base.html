@@ -1,16 +1,15 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Inscriptions of Israel/Palestine | Search Results</title>
-<link href="/django_media/iip_media/iip_search/css/general.css" rel="stylesheet" type="text/css" />
-
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Inscriptions of Israel/Palestine | Search Results</title>
+	<link href="{{ STATIC_URL }}iip_search_app/css/general.css" rel="stylesheet" type="text/css" />
 </head>
 
 <body>
 
 <div id="top">
-	<img src="/django_media/iip/iip_search/images/top_altogether.jpg" alt="Inscriptions of Israel / Palestine" usemap="#imgmap" />
+	<img src="{{ STATIC_URL }}iip_search_app/images/top_altogether.jpg" alt="Inscriptions of Israel / Palestine" usemap="#imgmap" />
 	<map name="imgmap">
   		<area shape="rect" coords="208,40,609,150" href="index.html" alt="Inscriptions of Israel / Palestine" />
   	</map>
@@ -27,7 +26,7 @@
 		<div id="logos">
 			<a href="http://library.brown.edu/cds"><img src="http://www.stg.brown.edu/projects/Inscriptions/images/cds_logo.gif" alt="CDS" /></a>
 			&nbsp;&nbsp;
-			<a href="http://www.brown.edu/"><img src="/django_media/iip/images/brown.gif" alt="Brown University" /></a>
+			<a href="http://www.brown.edu/"><img src="{{ STATIC_URL }}iip_search_app/images/brown.gif" alt="Brown University" /></a>
 		</div>
 	</div>
 </div>
@@ -35,7 +34,7 @@
 <div id="content">
 	<span class="h1">Search results for</span> <span class="h1ital"></span>
 	<p><a href="search">Back to search page</a></p>
-	
+
 <table id="search_results">
 	<thead><tr>
 		<th class="col1">Inscription</th>
@@ -45,11 +44,11 @@
 	</tr></thead>
 	<tbody>
 	{% block content %}{%endblock%}
-	
+
 	</tbody>
 	</table>
-	
-	
+
+
 <div id="narrow_results">
 	<h2>Narrow results</h2>
 	<h3>Epithet</h3>
@@ -66,7 +65,7 @@
 			<li><a href="link">Maximianus (2)</a></li>
 			<li><a href="link">most beloved (3)</a></li>
 		</ul>
-		
+
 	<h3>Title</h3>
 		<ul class="narrow_results_list">
 			<li><a href="link">head of the synagogue (2)</a></li>
@@ -78,7 +77,7 @@
 		</ul>
 
 </div>
-	
+
 </div>
 
 
