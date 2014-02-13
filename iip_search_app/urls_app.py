@@ -9,6 +9,8 @@ urlpatterns = patterns('',
 
     url( r'^hello/$',  'iip_search_app.views.hello', name=u'hello_url' ),
 
+    url( r'^results/$',  'iip_search_app.views.iip_results', name=u'search_iip_results_url' ),
+
     url( r'^search/$',  'iip_search_app.views.iip_results', name=u'search_iip_results_url' ),
 
     # ( r'^$', redirect_to, {'url': '/%s/collections/' % settings_app.PROJECT_APP} ),
