@@ -7,7 +7,7 @@ import os
 
 temp_DEBUG = unicode( os.environ.get(u'IIP_DEBUG', u'') )
 assert temp_DEBUG in [ u'True', u'' ], Exception( u'DEBUG private setting is, "%s"; must be either "True" or ""' % temp_DEBUG )
-DEBUG = bool( temp_DEBUG ),
+DEBUG = bool( temp_DEBUG )
 
 TEMPLATE_DEBUG = DEBUG
 
