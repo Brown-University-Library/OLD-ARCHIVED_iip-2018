@@ -2,7 +2,7 @@
 
 # Django settings for iip project.
 
-import os
+import json, os
 
 
 temp_DEBUG = unicode( os.environ.get(u'IIP_DEBUG', u'') )
@@ -37,7 +37,7 @@ DATABASES = {
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.4/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = json.loads( os.environ.get(u'IIP_ALLOWED_HOSTS', [u'127.0.0.1' ]) )  # list
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -76,12 +76,14 @@ MEDIA_URL = ''
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
 # STATIC_ROOT = ''
-STATIC_ROOT = unicode( os.environ.get(u'IIP_STATIC_ROOT', u'') )  # Note: different for runserver vs mod_wsgi
+# STATIC_ROOT = unicode( os.environ.get(u'IIP_STATIC_ROOT', u'') )  # Note: different for runserver vs mod_wsgi
+STATIC_ROOT = unicode( os.environ[u'IIP_STATIC_ROOT'] )  # Note: different for runserver vs mod_wsgi
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
 # STATIC_URL = '/static/'
-STATIC_URL = unicode( os.environ.get(u'IIP_STATIC_URL', u'') )  # Note: different for runserver vs mod_wsgi
+# STATIC_URL = unicode( os.environ.get(u'IIP_STATIC_URL', u'') )  # Note: different for runserver vs mod_wsgi
+STATIC_URL = unicode( os.environ[u'IIP_STATIC_URL'] )  # Note: different for runserver vs mod_wsgi
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -123,10 +125,13 @@ ROOT_URLCONF = 'iip_config.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'iip_config.wsgi.application'
 
+current_directory = os.path.dirname(os.path.abspath(__file__))
+site_templates = u'%s/../templates' % current_directory
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    os.path.abspath( site_templates ),
 )
 
 INSTALLED_APPS = (
