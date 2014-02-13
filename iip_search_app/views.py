@@ -25,22 +25,20 @@ def iip_results( request ):
         if not u'authz_info' in request.session:
             request.session[u'authz_info'] = { u'authorized': False }
         if request.method == u'POST':  # form has been submitted by user
+            log.debug( u'in views.iip_results(); id, %s; POST' % log_id )
             post_context = _get_POST_context( request )
             return render_to_response( u'base_extend.html', post_context )
         elif request.is_ajax():  # user has requested another page, a facet, etc.
+            log.debug( u'in views.iip_results(); id, %s; ajax-GET' % log_id )
             return_unistring = _get_ajax_unistring( request )
             return HttpResponse( return_unistring )
         else:  # regular GET
-            log.debug( u'in views.iip_results(); regular GET' )
+            log.debug( u'in views.iip_results(); id, %s; regular GET' % log_id )
             context = _get_GET_context( request )
-            # return render_to_response( u'iip_search_templates/search_form.html', context )
             return render( request, u'iip_search_templates/search_form.html', context )
     except Exception as e:
-      # message = common.makeErrorString()
-      # todo: update log
-      return HttpResponse( 'oops; unhandled error: %s' % unicode(repr(e)), content_type=u'application/javascript; charset=utf-8' )
-      # return HttpResponse( 'unhandled problem; see logs' )
-    # end def iipResults()
+        log.error( u'in views.iip_results(); id, %s; exception, %s' % (common.get_log_identifier(request.session)), unicode(repr(e)) )
+        return HttpResponse( 'oops; unhandled error logged' )
 
 def _get_POST_context( request ):
     """ Returns correct context for POST.
