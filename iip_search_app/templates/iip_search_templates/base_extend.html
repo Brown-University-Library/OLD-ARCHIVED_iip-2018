@@ -1,11 +1,11 @@
-{% extends "search.html" %}
+{% extends "iip_search_templates/search.html" %}
 {% load iipCustomFilters %}
 {% block queryCapture %}
 	<script type="text/javascript">
 	{% autoescape off %}
         var qstring = '{{ qstring }}';
         var resultsPage = '{{ resultsPage }}';
-    {% endautoescape %}        
+    {% endautoescape %}
     </script>
 {% endblock %}
 
@@ -57,7 +57,7 @@
                     <li><a class="facetLink" href="{{field}}">{{f}}</a>&nbsp;({{v}})</li>
                  {% endif %}
                 {%endfor%}
-            </ul>                
+            </ul>
             {%endfor%}
 		</ul>
 </div>

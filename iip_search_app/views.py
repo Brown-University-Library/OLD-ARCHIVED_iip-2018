@@ -26,7 +26,7 @@ def iip_results( request ):
     if request.method == u'POST':  # form has been submitted by user
         log.debug( u'in views.iip_results(); id, %s; POST' % log_id )
         post_context = _get_POST_context( request )
-        return render_to_response( u'base_extend.html', post_context )
+        return render_to_response( u'iip_search_templates/base_extend.html', post_context )
     elif request.is_ajax():  # user has requested another page, a facet, etc.
         log.debug( u'in views.iip_results(); id, %s; ajax-GET' % log_id )
         return_unistring = _get_ajax_unistring( request )
@@ -69,9 +69,9 @@ def _get_POST_context( request ):
         initial_qstring = form.generateSolrQuery()
         resultsPage = 1
         updated_qstring = common.updateQstring(
-            initial_qstring=initial_qstring, session_authz_dict=request.session['authz_info'], log_identifier=common.get_log_identifier(request.session)
-            )['modified_qstring']
-        context = common.paginateRequest( updated_qstring, resultsPage, log_identifier )
+            initial_qstring=initial_qstring, session_authz_dict=request.session['authz_info'], log_identifier=common.get_log_identifier(request.session) )['modified_qstring']
+        context = common.paginateRequest(
+            qstring=updated_qstring, resultsPage=resultsPage, log_identifier=common.get_log_identifier(request.session) )
         context[u'session_authz_info'] = request.session[u'authz_info']
         return context
 

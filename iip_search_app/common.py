@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import random
+import logging, random, re
+import solr
+from iip_search_app import settings_app
+
+log = logging.getLogger(__name__)
 
 
 def get_log_identifier( request_session=None ):
@@ -17,21 +21,34 @@ def get_log_identifier( request_session=None ):
     return log_identifier
 
 
+def queryCleanup(qstring):
+    qstring = qstring.replace('(', '')
+    qstring = qstring.replace(')', '')
+    qstring = qstring.replace('"', '')
+    qstring = qstring.replace('_', ' ')
+    qstring = re.sub(r'notBefore\:\[(-?\d*) TO 10000\]', r'dates after \1', qstring)
+    qstring = re.sub(r'notAfter\:\[-10000 TO (-?\d*)]', r'dates before \1', qstring)
+    qstring = re.sub(r' -(\d+)', r' \1 BCE', qstring)
+    qstring = re.sub(r' (\d+)\b(?!\sBCE)', r' \1 CE', qstring)
+    return qstring
+
+
 def paginateRequest(qstring,resultsPage,log_identifier):
   try:
     s = solr.SolrConnection( settings_app.SOLR_URL )
     args = {'rows':25}
     try:
       q = s.query((qstring.encode('utf-8')),**args)
-      updateLog( '- in common.paginateRequest(); q created via try.', log_identifier )
-    except:
+      log.info( u'in common.paginateRequest(); id, %s; q created via try' % log_identifier )
+    except Exception as e1:
       q = s.query('*:*', **args)
-      updateLog( '- in common.paginateRequest(); q created via except.', log_identifier )
+      log.info( u'in common.paginateRequest(); id, %s; exception, %s; q created via except' % (log_identifier, unicode(repr(e))) )
     try:
       fq = s.query((qstring.encode('utf-8')),facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
     except:
       fq = s.query('*:*',facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
-    updateLog( '- in common.paginateRequest(); q is: %s -- q.__dict__ is: %s' % (q,q.__dict__), log_identifier )
+    log.info( u'in common.paginateRequest(); id, %s; q is, `%s`; q.__dict__ is, `%s`' % (log_identifier, q, q.__dict__) )
+    # updateLog( '- in common.paginateRequest(); q is: %s -- q.__dict__ is: %s' % (q,q.__dict__), log_identifier )
     p = solr.SolrPaginator(q, 25)
     try:
       pg = p.page(resultsPage)
@@ -45,10 +62,9 @@ def paginateRequest(qstring,resultsPage,log_identifier):
     #facets = dict(sorted_f)
     dispQstring = queryCleanup(qstring.encode('utf-8'))
     return {'pages': p, 'iipResult': pg, 'qstring':qstring, 'resultsPage': resultsPage, 'facets':f, 'dispQstring': dispQstring}
-  except:
-    message = makeErrorString()
-    updateLog( '- in common.paginateRequest(); error: %s' % message, log_identifier, message_importance='high' )
-    return { 'error_message': message }
+  except Exception as e:
+    log.error( u'in common.paginateRequest(); id, %s; exception, %s' % (log_identifier, unicode(repr(e))) )
+    return False
   # end def paginateRequest()
 
 
