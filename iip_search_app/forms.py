@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import logging
+import logging, re
 import solr
 from django import forms
 from iip_search_app import common, settings_app
@@ -167,5 +167,3 @@ class SearchForm( forms.Form ):
 #                         response += " AND "
 #                     response += u"%s:%s" % (f,v)
 #         return response
-
-
