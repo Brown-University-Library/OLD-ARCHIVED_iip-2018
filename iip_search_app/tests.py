@@ -6,8 +6,36 @@ Replace this with more appropriate tests for your application.
 """
 
 import pprint
-from iip_search_app import forms
+from iip_search_app import common, forms
 from django.test import TestCase
+
+
+class CommonTest( TestCase ):
+
+    def test_update_q_string( self ):
+        """ Tests modification of solr query string. """
+        initial_qstring = u'foo'
+        log_identifier = u'bar'
+        # no session_authz_dict
+        session_authz_dict = None
+        self.assertEqual(
+            {'modified_qstring': u'display_status:(approved) AND foo'},
+            common.updateQstring(initial_qstring, session_authz_dict, log_identifier) )
+        # session_authz_dict, but no 'authorized' key
+        session_authz_dict = { u'some_key': u'some_value' }
+        self.assertEqual(
+            {'modified_qstring': u'display_status:(approved) AND foo'},
+            common.updateQstring(initial_qstring, session_authz_dict, log_identifier) )
+        # session_authz_dict, and 'authorized' key, but authorized not True
+        session_authz_dict = { u'authorized': u'other_than_true' }
+        self.assertEqual(
+            {'modified_qstring': u'display_status:(approved) AND foo'},
+            common.updateQstring(initial_qstring, session_authz_dict, log_identifier) )
+        # life good
+        session_authz_dict = { u'authorized': True }
+        self.assertEqual(
+            {'modified_qstring': u'foo'},
+            common.updateQstring(initial_qstring, session_authz_dict, log_identifier) )
 
 
 class FormsTest( TestCase ):
@@ -23,9 +51,3 @@ class FormsTest( TestCase ):
                 type(facet_count_dict[place]) == int, True )
 
 
-# class SimpleTest(TestCase):
-#     def test_basic_addition(self):
-#         """
-#         Tests that 1 + 1 always equals 2.
-#         """
-#         self.assertEqual(1 + 1, 2)
