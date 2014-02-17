@@ -46,7 +46,8 @@
 {% block facets %}
 
 <div id="narrow_results">
-    <h4><a href="../search">New search</a></h4>
+    <!-- <h4><a href="../search">New search</a></h4> -->
+    <h4><a href="{% url search_url %}">New search</a></h4>
 	<h4>Narrow results</h4><span style="font-size: 0.9em"><a href="showHideAll" class="showHideFacets">show/hide</a></span>
 		<ul class="narrow_results_list">
             {% for field,items in facets.items %}
