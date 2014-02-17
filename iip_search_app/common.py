@@ -10,15 +10,15 @@ log = logging.getLogger(__name__)
 def get_log_identifier( request_session=None ):
     """ Returns a log_identifier unicode_string.
         Sets it in the request session if necessary. """
-    log_identifier = unicode( random.randint(1000,9999) )
+    log_id = unicode( random.randint(1000,9999) )
     if request_session == None:  # cron script writing to log
         pass
     else:
         if u'log_identifier' in request_session:
-            log_identifier = request_session[u'log_identifier']
+            log_id = request_session[u'log_identifier']
         else:
-            request_session[u'log_identifier'] = log_identifier
-    return log_identifier
+            request_session[u'log_identifier'] = log_id
+    return log_id
 
 
 def queryCleanup(qstring):
@@ -33,22 +33,22 @@ def queryCleanup(qstring):
     return qstring
 
 
-def paginateRequest(qstring,resultsPage,log_identifier):
+def paginateRequest( qstring, resultsPage, log_id):
   try:
     s = solr.SolrConnection( settings_app.SOLR_URL )
     args = {'rows':25}
     try:
       q = s.query((qstring.encode('utf-8')),**args)
-      log.info( u'in common.paginateRequest(); id, %s; q created via try' % log_identifier )
+      log.info( u'in common.paginateRequest(); id, %s; q created via try' % log_id )
     except Exception as e1:
       q = s.query('*:*', **args)
-      log.info( u'in common.paginateRequest(); id, %s; exception, %s; q created via except' % (log_identifier, unicode(repr(e))) )
+      log.info( u'in common.paginateRequest(); id, %s; exception, %s; q created via except' % (log_id, unicode(repr(e))) )
     try:
       fq = s.query((qstring.encode('utf-8')),facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
     except:
       fq = s.query('*:*',facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
-    log.info( u'in common.paginateRequest(); id, %s; q is, `%s`; q.__dict__ is, `%s`' % (log_identifier, q, q.__dict__) )
-    # updateLog( '- in common.paginateRequest(); q is: %s -- q.__dict__ is: %s' % (q,q.__dict__), log_identifier )
+    log.info( u'in common.paginateRequest(); id, %s; q is, `%s`; q.__dict__ is, `%s`' % (log_id, q, q.__dict__) )
+    # updateLog( '- in common.paginateRequest(); q is: %s -- q.__dict__ is: %s' % (q,q.__dict__), log_id )
     p = solr.SolrPaginator(q, 25)
     try:
       pg = p.page(resultsPage)
@@ -63,12 +63,12 @@ def paginateRequest(qstring,resultsPage,log_identifier):
     dispQstring = queryCleanup(qstring.encode('utf-8'))
     return {'pages': p, 'iipResult': pg, 'qstring':qstring, 'resultsPage': resultsPage, 'facets':f, 'dispQstring': dispQstring}
   except Exception as e:
-    log.error( u'in common.paginateRequest(); id, %s; exception, %s' % (log_identifier, unicode(repr(e))) )
+    log.error( u'in common.paginateRequest(); id, %s; exception, %s' % (log_id, unicode(repr(e))) )
     return False
   # end def paginateRequest()
 
 
-def updateQstring( initial_qstring, session_authz_dict, log_identifier ):
+def updateQstring( initial_qstring, session_authz_dict, log_id ):
     """ Adds 'approved' display-status limit to solr query string if user is *not* logged in
           (because if user *is* logged in, display facets are shown explicitly).
         Returns modified_qstring dict.
