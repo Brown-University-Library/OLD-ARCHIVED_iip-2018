@@ -13,6 +13,6 @@ urlpatterns = patterns('',
 
     url( r'^search/$',  'iip_search_app.views.iip_results', name=u'search_url' ),
 
-    # ( r'^$', redirect_to, {'url': '/%s/collections/' % settings_app.PROJECT_APP} ),
+    url( r'^$', redirect_to, {'url': 'search/'} ),
 
     )
