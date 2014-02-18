@@ -4,6 +4,7 @@ import logging
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, render
 from iip_search_app import common, settings_app
+from iip_search_app.utils import ajax_snippet
 from iip_search_app.forms import SearchForm
 
 log = logging.getLogger(__name__)
@@ -29,7 +30,11 @@ def iip_results( request ):
         return render( request, u'iip_search_templates/base_extend.html', post_context )
     elif request.is_ajax():  # user has requested another page, a facet, etc.
         log.debug( u'in views.iip_results(); id, %s; ajax-GET' % log_id )
-        return_unistring = _get_ajax_unistring( request )
+        try:
+            return_unistring = _get_ajax_unistring( request )
+            log.debug( u'in views.iip_results(); id, %s; return_unistring, %s' % (log_id, return_unistring) )
+        except Exception as e:
+            log.error( u'in views.iip_results(); id, %s; exception, %s' % (log_id, unicode(repr(e))) )
         return HttpResponse( return_unistring )
     else:  # regular GET
         log.debug( u'in views.iip_results(); id, %s; regular GET' % log_id )
@@ -45,21 +50,25 @@ def _get_POST_context( request ):
         initial_qstring = form.generateSolrQuery()
         resultsPage = 1
         updated_qstring = common.updateQstring(
-            initial_qstring=initial_qstring, session_authz_dict=request.session['authz_info'], log_identifier=common.get_log_identifier(request.session) )['modified_qstring']
+            initial_qstring=initial_qstring, session_authz_dict=request.session['authz_info'], log_id=common.get_log_identifier(request.session) )['modified_qstring']
         context = common.paginateRequest(
-            qstring=updated_qstring, resultsPage=resultsPage, log_identifier=common.get_log_identifier(request.session) )
+            qstring=updated_qstring, resultsPage=resultsPage, log_id=common.get_log_identifier(request.session) )
         context[u'session_authz_info'] = request.session[u'authz_info']
         return context
 
 def _get_ajax_unistring( request ):
     """ Returns unicode string based on ajax update.
         Called by iip_results() """
-    log_identifier = request.session[u'log_identifier']
+    log.debug( u'in views._get_ajax_unistring(); starting' )
+    log_id = request.session[u'log_identifier']
     initial_qstring = request.GET.get( u'qstring', u'*:*' )
-    updated_qstring = common.updateQstring( initial_qstring, request.session[u'authz_info'], log_identifier )[u'modified_qstring']
+    log.debug( u'in views._get_ajax_unistring(); id, %s; initial_qstring, %s' % (log_id, initial_qstring) )
+    updated_qstring = common.updateQstring( initial_qstring, request.session[u'authz_info'], log_id )[u'modified_qstring']
+    log.debug( u'in views._get_ajax_unistring(); id, %s; updated_qstring, %s' % (log_id, updated_qstring) )
     resultsPage = int( request.GET[u'resultsPage'] )
-    context = paginateRequest( updated_qstring, resultsPage, log_identifier )
-    return_str = render_block_to_string(u'base_extend.html', u'content', context)
+    context = common.paginateRequest(
+        qstring=updated_qstring, resultsPage=resultsPage, log_id=log_id )
+    return_str = ajax_snippet.render_block_to_string(u'iip_search_templates/base_extend.html', u'content', context)
     return unicode( return_str )
 
 def _get_GET_context( request ):
