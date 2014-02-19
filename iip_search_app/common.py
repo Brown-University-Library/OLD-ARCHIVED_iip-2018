@@ -1,10 +1,21 @@
 # -*- coding: utf-8 -*-
 
-import logging, random, re
+import logging, pprint, random, re
 import solr
 from iip_search_app import settings_app
 
 log = logging.getLogger(__name__)
+
+
+def facetResults( facet ):
+    """ Returns dict of { facet_value_a: count_of_facet_value_a_entries }. """
+    try:
+        s = solr.SolrConnection( settings_app.SOLR_URL )
+        q = s.select( u'*:*', **{u'facet':u'true',u'facet.field':facet} )
+        facet_count_dict =q.facet_counts[u'facet_fields'][facet]
+        return facet_count_dict
+    except Exception as e:
+        log.error( u'in common.facetResults(); exception, %s' % unicode(repr(e)) )
 
 
 def get_log_identifier( request_session=None ):
