@@ -8,14 +8,14 @@ from iip_search_app import common, settings_app
 log = logging.getLogger(__name__)
 
 
-def facetResults(facet):
-    try:
-        s = solr.SolrConnection( settings_app.SOLR_URL )
-        q = s.select('*:*', **{'facet':'true','facet.field':facet})
-        fc =q.facet_counts['facet_fields'][facet]
-        return fc
-    except Exception as e:
-        log.error( u'in forms.facetResults(); exception, %s' % unicode(repr(e)) )
+# def facetResults(facet):
+#     try:
+#         s = solr.SolrConnection( settings_app.SOLR_URL )
+#         q = s.select('*:*', **{'facet':'true','facet.field':facet})
+#         fc =q.facet_counts['facet_fields'][facet]
+#         return fc
+#     except Exception as e:
+#         log.error( u'in forms.facetResults(); exception, %s' % unicode(repr(e)) )
 
 
 def doDateEra(self,f,v):
@@ -34,14 +34,14 @@ def doDateEra(self,f,v):
 
 
 class SearchForm( forms.Form ):
-    #regions =  [(item, item) for item in sorted(facetResults('region').keys())]
-    #cities =  [(item, item) for item in sorted(facetResults('city').keys())]
+    #regions =  [(item, item) for item in sorted( common.facetResults('region').keys())]
+    #cities =  [(item, item) for item in sorted( common.facetResults('city').keys())]
     #places = [(val, item) for item, val  in sorted(generatePlaceForm().items()) if item]
-    places = [(item, item) for item in sorted(facetResults('placeMenu').keys()) if item]
-    types =  [(item, item) for item in sorted(facetResults('type').keys()) if item]
-    physical_types =  [(item, item) for item in sorted(facetResults('physical_type').keys()) if item]
-    languages = [(item, u"%s" % item.replace('-',' ')) for item in sorted(facetResults('language').keys()) if item]
-    religions = [(u'"%s"'% item,  u"%s" % item.replace('-',' ')) for item in sorted(facetResults('religion').keys()) if item]
+    places = [(item, item) for item in sorted( common.facetResults('placeMenu').keys()) if item]
+    types =  [(item, item) for item in sorted( common.facetResults('type').keys()) if item]
+    physical_types =  [(item, item) for item in sorted( common.facetResults('physical_type').keys()) if item]
+    languages = [(item, u"%s" % item.replace('-',' ')) for item in sorted( common.facetResults('language').keys()) if item]
+    religions = [(u'"%s"'% item,  u"%s" % item.replace('-',' ')) for item in sorted( common.facetResults('religion').keys()) if item]
     #
     DISPLAY_STATUSES = [
     ('approved', 'Approved'),  # ( 'value', 'label' )
