@@ -18,6 +18,32 @@ def facetResults( facet ):
         log.error( u'in common.facetResults(); exception, %s' % unicode(repr(e)) )
 
 
+def fetchBiblio(q_results, target):
+    b = solr.SolrConnection( settings_app.BIBSOLR_URL )
+    biblios = []
+    for r in q_results:
+        try:
+            for t in r[target]:
+                # updateLog( '-in fetchBiblio(); t is: %s' % t )
+                w = dict( (n,v) for n,v in (t.split('=') for t in t.split('|') ) )
+                # updateLog( '-in fetchBiblio(); w is: %s' % w )
+                u_query_string = u'biblioId:%s'% w['bibl']
+                # updateLog( '-in fetchBiblio(); u_query_string is: %s' % u_query_string )
+                bq = b.query( u_query_string )
+                for bqry in bq:
+                    # updateLog( '-in fetchBiblio(); bqry is: %s' % bqry )
+                    bqry['nType'] = w['nType']
+                    bqry['n'] = w['n']
+                    biblios.append(bqry)
+                    # updateLog( '-in fetchBiblio(); biblios is now: %s' % biblios )
+        except:
+            return []  # 2012-03-16: returning 1 was generating a template-syntax error
+            # return 1
+    # updateLog( u'-in fetchBiblio(); biblios is: %s' % smart_unicode(biblios) )
+    return biblios
+    # end def fetchBiblio()
+
+
 def get_log_identifier( request_session=None ):
     """ Returns a log_identifier unicode_string.
         Sets it in the request session if necessary. """
