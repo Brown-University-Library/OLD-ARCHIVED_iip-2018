@@ -72,71 +72,85 @@ def _get_GET_context( request ):
 ## view inscription ##
 
 def viewinscr( request, inscrid ):
-    # return HttpResponse( u'<p>%s</p>' % inscrid )
+    """ Handles view-inscription GET, ajax-GET, and approval-update POST. """
+    if not u'authz_info' in request.session:
+        request.session[u'authz_info'] = { u'authorized': False }
+    if request.method == u'POST':  # TODO: call subfunction after getting approval working again
+        return _handle_viewinscr_POST( request )
+    else:  # GET
+        ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status ) = _prepare_viewinscr_get_data( request, inscrid )
+        if request.is_ajax():
+            return_response = _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn )
+        else:
+            return_response = _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request )
+        return return_response
+
+def _handle_viewinscr_POST( request ):
+    """ Handles view-inscription POST.
+        Returns a response object.
+        Called by viewinscr(). """
+    if request.session['authz_info']['authorized'] == False:
+        return_response = HttpResponseForbidden( '403 / Forbidden' )
+    # work_result = common.handleClick( original_status=request.session['current_display_status'], button_action=request.POST['action_button'], item_id=inscrid, log_id=log_id )
+    # common.updateLog( '- in views.viewinscr(); work_result is: %s' % work_result, log_id )
+    # return HttpResponse( u'<p>INTERRUPT</p>')
+    # request.session['click_confirmation_text'] = '%s has been marked as "%s"' % ( inscrid, work_result['new_display_status'] )
+    return_response = HttpResponseRedirect( '.' )
+    return return_response
+
+def _prepare_viewinscr_get_data( request, inscrid ):
+    """ Prepares data for regular or ajax GET.
+        Returns a tuple of vars.
+        Called by viewinscr(). """
+    log_id = common.get_log_identifier( request.session )
+    s = solr.SolrConnection( settings_app.SOLR_URL )
+    stateQuery = request.GET.get('qstring')
+    statePage = request.GET.get('resultsPage')
+    qstring = u'inscription_id:%s' % inscrid
     try:
-        log.debug( u'in views.viewinscr(); starting' )
-        log_identifier = common.get_log_identifier( request.session )
-        if not 'authz_info' in request.session:
-            request.session['authz_info'] = { 'authorized': False }
-        if request.method == 'POST': # If the form has been submitted...
-            if request.session['authz_info']['authorized'] == False:
-                return HttpResponseForbidden( '403 / Forbidden' )
-            # work_result = common.handleClick( original_status=request.session['current_display_status'], button_action=request.POST['action_button'], item_id=inscrid, log_identifier=log_identifier )
-            # common.updateLog( '- in views.viewinscr(); work_result is: %s' % work_result, log_identifier )
-            # return HttpResponse( u'<p>INTERRUPT</p>')
-            # request.session['click_confirmation_text'] = '%s has been marked as "%s"' % ( inscrid, work_result['new_display_status'] )
-            return HttpResponseRedirect( '.' )
-        else:    # regular GET
-            log.debug( u'in views.viewinscr(); id, %s; GET detected' % log_identifier )
-            s = solr.SolrConnection( settings_app.SOLR_URL )
-            stateQuery = request.GET.get('qstring')
-            log.debug( u'in views.viewinscr(); id, %s; stateQuery, %s' % (log_identifier, stateQuery) )
-            statePage = request.GET.get('resultsPage')
-            log.debug( u'in views.viewinscr(); id, %s; statePage, %s' % (log_identifier, statePage) )
-            qstring = u'inscription_id:%s' % inscrid
-            log.debug( u'in views.viewinscr(); id, %s; qstring, %s' % (log_identifier, qstring) )
-            try:
-                q = s.query(qstring)
-                log.debug( u'in views.viewinscr(); id, %s; q.__dict__ (solr query-result) is: %s' % (log_identifier, q.__dict__) )
-                # common.updateLog( '- in views.viewinscr(); q try; q.__dict__ (solr query-result) is: %s' % q.__dict__, log_identifier )
-            except:
-                q = s.query('*:*', **args)
-                # common.updateLog( '- in views.viewinscr(); q except; q.__dict__ (solr query-result) is: %s' % q.__dict__, log_identifier )
-            ## add the current display_status to the session
-            current_display_status = u'init'
-            if int( q.numFound ) > 0:
-                current_display_status = q.results[0]['display_status']
-                request.session['current_display_status'] = current_display_status
-            bibs = common.fetchBiblio( q.results, 'bibl')    # 2012-03-14, changed from fetchBiblio(q, '...') for easier testing
-            bibDip = common.fetchBiblio( q.results, 'biblDiplomatic')
-            bibTsc = common.fetchBiblio( q.results, 'biblTranscription')
-            bibTrn = common.fetchBiblio( q.results, 'biblTranslation')
-            if request.is_ajax():
-                context = {'inscription': q, 'biblios':bibs, 'bibDip' : bibDip, 'bibTsc' : bibTsc, 'bibTrn' : bibTrn,    'biblioFull': False}
-                # common.updateLog( '- in views.viewinscr(); is ajax; context is: %s' % context, log_identifier )
-                return_str = ajax_snippet.render_block_to_string( 'iip_search_templates/viewinscr.html', 'viewinscr', context )
-                return HttpResponse(return_str)
-            else:
-                chosen_display_status = current_display_status
-                temp_context = {
-                    'inscription': q,
-                    'biblios':bibs,
-                    'bibDip' : bibDip,
-                    'bibTsc' : bibTsc,
-                    'bibTrn' : bibTrn,
-                    'biblioFull': True,
-                    'chosen_display_status': chosen_display_status,
-                    'inscription_id': inscrid,
-                    'session_authz_info': request.session['authz_info'], }
-                # return render_to_response( 'iip_search_templates/viewinscr.html', temp_context )
-                return render( request, u'iip_search_templates/viewinscr.html', temp_context )
-    except Exception as e:
-        log.error( u'in views.viewinscr(); id, %s; exception, %s' % (log_identifier, unicode(repr(e))) )
-        # message = common.makeErrorString()
-        # todo: update log
-        return HttpResponse( 'oops; unhandled error: %s' % unicode(repr(e)), mimetype='text/javascript' )
-        # return HttpResponse( 'unhandled problem; see logs' )
-    # end def viewinscr()
+        q = s.query(qstring)
+    except:
+        q = s.query('*:*', **args)
+    ## add the current display_status to the session
+    current_display_status = u'init'
+    if int( q.numFound ) > 0:
+        current_display_status = q.results[0]['display_status']
+        request.session['current_display_status'] = current_display_status
+    bibs = common.fetchBiblio( q.results, 'bibl')    # 2012-03-14, changed from fetchBiblio(q, '...') for easier testing
+    bibDip = common.fetchBiblio( q.results, 'biblDiplomatic')
+    bibTsc = common.fetchBiblio( q.results, 'biblTranscription')
+    bibTrn = common.fetchBiblio( q.results, 'biblTranslation')
+    return ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status )
+
+def _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn ):
+    """ Returns view-inscription response-object for ajax GET.
+        Called by viewinscr() """
+    context = {
+        'inscription': q,
+        'biblios':bibs,
+        'bibDip' : bibDip,
+        'bibTsc' : bibTsc,
+        'bibTrn' : bibTrn,
+        'biblioFull': False }
+    return_str = ajax_snippet.render_block_to_string( 'iip_search_templates/viewinscr.html', 'viewinscr', context )
+    return_response = HttpResponse( return_str )
+    return return_response
+
+def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request ):
+    """ Returns view-inscription response-object for regular GET.
+        Called by viewinscr() """
+    context = {
+        'inscription': q,
+        'biblios':bibs,
+        'bibDip' : bibDip,
+        'bibTsc' : bibTsc,
+        'bibTrn' : bibTrn,
+        'biblioFull': True,
+        'chosen_display_status': current_display_status,
+        'inscription_id': inscrid,
+        'session_authz_info': request.session['authz_info'] }
+    return_response = render( request, u'iip_search_templates/viewinscr.html', context )
+    return return_response
 
 
 ## testing ##
