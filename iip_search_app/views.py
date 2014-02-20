@@ -15,27 +15,15 @@ log = logging.getLogger(__name__)
 
 def iip_results( request ):
     """ Handles /search/ GET, POST, and ajax-GET. """
-    log.debug( u'in views.iip_results(); starting' )
     log_id = common.get_log_identifier( request.session )
-    log.debug( u'in views.iip_results(); log_id, %s' % log_id )
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
     if request.method == u'POST':  # form has been submitted by user
-        log.debug( u'in views.iip_results(); id, %s; POST' % log_id )
-        post_context = _get_POST_context( request )
-        return render( request, u'iip_search_templates/base_extend.html', post_context )
+        return render( request, u'iip_search_templates/base_extend.html', _get_POST_context(request) )
     elif request.is_ajax():  # user has requested another page, a facet, etc.
-        log.debug( u'in views.iip_results(); id, %s; ajax-GET' % log_id )
-        try:
-            return_unistring = _get_ajax_unistring( request )
-            log.debug( u'in views.iip_results(); id, %s; return_unistring, %s' % (log_id, return_unistring) )
-        except Exception as e:
-            log.error( u'in views.iip_results(); id, %s; exception, %s' % (log_id, unicode(repr(e))) )
-        return HttpResponse( return_unistring )
+        return HttpResponse( _get_ajax_unistring(request) )
     else:  # regular GET
-        log.debug( u'in views.iip_results(); id, %s; regular GET' % log_id )
-        context = _get_GET_context( request )
-        return render( request, u'iip_search_templates/search_form.html', context )
+        return render( request, u'iip_search_templates/search_form.html', _get_GET_context(request) )
 
 def _get_POST_context( request ):
     """ Returns correct context for POST.
@@ -55,12 +43,10 @@ def _get_POST_context( request ):
 def _get_ajax_unistring( request ):
     """ Returns unicode string based on ajax update.
         Called by iip_results() """
-    log.debug( u'in views._get_ajax_unistring(); starting' )
-    log_id = request.session[u'log_identifier']
+    log_id = common.get_log_identifier(request.session)
+    log.info( u'in views._get_ajax_unistring(); id, %s; starting' % log_id )
     initial_qstring = request.GET.get( u'qstring', u'*:*' )
-    log.debug( u'in views._get_ajax_unistring(); id, %s; initial_qstring, %s' % (log_id, initial_qstring) )
     updated_qstring = common.updateQstring( initial_qstring, request.session[u'authz_info'], log_id )[u'modified_qstring']
-    log.debug( u'in views._get_ajax_unistring(); id, %s; updated_qstring, %s' % (log_id, updated_qstring) )
     resultsPage = int( request.GET[u'resultsPage'] )
     context = common.paginateRequest(
         qstring=updated_qstring, resultsPage=resultsPage, log_id=log_id )
