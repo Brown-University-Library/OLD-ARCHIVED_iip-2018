@@ -25,6 +25,40 @@ class CommonTest( TestCase ):
                 type(facet_count_dict[place]) == int
                 )
 
+    def test_paginateRequest( self ):
+        """ Checks data returned by paginateRequest. """
+        sent_qstring = u'display_status:(approved) AND language:(Aramaic)'
+        sent_results_page = 3
+        data = common.paginateRequest( qstring=sent_qstring, resultsPage=sent_results_page, log_id=u'123' )
+        self.assertEqual(
+            [u'dispQstring', u'facets', u'iipResult', u'pages', u'qstring', u'resultsPage'],
+            sorted( data.keys() )
+            )
+        self.assertEqual(
+            u'display status:approved AND language:Aramaic',
+            data[u'dispQstring']
+            )
+        self.assertEqual(
+            [u'city', u'language', u'physical_type', u'region', u'religion', u'type'],
+            sorted( data[u'facets'].keys() )
+            )
+        self.assertEqual(
+            True,
+            u'<solr.paginator.SolrPage instance' in unicode(repr(data[u'iipResult']))
+            )
+        self.assertEqual(
+            sent_qstring,
+            data[u'qstring']
+            )
+        self.assertEqual(
+            True,
+            u'<solr.paginator.SolrPaginator instance' in unicode(repr(data[u'pages']))
+            )
+        self.assertEqual(
+            sent_results_page,
+            data[u'resultsPage']
+            )
+
     def test_update_q_string( self ):
         """ Tests modification of solr query string. """
         initial_qstring = u'foo'

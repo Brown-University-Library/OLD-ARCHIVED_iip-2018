@@ -37,6 +37,7 @@ def _get_POST_context( request ):
             initial_qstring=initial_qstring, session_authz_dict=request.session['authz_info'], log_id=common.get_log_identifier(request.session) )['modified_qstring']
         context = common.paginateRequest(
             qstring=updated_qstring, resultsPage=resultsPage, log_id=common.get_log_identifier(request.session) )
+        log.debug( u'in views._get_POST_context(); context is: %s' % context )
         context[u'session_authz_info'] = request.session[u'authz_info']
         return context
 

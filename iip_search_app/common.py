@@ -71,38 +71,99 @@ def queryCleanup(qstring):
 
 
 def paginateRequest( qstring, resultsPage, log_id):
-  try:
+    """ Executes solr query on qstring and returns solr.py paginator object, and paginator.page object for given page, and facet-count dict.
+        Called by: (views.iip_results()) views._get_POST_context() and views._get_ajax_unistring(). """
+    log.debug( u'in common.paginateRequest(); qstring, %s; resultsPage, %s' % (qstring, resultsPage) )
+    ( s, q ) = _run_paginator_main_query( qstring, log_id )  # gets solr object and query object
+    fq = _run_paginator_facet_query( s, qstring, log_id )  # gets facet-query object
+    ( p, pg ) = _run_paginator_page_query( q, resultsPage, log_id )  # gets paginator object and paginator-page object
+    f = _run_paginator_facet_counts( fq )  # gets facet-counts dict
+    try:
+        dispQstring = queryCleanup(qstring.encode('utf-8'))
+        return {'pages': p, 'iipResult': pg, 'qstring':qstring, 'resultsPage': resultsPage, 'facets':f, 'dispQstring': dispQstring}
+    except Exception as e:
+        log.error( u'in common.paginateRequest(); id, %s; exception, %s' % (log_id, unicode(repr(e))) )
+        return False
+
+def _run_paginator_main_query( qstring, log_id ):
+    """ Performs a lookup on the query-string; returns solr object and query object.
+        Called by paginateRequest()."""
     s = solr.SolrConnection( settings_app.SOLR_URL )
     args = {'rows':25}
     try:
-      q = s.query((qstring.encode('utf-8')),**args)
-      log.info( u'in common.paginateRequest(); id, %s; q created via try' % log_id )
+        q = s.query((qstring.encode('utf-8')),**args)
+        log.debug( u'in common._run_paginator_main_query(); id, %s; q created via try' % log_id )
     except Exception as e1:
-      q = s.query('*:*', **args)
-      log.info( u'in common.paginateRequest(); id, %s; exception, %s; q created via except' % (log_id, unicode(repr(e))) )
+        q = s.query('*:*', **args)
+        log.debug( u'in common._run_paginator_main_query(); id, %s; exception, %s; q created via except' % (log_id, unicode(repr(e1))) )
+    return ( s, q )
+
+def _run_paginator_facet_query( s, qstring, log_id ):
+    """ Performs a facet-lookup for the query-string; returns facet-query object.
+        Called by paginateRequest()."""
+    args = {'rows':25}
     try:
-      fq = s.query((qstring.encode('utf-8')),facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
+        fq = s.query((qstring.encode('utf-8')),facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
     except:
-      fq = s.query('*:*',facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
-    log.info( u'in common.paginateRequest(); id, %s; q is, `%s`; q.__dict__ is, `%s`' % (log_id, q, q.__dict__) )
-    # updateLog( '- in common.paginateRequest(); q is: %s -- q.__dict__ is: %s' % (q,q.__dict__), log_id )
+        fq = s.query('*:*',facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
+    log.debug( u'in common._run_paginator_facet_query(); id, %s; fq is, `%s`; fq.__dict__ is, `%s`' % (log_id, fq, fq.__dict__) )
+    return fq
+
+def _run_paginator_page_query( q, resultsPage, log_id ):
+    """ Instantiates a paginator object and, from query-results, creates a paginator.page object.
+        Called by paginateRequest(). """
     p = solr.SolrPaginator(q, 25)
     try:
-      pg = p.page(resultsPage)
-    except:
-      pg = ''
+        pg = p.page(resultsPage)
+    except Exception as e:
+        pg = ''
+    log.debug( u'in common._run_paginator_page_query(); id, %s; pg is, `%s`; pg.__dict__ is, `%s`' % (log_id, pg, pg.__dict__) )
+    return ( p, pg )
+
+def _run_paginator_facet_counts( fq ):
+    """ Returns facet_count dict from the facet-query object.
+        Called by paginateRequest(). """
     try:
-      f = fq.facet_counts['facet_fields']
+        f = fq.facet_counts['facet_fields']
     except:
-      f  = ''
-    #sorted_f = sorted(f.items(), key=operator.itemgetter(1))
-    #facets = dict(sorted_f)
-    dispQstring = queryCleanup(qstring.encode('utf-8'))
-    return {'pages': p, 'iipResult': pg, 'qstring':qstring, 'resultsPage': resultsPage, 'facets':f, 'dispQstring': dispQstring}
-  except Exception as e:
-    log.error( u'in common.paginateRequest(); id, %s; exception, %s' % (log_id, unicode(repr(e))) )
-    return False
-  # end def paginateRequest()
+        f    = ''
+    return f
+
+# def paginateRequest( qstring, resultsPage, log_id):
+#     """ Executes solr query on qstring and returns solr.py paginator object, and paginator.page object for given page.
+#         Called by: (views.iip_results()) views._get_POST_context() and views._get_ajax_unistring(). """
+#     log.debug( u'in common.paginateRequest(); qstring, %s; resultsPage, %s' % (qstring, resultsPage) )
+#     try:
+#         s = solr.SolrConnection( settings_app.SOLR_URL )
+#         args = {'rows':25}
+#         try:
+#             q = s.query((qstring.encode('utf-8')),**args)
+#             log.debug( u'in common.paginateRequest(); id, %s; q created via try' % log_id )
+#         except Exception as e1:
+#             q = s.query('*:*', **args)
+#             log.info( u'in common.paginateRequest(); id, %s; exception, %s; q created via except' % (log_id, unicode(repr(e1))) )
+#         try:
+#             fq = s.query((qstring.encode('utf-8')),facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
+#         except:
+#             fq = s.query('*:*',facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
+#         log.debug( u'in common.paginateRequest(); id, %s; q is, `%s`; q.__dict__ is, `%s`' % (log_id, q, q.__dict__) )
+#         p = solr.SolrPaginator(q, 25)
+#         try:
+#             pg = p.page(resultsPage)
+#         except:
+#             pg = ''
+#         try:
+#             f = fq.facet_counts['facet_fields']
+#         except:
+#             f    = ''
+#         #sorted_f = sorted(f.items(), key=operator.itemgetter(1))
+#         #facets = dict(sorted_f)
+#         dispQstring = queryCleanup(qstring.encode('utf-8'))
+#         return {'pages': p, 'iipResult': pg, 'qstring':qstring, 'resultsPage': resultsPage, 'facets':f, 'dispQstring': dispQstring}
+#     except Exception as e:
+#         log.error( u'in common.paginateRequest(); id, %s; exception, %s' % (log_id, unicode(repr(e))) )
+#         return False
+#     # end def paginateRequest()
 
 
 def updateQstring( initial_qstring, session_authz_dict, log_id ):
