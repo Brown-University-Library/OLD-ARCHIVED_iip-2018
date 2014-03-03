@@ -2,7 +2,7 @@
 
 import logging
 import solr
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render_to_response, render
 from iip_search_app import common, settings_app
 from iip_search_app.utils import ajax_snippet
@@ -152,6 +152,66 @@ def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, curr
         'session_authz_info': request.session['authz_info'] }
     return_response = render( request, u'iip_search_templates/viewinscr.html', context )
     return return_response
+
+
+
+
+## login ##
+
+def login( request ):
+    """ Takes shib-eppn or 'dev_auth_hack' parameter (if enabled for non-shibbolized development) and checks it agains settings list of LEGIT_ADMINS. """
+    return HttpResponse( u'login not yet enabled' )
+    ## init
+    log_id = common.get_log_identifier( request.session )
+    log.info( u'in views.login(); id, %s; starting' % log_id )
+    request.session['authz_info'] = { 'authorized': False }
+    ## checks
+    if _check_shib( request ) == False:
+        _check_dev_auth_hack( request )
+    ## response
+    response = _make_response( request )
+    return response
+
+def _check_shib( request, log_id ):
+    """ Takes request;
+            examines it for shib info and updates request.session if necessary;
+            returns True or False.
+        Called by login() """
+    log.info( u'in views._check_shib(); id, %s; starting' % log_id )
+    return_val = False
+    if 'Shibboleth-eppn' in request.META:
+        if request.META['Shibboleth-eppn'] in settings_app.LEGIT_ADMINS:  # authorization passed
+          request.session['authz_info'] = { 'authorized': True, 'firstname': request.META['Shibboleth-givenName'] }
+          return_val = True
+    return return_val
+
+def _check_dev_auth_hack( request, log_id ):
+    """ Takes request;
+            examines it, and settings, for dev_auth_hack and updates request.session if necessary.
+        Called by login() """
+    log.info( u'in views._check_dev_auth_hack(); id, %s; starting' % log_id )
+    if 'dev_auth_hack' in request.GET and settings_app.DEV_AUTH_HACK == 'enabled':
+        if request.GET['dev_auth_hack'] in settings_app.LEGIT_ADMINS:
+            request.session['authz_info'] = { 'authorized': True, 'firstname': 'birkin' }
+    return
+
+def _make_response( request, log_id ):
+    """ Takes request;
+            examines session['authz_info'];
+            returns a response object to caller.
+        Called by login(). """
+    log.info( u'in views._make_response(); id, %s; starting' % log_id )
+    if request.session['authz_info']['authorized'] == True:
+        if 'next' in request.GET:
+          response = HttpResponseRedirect( request.GET['next'] )
+        else:
+          redirect_url = '/%s/iip/search/' % settings_app.PROJECT_URL_SEGMENT
+          response = HttpResponseRedirect( redirect_url )
+    else:
+        response = HttpResponseForbidden( '403 / Forbidden; unauthorized user' )
+    return response
+
+
 
 
 ## testing ##
