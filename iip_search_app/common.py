@@ -18,30 +18,38 @@ def facetResults( facet ):
         log.error( u'in common.facetResults(); exception, %s' % unicode(repr(e)) )
 
 
-def fetchBiblio(q_results, target):
-    b = solr.SolrConnection( settings_app.BIBSOLR_URL )
-    biblios = []
+def fetchBiblio( q_results, target ):
+    """ Takes a solr.core.Result and a target-string,
+            does a biblio solr lookup on each one,
+            returns a list of biblio key-value dicts.
+        Returns a list of dicts (usually 1 dict) of biblio key-value data.
+        Called by views._prepare_viewinscr_get_data() """
+    assert type(q_results) == solr.core.Results, type(q_results)
+    assert type(target) == str, type(target)
     for r in q_results:
         try:
-            for t in r[target]:
-                # updateLog( '-in fetchBiblio(); t is: %s' % t )
-                w = dict( (n,v) for n,v in (t.split('=') for t in t.split('|') ) )
-                # updateLog( '-in fetchBiblio(); w is: %s' % w )
-                u_query_string = u'biblioId:%s'% w['bibl']
-                # updateLog( '-in fetchBiblio(); u_query_string is: %s' % u_query_string )
-                bq = b.query( u_query_string )
-                for bqry in bq:
-                    # updateLog( '-in fetchBiblio(); bqry is: %s' % bqry )
-                    bqry['nType'] = w['nType']
-                    bqry['n'] = w['n']
-                    biblios.append(bqry)
-                    # updateLog( '-in fetchBiblio(); biblios is now: %s' % biblios )
-        except:
-            return []  # 2012-03-16: returning 1 was generating a template-syntax error
-            # return 1
-    # updateLog( u'-in fetchBiblio(); biblios is: %s' % smart_unicode(biblios) )
+            biblios = _get_biblio_results( r, target )
+        except Exception as e:
+            log.error( u'in common.fetchBiblio(); id, %s; exception, %s' % (u'n/a', unicode(repr(e))) )
+            biblios = []
     return biblios
-    # end def fetchBiblio()
+
+def _get_biblio_results( r, target ):
+    """ Takes a single solr.core.Result entry and a target-string,
+            does a biblio solr lookup, and
+            returns a list of biblio key-value dicts.
+        Called by fetchBiblio() """
+    b = solr.SolrConnection( settings_app.BIBSOLR_URL )
+    biblios = []
+    for t in r[target]:
+        w = dict( (n,v) for n,v in (t.split('=') for t in t.split('|') ) )
+        u_query_string = u'biblioId:%s' % w['bibl']
+        bq = b.query( u_query_string )
+        for bqry in bq:
+            bqry['nType'] = w['nType']
+            bqry['n'] = w['n']
+            biblios.append(bqry)
+    return biblios
 
 
 def get_log_identifier( request_session=None ):
@@ -74,10 +82,10 @@ def paginateRequest( qstring, resultsPage, log_id):
     """ Executes solr query on qstring and returns solr.py paginator object, and paginator.page object for given page, and facet-count dict.
         Called by: (views.iip_results()) views._get_POST_context() and views._get_ajax_unistring(). """
     log.debug( u'in common.paginateRequest(); qstring, %s; resultsPage, %s' % (qstring, resultsPage) )
-    ( s, q ) = _run_paginator_main_query( qstring, log_id )  # gets solr object and query object
-    fq = _run_paginator_facet_query( s, qstring, log_id )  # gets facet-query object
-    ( p, pg ) = _run_paginator_page_query( q, resultsPage, log_id )  # gets paginator object and paginator-page object
-    f = _run_paginator_facet_counts( fq )  # gets facet-counts dict
+    ( s, q ) = _run_paginator_main_query( qstring, log_id )             # gets solr object and query object
+    fq = _run_paginator_facet_query( s, qstring, log_id )               # gets facet-query object
+    ( p, pg ) = _run_paginator_page_query( q, resultsPage, log_id )     # gets paginator object and paginator-page object
+    f = _run_paginator_facet_counts( fq )                               # gets facet-counts dict
     try:
         dispQstring = queryCleanup(qstring.encode('utf-8'))
         return {'pages': p, 'iipResult': pg, 'qstring':qstring, 'resultsPage': resultsPage, 'facets':f, 'dispQstring': dispQstring}
@@ -128,42 +136,6 @@ def _run_paginator_facet_counts( fq ):
     except:
         f    = ''
     return f
-
-# def paginateRequest( qstring, resultsPage, log_id):
-#     """ Executes solr query on qstring and returns solr.py paginator object, and paginator.page object for given page.
-#         Called by: (views.iip_results()) views._get_POST_context() and views._get_ajax_unistring(). """
-#     log.debug( u'in common.paginateRequest(); qstring, %s; resultsPage, %s' % (qstring, resultsPage) )
-#     try:
-#         s = solr.SolrConnection( settings_app.SOLR_URL )
-#         args = {'rows':25}
-#         try:
-#             q = s.query((qstring.encode('utf-8')),**args)
-#             log.debug( u'in common.paginateRequest(); id, %s; q created via try' % log_id )
-#         except Exception as e1:
-#             q = s.query('*:*', **args)
-#             log.info( u'in common.paginateRequest(); id, %s; exception, %s; q created via except' % (log_id, unicode(repr(e1))) )
-#         try:
-#             fq = s.query((qstring.encode('utf-8')),facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
-#         except:
-#             fq = s.query('*:*',facet='true', facet_field=['region','city','type','physical_type','language','religion'],**args)
-#         log.debug( u'in common.paginateRequest(); id, %s; q is, `%s`; q.__dict__ is, `%s`' % (log_id, q, q.__dict__) )
-#         p = solr.SolrPaginator(q, 25)
-#         try:
-#             pg = p.page(resultsPage)
-#         except:
-#             pg = ''
-#         try:
-#             f = fq.facet_counts['facet_fields']
-#         except:
-#             f    = ''
-#         #sorted_f = sorted(f.items(), key=operator.itemgetter(1))
-#         #facets = dict(sorted_f)
-#         dispQstring = queryCleanup(qstring.encode('utf-8'))
-#         return {'pages': p, 'iipResult': pg, 'qstring':qstring, 'resultsPage': resultsPage, 'facets':f, 'dispQstring': dispQstring}
-#     except Exception as e:
-#         log.error( u'in common.paginateRequest(); id, %s; exception, %s' % (log_id, unicode(repr(e))) )
-#         return False
-#     # end def paginateRequest()
 
 
 def updateQstring( initial_qstring, session_authz_dict, log_id ):
