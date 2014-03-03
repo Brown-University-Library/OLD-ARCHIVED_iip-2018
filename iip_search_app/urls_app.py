@@ -9,6 +9,8 @@ urlpatterns = patterns('',
 
     url( r'^hello/$',  'iip_search_app.views.hello', name=u'hello_url' ),
 
+    url( r'^login/$',  'iip_search_app.views.login', name=u'login_url' ),
+
     url( r'^results/$',  'iip_search_app.views.iip_results', name=u'results_url' ),
 
     url( r'^search/$',  'iip_search_app.views.iip_results', name=u'search_url' ),

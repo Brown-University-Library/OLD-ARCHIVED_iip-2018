@@ -1,16 +1,13 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
-
-Replace this with more appropriate tests for your application.
-"""
+# -*- coding: utf-8 -*-
 
 import pprint
-from iip_search_app import common
+import solr
+from iip_search_app import common, settings_app
 from django.test import TestCase
 
 
 class CommonTest( TestCase ):
+    """ Tests functions in 'common.py'. """
 
     def test_facetResults( self ):
         """ Checks type of data returned from query. """
@@ -24,6 +21,29 @@ class CommonTest( TestCase ):
                 True,
                 type(facet_count_dict[place]) == int
                 )
+
+    def test_fetchBiblio( self ):
+        """ Checks biblio solr response for a given iip solr resultset and target-string. """
+        s = solr.SolrConnection( settings_app.SOLR_URL )
+        qstring = u'inscription_id:%s' % u'beth0282'
+        q = s.query( qstring )
+        result = common.fetchBiblio( q_results=q.results, target=u'biblTranslation'.encode(u'utf-8') )
+        self.assertEqual(
+            list, type(result)
+            )
+        self.assertEqual(
+            1, len(result)
+            )
+        self.assertEqual(
+            dict, type( result[0] )
+            )
+        self.assertEqual(
+            23, len( result[0].keys() )
+            )
+        self.assertEqual(
+            [u'biblioId', u'publisher_place_t', u'subject_facet', u'subject_geographic_t'],
+            sorted( result[0].keys()[0:4] )
+            )
 
     def test_paginateRequest( self ):
         """ Checks data returned by paginateRequest. """
