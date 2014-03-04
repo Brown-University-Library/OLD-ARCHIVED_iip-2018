@@ -155,8 +155,6 @@ def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, curr
     return return_response
 
 
-
-
 ## login ##
 
 def login( request ):
@@ -209,17 +207,24 @@ def _make_response( request, log_id ):
           response = HttpResponseRedirect( request.GET['next'] )
         else:
             redirect_url = u'%s://%s%s' % (
-                request.META[u'wsgi.url_scheme'],
-                request.get_host(),
-                reverse(u'search_url', )
-                )
-          # redirect_url = '/%s/iip/search/' % settings_app.PROJECT_URL_SEGMENT
+                request.META[u'wsgi.url_scheme'], request.get_host(), reverse(u'search_url',) )
         response = HttpResponseRedirect( redirect_url )
     else:
         response = HttpResponseForbidden( '403 / Forbidden; unauthorized user' )
     return response
 
 
+## logout ###
+
+def logout( request ):
+    """ Removes session-based authentication. """
+    request.session[u'authz_info'] = { u'authorized': False }
+    if u'next' in request.GET:
+        redirect_url = request.GET[u'next']
+    else:
+        redirect_url = u'%s://%s%s' % (
+            request.META[u'wsgi.url_scheme'], request.get_host(), reverse(u'search_url',) )
+    return HttpResponseRedirect( redirect_url )
 
 
 ## testing ##
