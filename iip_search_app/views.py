@@ -24,7 +24,7 @@ def iip_results( request ):
     elif request.is_ajax():  # user has requested another page, a facet, etc.
         return HttpResponse( _get_ajax_unistring(request) )
     else:  # regular GET
-        return render( request, u'iip_search_templates/search_form.html', _get_GET_context(request) )
+        return render( request, u'iip_search_templates/search_form.html', _get_GET_context(request, log_id) )
 
 def _get_POST_context( request ):
     """ Returns correct context for POST.
@@ -55,20 +55,35 @@ def _get_ajax_unistring( request ):
     return_str = ajax_snippet.render_block_to_string(u'iip_search_templates/base_extend.html', u'content', context)
     return unicode( return_str )
 
-def _get_GET_context( request ):
+def _get_GET_context( request, log_id ):
     """ Returns correct context for GET.
         Called by iip_results() """
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
-    log.debug( u'in views._get_GET_context(); about to instantiate form' )
     form = SearchForm()  # an unbound form
-    log.debug( u'in views._get_GET_context(); form instantiated' )
     context = {
         u'form': form,
         u'session_authz_info': request.session[u'authz_info'],
-        u'settings_app': settings_app }
+        u'settings_app': settings_app,
+        u'admin_link': common.make_admin_link( session_authz_dict=request.session[u'authz_info'], url_scheme=request.META[u'wsgi.url_scheme'], url_host=request.get_host(), log_id=log_id )
+        }
     log.debug( u'in views._get_GET_context(); context, %s' % context )
     return context
+
+# def _get_GET_context( request ):
+#     """ Returns correct context for GET.
+#         Called by iip_results() """
+#     if not u'authz_info' in request.session:
+#         request.session[u'authz_info'] = { u'authorized': False }
+#     log.debug( u'in views._get_GET_context(); about to instantiate form' )
+#     form = SearchForm()  # an unbound form
+#     log.debug( u'in views._get_GET_context(); form instantiated' )
+#     context = {
+#         u'form': form,
+#         u'session_authz_info': request.session[u'authz_info'],
+#         u'settings_app': settings_app }
+#     log.debug( u'in views._get_GET_context(); context, %s' % context )
+#     return context
 
 
 ## view inscription ##
