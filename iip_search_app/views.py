@@ -2,7 +2,8 @@
 
 import logging
 import solr
-from django.http import HttpResponse, HttpResponseForbidden
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response, render
 from iip_search_app import common, settings_app
 from iip_search_app.utils import ajax_snippet
@@ -160,16 +161,15 @@ def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, curr
 
 def login( request ):
     """ Takes shib-eppn or 'dev_auth_hack' parameter (if enabled for non-shibbolized development) and checks it agains settings list of LEGIT_ADMINS. """
-    return HttpResponse( u'login not yet enabled' )
     ## init
     log_id = common.get_log_identifier( request.session )
     log.info( u'in views.login(); id, %s; starting' % log_id )
     request.session['authz_info'] = { 'authorized': False }
     ## checks
-    if _check_shib( request ) == False:
-        _check_dev_auth_hack( request )
+    if _check_shib( request, log_id ) == False:
+        _check_dev_auth_hack( request, log_id )
     ## response
-    response = _make_response( request )
+    response = _make_response( request, log_id )
     return response
 
 def _check_shib( request, log_id ):
@@ -191,8 +191,11 @@ def _check_dev_auth_hack( request, log_id ):
         Called by login() """
     log.info( u'in views._check_dev_auth_hack(); id, %s; starting' % log_id )
     if 'dev_auth_hack' in request.GET and settings_app.DEV_AUTH_HACK == 'enabled':
+        log.info( u'in views._check_dev_auth_hack(); id, %s; dev_auth_hack exists and is enabled' % log_id )
         if request.GET['dev_auth_hack'] in settings_app.LEGIT_ADMINS:
-            request.session['authz_info'] = { 'authorized': True, 'firstname': 'birkin' }
+            log.info( u'in views._check_dev_auth_hack(); id, %s; param is a legit-admin' % log_id )
+            request.session['authz_info'] = { 'authorized': True, 'firstname': request.GET['dev_auth_hack'] }
+            log.info( u'in views._check_dev_auth_hack(); id, %s; session authorization to True' % log_id )
     return
 
 def _make_response( request, log_id ):
@@ -205,8 +208,13 @@ def _make_response( request, log_id ):
         if 'next' in request.GET:
           response = HttpResponseRedirect( request.GET['next'] )
         else:
-          redirect_url = '/%s/iip/search/' % settings_app.PROJECT_URL_SEGMENT
-          response = HttpResponseRedirect( redirect_url )
+            redirect_url = u'%s://%s%s' % (
+                request.META[u'wsgi.url_scheme'],
+                request.get_host(),
+                reverse(u'search_url', )
+                )
+          # redirect_url = '/%s/iip/search/' % settings_app.PROJECT_URL_SEGMENT
+        response = HttpResponseRedirect( redirect_url )
     else:
         response = HttpResponseForbidden( '403 / Forbidden; unauthorized user' )
     return response
