@@ -67,7 +67,7 @@ def get_log_identifier( request_session=None ):
     return log_id
 
 
-def make_admin_link( session_authz_dict, url_scheme, url_host, log_id ):
+def make_admin_link( session_authz_dict, url_host, log_id ):
     """ Takes authorization session dict;
             makes and returns admin link string.
         Called by (iip_results) views._get_GET_context() """
@@ -75,11 +75,11 @@ def make_admin_link( session_authz_dict, url_scheme, url_host, log_id ):
     if session_authz_dict[u'authorized']:
         admin_link_dict = {
             u'text': u'[ logout ]',
-            u'url': u'%s://%s%s' % (url_scheme, url_host, reverse(u'logout_url',)) }
+            u'url': u'%s://%s%s' % (settings_app.URL_SCHEME, url_host, reverse(u'logout_url',)) }
     else:
         admin_link_dict = {
             u'text': u'[ admin ]',
-            u'url': u'%s://%s%s' % (url_scheme, url_host, reverse(u'login_url',)) }
+            u'url': u'%s://%s%s' % (settings_app.URL_SCHEME, url_host, reverse(u'login_url',)) }
     return admin_link_dict
 
 
