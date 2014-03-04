@@ -20,13 +20,13 @@ def iip_results( request ):
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
     if request.method == u'POST':  # form has been submitted by user
-        return render( request, u'iip_search_templates/base_extend.html', _get_POST_context(request) )
+        return render( request, u'iip_search_templates/base_extend.html', _get_POST_context(request, log_id) )
     elif request.is_ajax():  # user has requested another page, a facet, etc.
         return HttpResponse( _get_ajax_unistring(request) )
     else:  # regular GET
         return render( request, u'iip_search_templates/search_form.html', _get_GET_context(request, log_id) )
 
-def _get_POST_context( request ):
+def _get_POST_context( request, log_id ):
     """ Returns correct context for POST.
         Called by iip_results() """
     request.encoding = u'utf-8'
@@ -36,10 +36,9 @@ def _get_POST_context( request ):
         resultsPage = 1
         updated_qstring = common.updateQstring(
             initial_qstring=initial_qstring, session_authz_dict=request.session['authz_info'], log_id=common.get_log_identifier(request.session) )['modified_qstring']
-        context = common.paginateRequest(
-            qstring=updated_qstring, resultsPage=resultsPage, log_id=common.get_log_identifier(request.session) )
-        log.debug( u'in views._get_POST_context(); context is: %s' % context )
+        context = common.paginateRequest( qstring=updated_qstring, resultsPage=resultsPage, log_id=common.get_log_identifier(request.session) )
         context[u'session_authz_info'] = request.session[u'authz_info']
+        context[u'admin_link'] = common.make_admin_link( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id )
         return context
 
 def _get_ajax_unistring( request ):
@@ -75,8 +74,7 @@ def _get_GET_context( request, log_id ):
 
 def viewinscr( request, inscrid ):
     """ Handles view-inscription GET, ajax-GET, and approval-update POST. """
-    if not u'authz_info' in request.session:
-        request.session[u'authz_info'] = { u'authorized': False }
+    log_id = _setup_viewinscr( request )
     if request.method == u'POST':  # TODO: call subfunction after getting approval working again
         return _handle_viewinscr_POST( request )
     else:  # GET
@@ -84,8 +82,18 @@ def viewinscr( request, inscrid ):
         if request.is_ajax():
             return_response = _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn )
         else:
-            return_response = _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request )
+            return_response = _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, log_id )
         return return_response
+
+def _setup_viewinscr( request ):
+    """ Takes request;
+            updates session with authz_info and log_id;
+            returns log_id.
+        Called by viewinscr() """
+    if not u'authz_info' in request.session:
+        request.session[u'authz_info'] = { u'authorized': False }
+    log_id = common.get_log_identifier( request.session )
+    return log_id
 
 def _handle_viewinscr_POST( request ):
     """ Handles view-inscription POST.
@@ -138,7 +146,7 @@ def _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn ):
     return_response = HttpResponse( return_str )
     return return_response
 
-def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request ):
+def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, log_id ):
     """ Returns view-inscription response-object for regular GET.
         Called by viewinscr() """
     context = {
@@ -150,7 +158,9 @@ def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, curr
         'biblioFull': True,
         'chosen_display_status': current_display_status,
         'inscription_id': inscrid,
-        'session_authz_info': request.session['authz_info'] }
+        'session_authz_info': request.session['authz_info'],
+        'admin_link': common.make_admin_link( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id )
+        }
     return_response = render( request, u'iip_search_templates/viewinscr.html', context )
     return return_response
 
