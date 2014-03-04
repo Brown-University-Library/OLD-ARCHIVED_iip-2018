@@ -34,20 +34,17 @@
       &nbsp;&nbsp;
       <a href="http://www.brown.edu/"><img src="{{ STATIC_URL }}iip_search_app/images/brown.gif" alt="Brown University" /></a>
 		</div>
-		<div id="admin">
-		  {% if session_authz_info.authorized %}
-  		  <p>Welcome {{ session_authz_info.firstname }}</p>
-  		  <a id="admin_link" href="/cds/projects/iip/logout/">[ logout ]</a>
-  		{% else %}
-    		<a id="admin_link" href="{{ settings_app.ADMIN_PROTOCOL }}://{{ settings_app.SERVER }}/{{settings_app.PROJECT_URL_SEGMENT }}/iip/login/">[ admin ]</a>
-  		  <!-- <a id="admin_link" href="/cds/projects/iip/login/">[ admin ]</a> -->
-		  {% endif %}
-		</div>
+    <div id="admin">
+      {% if session_authz_info.authorized %}
+        <p>Welcome {{ session_authz_info.firstname }}</p>
+      {% endif %}
+      <a id="admin_link" href="{{ admin_link.url }}">{{ admin_link.text }}</a>
+    </div>
 	</div>
 </div>
 
 <div id="content">
-                {%block viewinscr %}{%endblock%}
+        {%block viewinscr %}{%endblock%}
 				{%block SearchForm%}{%endblock%}
 				{%block content%}{%endblock%}
 </div>

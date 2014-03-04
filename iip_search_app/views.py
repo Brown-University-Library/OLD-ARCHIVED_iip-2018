@@ -2,7 +2,8 @@
 
 import logging
 import solr
-from django.http import HttpResponse, HttpResponseForbidden
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response, render
 from iip_search_app import common, settings_app
 from iip_search_app.utils import ajax_snippet
@@ -23,7 +24,7 @@ def iip_results( request ):
     elif request.is_ajax():  # user has requested another page, a facet, etc.
         return HttpResponse( _get_ajax_unistring(request) )
     else:  # regular GET
-        return render( request, u'iip_search_templates/search_form.html', _get_GET_context(request) )
+        return render( request, u'iip_search_templates/search_form.html', _get_GET_context(request, log_id) )
 
 def _get_POST_context( request ):
     """ Returns correct context for POST.
@@ -54,20 +55,35 @@ def _get_ajax_unistring( request ):
     return_str = ajax_snippet.render_block_to_string(u'iip_search_templates/base_extend.html', u'content', context)
     return unicode( return_str )
 
-def _get_GET_context( request ):
+def _get_GET_context( request, log_id ):
     """ Returns correct context for GET.
         Called by iip_results() """
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
-    log.debug( u'in views._get_GET_context(); about to instantiate form' )
     form = SearchForm()  # an unbound form
-    log.debug( u'in views._get_GET_context(); form instantiated' )
     context = {
         u'form': form,
         u'session_authz_info': request.session[u'authz_info'],
-        u'settings_app': settings_app }
+        u'settings_app': settings_app,
+        u'admin_link': common.make_admin_link( session_authz_dict=request.session[u'authz_info'], url_scheme=request.META[u'wsgi.url_scheme'], url_host=request.get_host(), log_id=log_id )
+        }
     log.debug( u'in views._get_GET_context(); context, %s' % context )
     return context
+
+# def _get_GET_context( request ):
+#     """ Returns correct context for GET.
+#         Called by iip_results() """
+#     if not u'authz_info' in request.session:
+#         request.session[u'authz_info'] = { u'authorized': False }
+#     log.debug( u'in views._get_GET_context(); about to instantiate form' )
+#     form = SearchForm()  # an unbound form
+#     log.debug( u'in views._get_GET_context(); form instantiated' )
+#     context = {
+#         u'form': form,
+#         u'session_authz_info': request.session[u'authz_info'],
+#         u'settings_app': settings_app }
+#     log.debug( u'in views._get_GET_context(); context, %s' % context )
+#     return context
 
 
 ## view inscription ##
@@ -154,22 +170,19 @@ def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, curr
     return return_response
 
 
-
-
 ## login ##
 
 def login( request ):
     """ Takes shib-eppn or 'dev_auth_hack' parameter (if enabled for non-shibbolized development) and checks it agains settings list of LEGIT_ADMINS. """
-    return HttpResponse( u'login not yet enabled' )
     ## init
     log_id = common.get_log_identifier( request.session )
     log.info( u'in views.login(); id, %s; starting' % log_id )
     request.session['authz_info'] = { 'authorized': False }
     ## checks
-    if _check_shib( request ) == False:
-        _check_dev_auth_hack( request )
+    if _check_shib( request, log_id ) == False:
+        _check_dev_auth_hack( request, log_id )
     ## response
-    response = _make_response( request )
+    response = _make_response( request, log_id )
     return response
 
 def _check_shib( request, log_id ):
@@ -191,8 +204,11 @@ def _check_dev_auth_hack( request, log_id ):
         Called by login() """
     log.info( u'in views._check_dev_auth_hack(); id, %s; starting' % log_id )
     if 'dev_auth_hack' in request.GET and settings_app.DEV_AUTH_HACK == 'enabled':
+        log.info( u'in views._check_dev_auth_hack(); id, %s; dev_auth_hack exists and is enabled' % log_id )
         if request.GET['dev_auth_hack'] in settings_app.LEGIT_ADMINS:
-            request.session['authz_info'] = { 'authorized': True, 'firstname': 'birkin' }
+            log.info( u'in views._check_dev_auth_hack(); id, %s; param is a legit-admin' % log_id )
+            request.session['authz_info'] = { 'authorized': True, 'firstname': request.GET['dev_auth_hack'] }
+            log.info( u'in views._check_dev_auth_hack(); id, %s; session authorization to True' % log_id )
     return
 
 def _make_response( request, log_id ):
@@ -205,13 +221,25 @@ def _make_response( request, log_id ):
         if 'next' in request.GET:
           response = HttpResponseRedirect( request.GET['next'] )
         else:
-          redirect_url = '/%s/iip/search/' % settings_app.PROJECT_URL_SEGMENT
-          response = HttpResponseRedirect( redirect_url )
+            redirect_url = u'%s://%s%s' % (
+                request.META[u'wsgi.url_scheme'], request.get_host(), reverse(u'search_url',) )
+        response = HttpResponseRedirect( redirect_url )
     else:
         response = HttpResponseForbidden( '403 / Forbidden; unauthorized user' )
     return response
 
 
+## logout ###
+
+def logout( request ):
+    """ Removes session-based authentication. """
+    request.session[u'authz_info'] = { u'authorized': False }
+    if u'next' in request.GET:
+        redirect_url = request.GET[u'next']
+    else:
+        redirect_url = u'%s://%s%s' % (
+            request.META[u'wsgi.url_scheme'], request.get_host(), reverse(u'search_url',) )
+    return HttpResponseRedirect( redirect_url )
 
 
 ## testing ##
