@@ -2,7 +2,7 @@
 
 import pprint
 import solr
-from iip_search_app import common, settings_app
+from iip_search_app import common, models, settings_app
 from django.test import TestCase
 
 
@@ -103,3 +103,16 @@ class CommonTest( TestCase ):
         self.assertEqual(
             {'modified_qstring': u'foo'},
             common.updateQstring(initial_qstring, session_authz_dict, log_identifier) )
+
+
+class ProcessorTest( TestCase ):
+    """ Tests functions in 'models.py' Processor() """
+
+    def test_process_file( self ):
+        """ Tests keys. """
+        from models import Processor
+        p = Processor()
+        self.assertEqual(
+            [u'a__svn_export', u'b__grab_source_xml', u'c__run_munger', u'd__make_initial_solr_doc', u'e__update_display_facet', u'f__post_to_solr'],
+            sorted( p.process_file(u'dummy_id').keys() )
+            )
