@@ -1,9 +1,18 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 
 class Processor( object ):
     """ Container for various tasks involved in processing inscription metadata.
         (non-django, plain-python model) """
+
+    def __init__( self ):
+        """ Settings """
+        self.TEMP_STDOUT_PATH = unicode( os.environ.get(u'IIP_SEARCH__TEMP_STDOUT_PATH') )
+        self.TEMP_STDERR_PATH = unicode( os.environ.get(u'IIP_SEARCH__TEMP_STDERR_PATH') )
+        self.VC_XML_URL = unicode( os.environ.get(u'IIP_SEARCH__VC_XML_URL') )  # version control url
+        self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
 
     def process_file( self, file_id, current_display_facet=None ):
         """ Takes file_id string;
@@ -20,14 +29,14 @@ class Processor( object ):
                 update-all-files script (current_display_facet looked up and passed in if available),
                 github commit hook (current_display_facet looked up and passed in if available) """
         process_dict = {
-            u'a__svn_export': {u'status': u'', u'data': u''},
+            u'a__grab_latest_file': {u'status': u'', u'data': u''},
             u'b__grab_source_xml': {u'status': u'', u'data': u''},
             u'c__run_munger': {u'status': u'', u'data': u''},
             u'd__make_initial_solr_doc': {u'status': u'', u'data': u''},
             u'e__update_display_facet': {u'status': u'', u'data': u''},
             u'f__post_to_solr': {u'status': u'', u'data': u''},
             }
-        process_dict[u'a__svn_export'] = self.run_svn_export(
+        process_dict[u'a__grab_latest_file'] = self.grab_latest_file(
             file_id )
         process_dict[u'b__grab_source_xml'] = self.grab_original_xml(
             file_id )
@@ -43,43 +52,69 @@ class Processor( object ):
 
     ## helpers for above ##
 
-    def run_svn_export( self, file_id ):
+    def grab_latest_file( self, file_id ):
         '''
         - Purpose: to execute an svn export command on given svn-repository file and return output.
         - Called by: script__detect_new_files
         '''
-        try:
-            import subprocess
-            updateLog( '- in common.runSvnExport(); file_url is: %s; destination_path is: %s' % ( file_url, destination_path ), log_identifier )
-            ## open temp files
-            f_stdout = open( settings_app.SCRIPT_TEMP_STDOUT_PATH, 'w' )
-            f_stderr = open( settings_app.SCRIPT_TEMP_STDERR_PATH, 'w' )
-            f_stdout.write( '' )
-            f_stderr.write( '' )
-            ## make call
-            subprocess.call( ['svn', 'export', file_url, destination_path], stdout=f_stdout, stderr=f_stderr )
-            ## populate output
-            f_stdout.close()
-            f_stderr.close()
-            f_stdout = open( settings_app.SCRIPT_TEMP_STDOUT_PATH, 'r' )
-            f_stderr = open( settings_app.SCRIPT_TEMP_STDERR_PATH, 'r' )
-            svn_stdout = f_stdout.readlines()
-            svn_stderr = f_stderr.readlines()
-            f_stdout.close()
-            f_stderr.close()
-            return_dict = {
-                'stderr': svn_stderr,
-                'stdout': svn_stdout,
-                'submitted_file_url': file_url,
-                'submitted_destination_path': destination_path }
-            updateLog( '- in common.runSvnExport(); return_dict is: %s' % return_dict, log_identifier )
-            return return_dict
-        except Exception, e:
-            # print '- simple e is: %s' % e
-            message = makeErrorString()
-            updateLog( '- in common.runSvnExport(); error: %s' % message, log_identifier, message_importance='high' )
-            return { 'error_message': message }
-        # end def runSvnExport()
+        import subprocess
+        ## open temp files
+        f_stdout = open( self.TEMP_STDOUT_PATH, u'w' )
+        f_stderr = open( self.TEMP_STDERR_PATH, u'w' )
+        f_stdout.write( u'' )
+        f_stderr.write( u'' )
+        ## make call
+        file_url = u'%s/%s.xml' % ( self.VC_XML_URL, file_id )
+        destination_path = u'%s/%s.xml' % ( self.XML_DIR_PATH, file_id )
+        subprocess.call( [u'svn', u'export', u'--force', file_url, destination_path], stdout=f_stdout, stderr=f_stderr )
+        ## populate output
+        f_stdout.close()
+        f_stderr.close()
+        f_stdout = open( self.TEMP_STDOUT_PATH, u'r' )
+        f_stderr = open( self.TEMP_STDERR_PATH, u'r' )
+        var_stdout = f_stdout.readlines()
+        var_stderr = f_stderr.readlines()
+        f_stdout.close()
+        f_stderr.close()
+        return_dict = {
+            u'stderr': var_stderr,
+            u'stdout': var_stdout,
+            u'submitted_file_id': file_id,
+            u'submitted_vc_url': file_url,
+            u'submitted_destination_path': destination_path }
+        return return_dict
+
+    # def grab_latest_file( self, file_id ):
+    #     '''
+    #     - Purpose: to execute an svn export command on given svn-repository file and return output.
+    #     - Called by: script__detect_new_files
+    #     '''
+    #     import subprocess
+    #     ## open temp files
+    #     f_stdout = open( self.TEMP_STDOUT_PATH, 'w' )
+    #     f_stderr = open( self.TEMP_STDERR_PATH, 'w' )
+    #     f_stdout.write( '' )
+    #     f_stderr.write( '' )
+    #     ## make call
+    #     file_url = '%s/%s.xml' % ( self.VC_XML_URL, file_id )
+    #     destination_path = '%s/%s.xml' % ( self.XML_DIR_PATH, file_id )
+    #     subprocess.call( ['svn', 'export', '--force', file_url, destination_path], stdout=f_stdout, stderr=f_stderr )
+    #     ## populate output
+    #     f_stdout.close()
+    #     f_stderr.close()
+    #     f_stdout = open( self.TEMP_STDOUT_PATH, 'r' )
+    #     f_stderr = open( self.TEMP_STDERR_PATH, 'r' )
+    #     var_stdout = f_stdout.readlines()
+    #     var_stderr = f_stderr.readlines()
+    #     f_stdout.close()
+    #     f_stderr.close()
+    #     return_dict = {
+    #         'stderr': var_stderr,
+    #         'stdout': var_stdout,
+    #         'submitted_file_id': file_id,
+    #         'submitted_vc_url': file_url,
+    #         'submitted_destination_path': destination_path }
+    #     return return_dict
 
     def grab_original_xml( self, file_id ):
         try:

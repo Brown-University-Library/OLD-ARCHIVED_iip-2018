@@ -108,11 +108,28 @@ class CommonTest( TestCase ):
 class ProcessorTest( TestCase ):
     """ Tests functions in 'models.py' Processor() """
 
-    def test_process_file( self ):
-        """ Tests keys. """
+    # def test_process_file__check_keys( self ):
+    #     """ Tests keys. """
+    #     from models import Processor
+    #     p = Processor()
+    #     self.assertEqual(
+    #         [u'a__svn_export', u'b__grab_source_xml', u'c__run_munger', u'd__make_initial_solr_doc', u'e__update_display_facet', u'f__post_to_solr'],
+    #         sorted(p.process_file(u'dummy_id').keys()) )
+
+    def test_grab_latest_file( self ):
+        """ Tests keys; no-errors; and success-message. """
         from models import Processor
         p = Processor()
+        data_dict = p.grab_latest_file( file_id=u'beth0282' )
         self.assertEqual(
-            [u'a__svn_export', u'b__grab_source_xml', u'c__run_munger', u'd__make_initial_solr_doc', u'e__update_display_facet', u'f__post_to_solr'],
-            sorted( p.process_file(u'dummy_id').keys() )
-            )
+            [u'stderr', u'stdout', u'submitted_destination_path', u'submitted_file_id', u'submitted_vc_url'],
+            sorted(data_dict.keys()) )
+        self.assertEqual(
+            [],
+            data_dict[u'stderr'] )
+        self.assertEqual(
+            True,
+            u'Export complete' in data_dict[u'stdout'][1] )
+
+
+# eof
