@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import os
+import os, subprocess
 
 
 class Processor( object ):
     """ Container for various tasks involved in processing inscription metadata.
-        (non-django, plain-python model) """
+        Non-django, plain-python model.
+        No dango dependencies, including settings. """
 
     def __init__( self ):
-        """ Settings """
+        """ Settings. """
         self.TEMP_STDOUT_PATH = unicode( os.environ.get(u'IIP_SEARCH__TEMP_STDOUT_PATH') )
         self.TEMP_STDERR_PATH = unicode( os.environ.get(u'IIP_SEARCH__TEMP_STDERR_PATH') )
         self.VC_XML_URL = unicode( os.environ.get(u'IIP_SEARCH__VC_XML_URL') )  # version control url
@@ -21,13 +22,13 @@ class Processor( object ):
                 Runs munger,
                 Runs xslt to create solr-doc,
                 Updates solr-doc display facet,
-                Posts to solr;
-            Returns processing dict;
+                Posts to solr.
+            Returns processing dict.
             Called by (eventually)
                 views.viewinscr() subfunction via logged-in user (current_display_facet passed in),
                 update-new-files script (current_display_facet = None),
                 update-all-files script (current_display_facet looked up and passed in if available),
-                github commit hook (current_display_facet looked up and passed in if available) """
+                github commit hook (current_display_facet looked up and passed in if available). """
         process_dict = {
             u'a__grab_latest_file': {u'status': u'', u'data': u''},
             u'b__grab_source_xml': {u'status': u'', u'data': u''},
@@ -53,29 +54,16 @@ class Processor( object ):
     ## helpers for above ##
 
     def grab_latest_file( self, file_id ):
-        '''
-        - Purpose: to execute an svn export command on given svn-repository file and return output.
-        - Called by: script__detect_new_files
-        '''
-        import subprocess
-        ## open temp files
-        f_stdout = open( self.TEMP_STDOUT_PATH, u'w' )
-        f_stderr = open( self.TEMP_STDERR_PATH, u'w' )
-        f_stdout.write( u'' )
-        f_stderr.write( u'' )
-        ## make call
-        file_url = u'%s/%s.xml' % ( self.VC_XML_URL, file_id )
-        destination_path = u'%s/%s.xml' % ( self.XML_DIR_PATH, file_id )
+        """ Takes file_id string;
+                Runs an svn-export.
+                Returns output dict.
+            Called by process_file()
+            Note: no user/pass required; works after manually running svn command once. """
+        ## setup
+        ( f_stdout, f_stderr, file_url, destination_path ) = self._setup_grab_files( file_id )
         subprocess.call( [u'svn', u'export', u'--force', file_url, destination_path], stdout=f_stdout, stderr=f_stderr )
         ## populate output
-        f_stdout.close()
-        f_stderr.close()
-        f_stdout = open( self.TEMP_STDOUT_PATH, u'r' )
-        f_stderr = open( self.TEMP_STDERR_PATH, u'r' )
-        var_stdout = f_stdout.readlines()
-        var_stderr = f_stderr.readlines()
-        f_stdout.close()
-        f_stderr.close()
+        ( f_stdout, f_stderr, var_stdout, var_stderr ) = self._prep_grab_output( f_stdout, f_stderr )
         return_dict = {
             u'stderr': var_stderr,
             u'stdout': var_stdout,
@@ -84,37 +72,33 @@ class Processor( object ):
             u'submitted_destination_path': destination_path }
         return return_dict
 
-    # def grab_latest_file( self, file_id ):
-    #     '''
-    #     - Purpose: to execute an svn export command on given svn-repository file and return output.
-    #     - Called by: script__detect_new_files
-    #     '''
-    #     import subprocess
-    #     ## open temp files
-    #     f_stdout = open( self.TEMP_STDOUT_PATH, 'w' )
-    #     f_stderr = open( self.TEMP_STDERR_PATH, 'w' )
-    #     f_stdout.write( '' )
-    #     f_stderr.write( '' )
-    #     ## make call
-    #     file_url = '%s/%s.xml' % ( self.VC_XML_URL, file_id )
-    #     destination_path = '%s/%s.xml' % ( self.XML_DIR_PATH, file_id )
-    #     subprocess.call( ['svn', 'export', '--force', file_url, destination_path], stdout=f_stdout, stderr=f_stderr )
-    #     ## populate output
-    #     f_stdout.close()
-    #     f_stderr.close()
-    #     f_stdout = open( self.TEMP_STDOUT_PATH, 'r' )
-    #     f_stderr = open( self.TEMP_STDERR_PATH, 'r' )
-    #     var_stdout = f_stdout.readlines()
-    #     var_stderr = f_stderr.readlines()
-    #     f_stdout.close()
-    #     f_stderr.close()
-    #     return_dict = {
-    #         'stderr': var_stderr,
-    #         'stdout': var_stdout,
-    #         'submitted_file_id': file_id,
-    #         'submitted_vc_url': file_url,
-    #         'submitted_destination_path': destination_path }
-    #     return return_dict
+    def _setup_grab_files( self, file_id ):
+        """ Initializes temp files.
+            Returns tuple of vars.
+            Called by grab_latest_file() """
+        f_stdout = open( self.TEMP_STDOUT_PATH, u'w' )
+        f_stderr = open( self.TEMP_STDERR_PATH, u'w' )
+        f_stdout.write( u'' )
+        f_stderr.write( u'' )
+        file_url = u'%s/%s.xml' % ( self.VC_XML_URL, file_id )
+        destination_path = u'%s/%s.xml' % ( self.XML_DIR_PATH, file_id )
+        return ( f_stdout, f_stderr, file_url, destination_path )
+
+    def _prep_grab_output( self, f_stdout, f_stderr ):
+        """ Closes files and sets return vars;
+            Returns tuple of vars.
+            Called by grab_latest_file() """
+        f_stdout.close()
+        f_stderr.close()
+        f_stdout = open( self.TEMP_STDOUT_PATH, u'r' )
+        f_stderr = open( self.TEMP_STDERR_PATH, u'r' )
+        var_stdout = f_stdout.readlines()
+        var_stderr = f_stderr.readlines()
+        f_stdout.close()
+        f_stderr.close()
+        return ( f_stdout, f_stderr, var_stdout, var_stderr )
+
+    ##
 
     def grab_original_xml( self, file_id ):
         try:
@@ -130,6 +114,8 @@ class Processor( object ):
             message = common.makeErrorString()
             self.problem_log = smart_unicode( message )
             self.save()
+
+    ##
 
     def run_munger( self, source_xml ):
         try:
@@ -192,6 +178,8 @@ class Processor( object ):
             self.save()
         # end def runMunger()
 
+    ##
+
     def make_initial_solr_doc( self, munged_xml ):
         '''
         Applies the iip munged-data-to-solrdoc stylesheet to create the solrdoc.
@@ -226,6 +214,8 @@ class Processor( object ):
             self.problem_log = smart_unicode( message )
             self.save()
 
+    ##
+
     def update_display_facet( self, file_id, initial_solr_xml, current_display_facet ):
         '''
         - Purpose: Takes solr doc and adds a 'display_status' field.
@@ -248,6 +238,8 @@ class Processor( object ):
             message = common.makeErrorString()
             self.problem_log = smart_unicode( message )
             self.save()
+
+    ##
 
     def updateSolr( self, file_id, updated_solr_xml ):
         '''
@@ -280,3 +272,5 @@ class Processor( object ):
     #             self.inscription_id = segment[0:-4]
     #     except Exception, e:
     #         self.problem_log = smart_unicode(e)
+
+    ## end class Processor()
