@@ -183,7 +183,7 @@ class Processor( object ):
             u'%s/Final/%s' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name ),
             u'%s/Stripped/%s.cloned.decomposed.stripped.xml' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
             ]
-        print u'files_to_delete...'; pprint.pprint( files_to_delete )
+        # print u'files_to_delete...'; pprint.pprint( files_to_delete )
         for entry in files_to_delete:
             assert os.path.exists(entry) == True, os.path.exists(entry)
             os.remove( entry )
