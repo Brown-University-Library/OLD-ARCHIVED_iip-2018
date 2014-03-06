@@ -73,7 +73,8 @@ class Processor( object ):
         return return_dict
 
     def _setup_grab_files( self, file_id ):
-        """ Initializes temp files.
+        """ Takes file_id string.
+            Initializes temp files.
             Returns tuple of vars.
             Called by grab_latest_file() """
         f_stdout = open( self.TEMP_STDOUT_PATH, u'w' )
@@ -101,19 +102,20 @@ class Processor( object ):
     ##
 
     def grab_original_xml( self, file_id ):
-        try:
-            assert type(self.filepath) == unicode, type(self.filepath)
-            f = open( self.filepath )
-            xml_string = f.read()
-            f.close()
-            assert type(xml_string) == str, type(xml)
-            xml_ustring = xml_string.decode( u'utf-8' )
-            self.xml_original = xml_ustring
-            self.save()
-        except:
-            message = common.makeErrorString()
-            self.problem_log = smart_unicode( message )
-            self.save()
+        """ Takes file_id string.
+            Returns xml file in return_dict.
+            Called by process_file(). """
+        file_path = u'%s/%s.xml' % ( self.XML_DIR_PATH, file_id )
+        with open( file_path ) as f:
+            xml_utf8 = f.read()
+        assert type(xml_utf8) == str, type(xml_utf8)
+        xml = xml_utf8.decode( u'utf-8' )
+        return_dict = {
+            u'submitted_file_id': file_id,
+            u'file_path': file_path,
+            u'xml': xml
+            }
+        return return_dict
 
     ##
 

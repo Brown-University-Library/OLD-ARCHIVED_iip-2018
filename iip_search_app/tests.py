@@ -4,6 +4,7 @@ import pprint
 import solr
 from iip_search_app import common, models, settings_app
 from django.test import TestCase
+from models import Processor
 
 
 class CommonTest( TestCase ):
@@ -104,6 +105,47 @@ class CommonTest( TestCase ):
             {'modified_qstring': u'foo'},
             common.updateQstring(initial_qstring, session_authz_dict, log_identifier) )
 
+    def test_validate_xml( self ):
+        """ Tests validation. """
+        schema = u"""<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xsd:element name="a" type="AType"/>
+    <xsd:complexType name="AType">
+        <xsd:sequence>
+            <xsd:element name="b" type="xsd:string" />
+        </xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>"""
+        ## valid
+        xml = u"""<?xml version="1.0" encoding="utf-8"?><a><b></b></a>"""
+        data_dict = common.validate_xml( xml=xml, schema=schema )
+        self.assertEqual(
+            True,
+            data_dict[u'validate_result'] )
+        ## valid
+        xml = u"""<?xml version="1.0" encoding="utf-8"?><a><c></c></a>"""
+        data_dict = common.validate_xml( xml=xml, schema=schema )
+        self.assertEqual(
+            False,
+            data_dict[u'validate_result'] )
+
+    def test_check_xml_wellformedness(self):
+        """ Tests that xml is well-formed.
+            TODO: eliminate this test and the code once there's a schema, and instead use validate_xml() """
+        ## good
+        xml = u"""<?xml version="1.0" encoding="utf-8"?><a><b></b></a>"""
+        data_dict = common.check_xml_wellformedness( xml )
+        self.assertEqual(
+            True,
+            data_dict[u'well_formed'] )
+        ## bad
+        xml = u"""<a><b><b></a>"""
+        data_dict = common.check_xml_wellformedness( xml )
+        self.assertEqual(
+            False,
+            data_dict[u'well_formed'] )
+
+    ## end class Common()
+
 
 class ProcessorTest( TestCase ):
     """ Tests functions in 'models.py' Processor() """
@@ -118,7 +160,6 @@ class ProcessorTest( TestCase ):
 
     def test_grab_latest_file( self ):
         """ Tests keys; no-errors; and success-message. """
-        from models import Processor
         p = Processor()
         data_dict = p.grab_latest_file( file_id=u'beth0282' )
         self.assertEqual(
@@ -130,6 +171,22 @@ class ProcessorTest( TestCase ):
         self.assertEqual(
             True,
             u'Export complete' in data_dict[u'stdout'][1] )
+
+    def test_grab_original_xml( self ):
+        """ Tests for well-formed xml and type of returned string.
+            TODO: update to check for _valid_ xml once I have access to a schema. """
+        p = Processor()
+        grab_dict = p.grab_original_xml( file_id=u'beth0282' )
+        ## type check
+        self.assertEqual(
+            unicode,
+            type(grab_dict[u'xml']) )
+        ## well-formedness check
+        well_formedness_dict = common.check_xml_wellformedness( xml=grab_dict[u'xml'] )
+        self.assertEqual(
+            True,
+            well_formedness_dict[u'well_formed']
+            )
 
 
 # eof
