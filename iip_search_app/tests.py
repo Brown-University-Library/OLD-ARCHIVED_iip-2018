@@ -188,5 +188,22 @@ class ProcessorTest( TestCase ):
             well_formedness_dict[u'well_formed']
             )
 
+    def test_run_munger( self ):
+        """ Tests for well-formed xml and type of returned string.
+            TODO: update to check for _valid_ xml once I have access to a schema. """
+        p = Processor()
+        grab_dict = p.grab_original_xml( file_id=u'beth0282' )
+        munger_dict = p.run_munger( source_xml=grab_dict[u'xml'] )
+        ## type check
+        self.assertEqual(
+            unicode,
+            type(munger_dict[u'munged_xml']) )
+        ## well-formedness check
+        well_formedness_dict = common.check_xml_wellformedness( xml=munger_dict[u'munged_xml'] )
+        self.assertEqual(
+            True,
+            well_formedness_dict[u'well_formed']
+            )
+
 
 # eof
