@@ -2,8 +2,11 @@
 
 import logging, pprint, random, re
 import solr
+from StringIO import StringIO
 from django.core.urlresolvers import reverse
 from iip_search_app import settings_app
+from lxml import etree
+
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +21,8 @@ def facetResults( facet ):
     except Exception as e:
         log.error( u'in common.facetResults(); exception, %s' % unicode(repr(e)) )
 
+
+## fetchBiblio
 
 def fetchBiblio( q_results, target ):
     """ Takes a solr.core.Result and a target-string,
@@ -51,6 +56,8 @@ def _get_biblio_results( r, target ):
             bqry['n'] = w['n']
             biblios.append(bqry)
     return biblios
+
+##
 
 
 def get_log_identifier( request_session=None ):
@@ -94,6 +101,8 @@ def queryCleanup(qstring):
     qstring = re.sub(r' (\d+)\b(?!\sBCE)', r' \1 CE', qstring)
     return qstring
 
+
+## paginateRequest
 
 def paginateRequest( qstring, resultsPage, log_id):
     """ Executes solr query on qstring and returns solr.py paginator object, and paginator.page object for given page, and facet-count dict.
@@ -154,6 +163,8 @@ def _run_paginator_facet_counts( fq ):
         f    = ''
     return f
 
+##
+
 
 def updateQstring( initial_qstring, session_authz_dict, log_id ):
     """ Adds 'approved' display-status limit to solr query string if user is *not* logged in
@@ -167,3 +178,59 @@ def updateQstring( initial_qstring, session_authz_dict, log_id ):
     else:
         qstring = initial_qstring
     return { 'modified_qstring': qstring }
+
+
+## validate_xml
+
+def validate_xml( xml=None, schema=None, xml_path=None, schema_path=None ):
+    """ Takes xml file or path, and schema file or path;
+            Validates;
+            Returns result as boolean in dict.
+        Called by: nothing yet.  :(  I need a schema!
+        TODO: add exception handling -- document may not be, eg, well-formed. """
+    ( the_xml, the_schema ) = _setup_validate_xml( xml, schema, xml_path, schema_path )
+    log.debug( u'in common.validate_xml(); the_xml, `%s`; the_schema, `%s`' % (the_xml, the_schema) )
+    schema_file = StringIO( the_schema.encode(u'utf-8') )  # _str_ required if xml includes an encoding-declaration
+    schema_doc = etree.parse( schema_file )
+    schema_object = etree.XMLSchema( schema_doc )
+    xml_file = StringIO( the_xml.encode(u'utf-8') )
+    xml_doc = etree.parse( xml_file )
+    boolean_result = schema_object.validate( xml_doc )
+    return {
+        u'xml': xml, u'schema': schema, u'xml_path': xml_path, u'schema_path': schema_path, u'validate_result': boolean_result
+        }
+
+def _setup_validate_xml( xml, schema, xml_path, schema_path ):
+    """ Takes xml file or path, and schema file or path;
+            Returns xml unicode-string and schema unicode-string.
+        Called by validate_xml() . """
+    if xml == None:
+        with open( xml_path ) as f:
+            xml_utf8 = f.read()
+            xml = xml_utf8.decode(u'utf-8')
+    if schema == None:
+        with open( schema_path ) as f:
+            xml_utf8 = f.read()
+            schema = xml_utf8.decode(u'utf-8')
+    return ( xml, schema )
+
+##
+
+
+def check_xml_wellformedness( xml ):
+    """ Takes xml unicode string;
+            Attempts to docify it;
+            Returns result as boolean in dict.
+        Called by models.Processor.grab_original_xml() until there's a schema to validate against. """
+    assert type( xml ) == unicode
+    check_result = False
+    try:
+        etree_element = etree.fromstring( xml.encode(u'utf-8') )  # _str_ required if xml includes an encoding-declaration
+        check_result = True
+    except Exception as e:
+        log.error( u'in common.check_xml_wellformedness(); exception, %s; xml, %s' % (unicode(repr(e)), xml) )
+    return {
+        u'xml': xml, u'well_formed': check_result }
+
+
+## eof
