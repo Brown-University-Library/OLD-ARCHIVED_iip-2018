@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os, subprocess
+import datetime, os, pprint, random, subprocess
 
 
 class Processor( object ):
@@ -10,20 +10,22 @@ class Processor( object ):
 
     def __init__( self ):
         """ Settings. """
-        self.TEMP_STDOUT_PATH = unicode( os.environ.get(u'IIP_SEARCH__TEMP_STDOUT_PATH') )
-        self.TEMP_STDERR_PATH = unicode( os.environ.get(u'IIP_SEARCH__TEMP_STDERR_PATH') )
+        self.TEMPFILES_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__TEMPFILES_DIR_PATH') )  # for stdout and stderr
         self.VC_XML_URL = unicode( os.environ.get(u'IIP_SEARCH__VC_XML_URL') )  # version control url
         self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
+        self.MUNGER_SCRIPT_DIRECTORY = unicode( os.environ.get(u'IIP_SEARCH__MUNGER_SCRIPT_DIRECTORY') )
+        self.MUNGER_SCRIPT_XML_DIRECTORY = unicode( os.environ.get(u'IIP_SEARCH__MUNGER_SCRIPT_XML_DIRECTORY') )
+        self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY = unicode( os.environ.get(u'IIP_SEARCH__MUNGER_SCRIPT_MUNGED_XML_DIRECTORY') )
 
     def process_file( self, file_id, current_display_facet=None ):
-        """ Takes file_id string;
+        """ Takes file_id string.
                 Runs svn-export on file,
                 Grabs source xml,
                 Runs munger,
                 Runs xslt to create solr-doc,
                 Updates solr-doc display facet,
                 Posts to solr.
-            Returns processing dict.
+                Returns processing dict.
             Called by (eventually)
                 views.viewinscr() subfunction via logged-in user (current_display_facet passed in),
                 update-new-files script (current_display_facet = None),
@@ -54,65 +56,82 @@ class Processor( object ):
     ## helpers for above ##
 
     def grab_latest_file( self, file_id ):
-        """ Takes file_id string;
+        """ Takes file_id string.
                 Runs an svn-export.
                 Returns output dict.
-            Called by process_file()
+            Called by process_file().
             Note: no user/pass required; works after manually running svn command once. """
         ## setup
-        ( f_stdout, f_stderr, file_url, destination_path ) = self._setup_grab_files( file_id )
-        subprocess.call( [u'svn', u'export', u'--force', file_url, destination_path], stdout=f_stdout, stderr=f_stderr )
+        ( f_stdout, f_stderr, file_url, xml_destination_path, temp_stdout_filepath, temp_stderr_filepath ) = self._setup_grab_files( file_id )
+        ## work
+        subprocess.call( [u'svn', u'export', u'--force', file_url, xml_destination_path], stdout=f_stdout, stderr=f_stderr )
         ## populate output
-        ( f_stdout, f_stderr, var_stdout, var_stderr ) = self._prep_grab_output( f_stdout, f_stderr )
+        ( f_stdout, f_stderr, var_stdout, var_stderr ) = self._prep_grab_output( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath )
+        ## return
         return_dict = {
-            u'stderr': var_stderr,
-            u'stdout': var_stdout,
-            u'submitted_file_id': file_id,
-            u'submitted_vc_url': file_url,
-            u'submitted_destination_path': destination_path }
+            u'stderr': var_stderr, u'stdout': var_stdout,
+            u'submitted_file_id': file_id, u'submitted_vc_url': file_url, u'submitted_destination_path': xml_destination_path }
         return return_dict
 
     def _setup_grab_files( self, file_id ):
         """ Takes file_id string.
-            Initializes temp files.
-            Returns tuple of vars.
+                Initializes temp files.
+                Returns tuple of vars.
             Called by grab_latest_file() """
-        f_stdout = open( self.TEMP_STDOUT_PATH, u'w' )
-        f_stderr = open( self.TEMP_STDERR_PATH, u'w' )
+        ( temp_stdout_filepath, temp_stderr_filepath ) = ( self._make_temp_filepath(u'stdout_vcs'), self._make_temp_filepath(u'stderr_vcs') )
+        f_stdout = open( temp_stdout_filepath, u'w' )
+        f_stderr = open( temp_stderr_filepath, u'w' )
         f_stdout.write( u'' )
         f_stderr.write( u'' )
         file_url = u'%s/%s.xml' % ( self.VC_XML_URL, file_id )
-        destination_path = u'%s/%s.xml' % ( self.XML_DIR_PATH, file_id )
-        return ( f_stdout, f_stderr, file_url, destination_path )
+        xml_destination_path = u'%s/%s.xml' % ( self.XML_DIR_PATH, file_id )
+        return ( f_stdout, f_stderr, file_url, xml_destination_path, temp_stdout_filepath, temp_stderr_filepath )
 
-    def _prep_grab_output( self, f_stdout, f_stderr ):
-        """ Closes files and sets return vars;
-            Returns tuple of vars.
+    def _prep_grab_output( self, f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath ):
+        """ Takes file-objects and path strings.
+                Closes files, sets return vars, deletes temp files.
+                Returns tuple of vars.
             Called by grab_latest_file() """
         f_stdout.close()
         f_stderr.close()
-        f_stdout = open( self.TEMP_STDOUT_PATH, u'r' )
-        f_stderr = open( self.TEMP_STDERR_PATH, u'r' )
+        f_stdout = open( temp_stdout_filepath, u'r' )
+        f_stderr = open( temp_stderr_filepath, u'r' )
         var_stdout = f_stdout.readlines()
         var_stderr = f_stderr.readlines()
         f_stdout.close()
         f_stderr.close()
+        os.remove( temp_stdout_filepath )
+        os.remove( temp_stderr_filepath )
         return ( f_stdout, f_stderr, var_stdout, var_stderr )
+
+    ##
+
+
+    def _make_temp_filepath( self, prefix ):
+        """ Takes prefix string.
+                Creates file name based on prefix, date, and random number.
+                Returns created file name string.
+            Called by _setup_grab_files(), and eventually a munger subfunction. """
+        now_string = unicode( datetime.datetime.now() ).replace( u' ', u'_' )
+        random_string = random.randint( 1000,9999 )
+        filepath = u'%s/%s_%s_%s' % ( self.TEMPFILES_DIR_PATH , prefix, now_string, random_string )
+        return filepath
+
 
     ##
 
     def grab_original_xml( self, file_id ):
         """ Takes file_id string.
-            Returns xml file in return_dict.
+                Returns xml file in return_dict.
             Called by process_file(). """
-        file_path = u'%s/%s.xml' % ( self.XML_DIR_PATH, file_id )
-        with open( file_path ) as f:
+        filepath = u'%s/%s.xml' % ( self.XML_DIR_PATH, file_id )
+        with open( filepath ) as f:
             xml_utf8 = f.read()
         assert type(xml_utf8) == str, type(xml_utf8)
         xml = xml_utf8.decode( u'utf-8' )
         return_dict = {
             u'submitted_file_id': file_id,
-            u'file_path': file_path,
+            u'filepath': filepath,
             u'xml': xml
             }
         return return_dict
@@ -120,64 +139,61 @@ class Processor( object ):
     ##
 
     def run_munger( self, source_xml ):
-        try:
-            import random, os, subprocess
-            assert type(settings_app.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY) == unicode, type(settings_app.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY)
-            assert type(settings_app.MUNGER_SCRIPT_XML_DIRECTORY) == unicode, type(settings_app.MUNGER_SCRIPT_XML_DIRECTORY)
-            assert type(settings_app.SCRIPT_TEMP_STDERR_PATH) == unicode, type(settings_app.SCRIPT_TEMP_STDERR_PATH)
-            assert type(settings_app.SCRIPT_TEMP_STDOUT_PATH) == unicode, type(settings_app.SCRIPT_TEMP_STDOUT_PATH)
-            assert type(self.xml_original) == unicode, type(self.xml_original)
-            ## save file w/identifier as part of name
-            file_name_root = u'FILE_%s' % random.randint(1000,9999)    # need this root part later
-            file_name = u'%s.xml' % file_name_root
-            # updateLog( '- in common.runMungerNew(); file_name is: %s' % file_name, log_identifier )
-            file_path = u'%s/%s' % ( settings_app.MUNGER_SCRIPT_XML_DIRECTORY, file_name )
-            f = open( file_path, u'w' )
-            f.write( self.xml_original.encode(u'utf-8') )
-            f.close()
-            ## call script (called script automatically saves file in various processing and a final directory)
-            current_working_directory = os.getcwd()
-            os.chdir( settings_app.MUNGER_SCRIPT_DIRECTORY )
-            var = u'1'    # days; required by script; tells script to process all files updated in last day
-            command_list = [ u'./strip.pl', var ]
-            ## open temp files
-            f_stdout = open( settings_app.SCRIPT_TEMP_STDOUT_PATH, u'w' )
-            f_stderr = open( settings_app.SCRIPT_TEMP_STDERR_PATH, u'w' )
-            f_stdout.write( u'' )
-            f_stderr.write( u'' )
-            ## run command
-            subprocess.call( command_list, stdout=f_stdout, stderr=f_stderr )
-            ## populate output
-            f_stdout.close()
-            f_stderr.close()
-            ## read output file into string
-            file_path = u'%s/%s' % ( settings_app.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY, file_name )
-            f = open( file_path )
-            munged_xml_string = f.read()
-            assert type(munged_xml_string) == str, type(munged_xml_string)
-            munged_xml_ustring = munged_xml_string.decode(u'utf-8')
-            f.close()
-            ## cleanup & return
-            files_to_delete = [
-                u'%s/%s' % ( settings_app.MUNGER_SCRIPT_XML_DIRECTORY, file_name ),
-                u'%s/%s' % ( settings_app.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY, file_name ),
-                u'%s/Cloned/%s.cloned.xml' % ( settings_app.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
-                u'%s/Copied/%s' % ( settings_app.MUNGER_SCRIPT_DIRECTORY, file_name ),
-                u'%s/Decomposed/%s.cloned.decomposed.xml' % ( settings_app.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
-                u'%s/Final/%s' % ( settings_app.MUNGER_SCRIPT_DIRECTORY, file_name ),
-                u'%s/Stripped/%s.cloned.decomposed.stripped.xml' % ( settings_app.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
-                ]
-            for entry in files_to_delete:
-                assert os.path.exists(entry) == True, os.path.exists(entry)
-                os.remove( entry )
-                assert os.path.exists(entry) == False, os.path.exists(entry)
-            os.chdir( current_working_directory )    # otherwise may affect other scripts
-            self.xml_munged = munged_xml_ustring
-            self.save()
-        except Exception, e:
-            message = common.makeErrorString()
-            self.problem_log = smart_unicode( message )
-            self.save()
+        assert type(source_xml) == unicode, type(source_xml)
+        assert type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY)
+        assert type(self.MUNGER_SCRIPT_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_XML_DIRECTORY)
+        assert type(self.TEMPFILES_DIR_PATH) == unicode, type(self.TEMPFILES_DIR_PATH)
+        ## save file w/identifier as part of name
+        file_name_root = u'FILE_%s' % random.randint(1000,9999)    # need this root part later
+        file_name = u'%s.xml' % file_name_root
+        filepath = u'%s/%s' % ( self.MUNGER_SCRIPT_XML_DIRECTORY, file_name )
+        f = open( filepath, u'w' )
+        f.write( source_xml.encode(u'utf-8') )
+        f.close()
+        ## call script (called script automatically saves file in various processing and a final directory)
+        current_working_directory = os.getcwd()
+        os.chdir( self.MUNGER_SCRIPT_DIRECTORY )
+        var = u'1'    # days; required by script; tells script to process all files updated in last day
+        command_list = [ u'./strip.pl', var ]
+        ## open temp files
+        ( temp_stdout_filepath, temp_stderr_filepath ) = ( self._make_temp_filepath(u'stdout_munger'), self._make_temp_filepath(u'stderr_munger') )
+        f_stdout = open( temp_stdout_filepath, u'w' )
+        f_stderr = open( temp_stderr_filepath, u'w' )
+        f_stdout.write( u'' )
+        f_stderr.write( u'' )
+        ## run command
+        subprocess.call( command_list, stdout=f_stdout, stderr=f_stderr )
+        ## populate output
+        f_stdout.close()
+        f_stderr.close()
+        ## read output file into string
+        filepath = u'%s/%s' % ( self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY, file_name )
+        f = open( filepath )
+        munged_xml_string = f.read()
+        assert type(munged_xml_string) == str, type(munged_xml_string)
+        munged_xml_ustring = munged_xml_string.decode(u'utf-8')
+        f.close()
+        ## cleanup & return
+        files_to_delete = [
+            u'%s/%s' % ( self.MUNGER_SCRIPT_XML_DIRECTORY, file_name ),
+            u'%s/%s' % ( self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY, file_name ),
+            u'%s/Cloned/%s.cloned.xml' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
+            u'%s/Copied/%s' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name ),
+            u'%s/Decomposed/%s.cloned.decomposed.xml' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
+            u'%s/Final/%s' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name ),
+            u'%s/Stripped/%s.cloned.decomposed.stripped.xml' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
+            ]
+        # print u'files_to_delete...'; pprint.pprint( files_to_delete )
+        for entry in files_to_delete:
+            assert os.path.exists(entry) == True, os.path.exists(entry)
+            os.remove( entry )
+            assert os.path.exists(entry) == False, os.path.exists(entry)
+        os.chdir( current_working_directory )    # otherwise may affect other scripts
+        ## return
+        return {
+            u'source_xml': source_xml,
+            u'munged_xml': munged_xml_ustring
+            }
         # end def runMunger()
 
     ##
