@@ -1,0 +1,57 @@
+
+These are the steps to getting files for XML_Files_Derived. For details on what is going on here see the STG wiki page 
+
+https://wiki.brown.edu/confluence/display/stgwiki/FGinscriptionsXmlProcessing
+
+
+1.) all commands assume you are in [PATH]/Inscriptions/Search/Admin/Unicode-strip/
+
+2.) ./clone.bash ../../../XML_Files/foo* (writes new <div> frag files to Cloned/ dir)
+
+3.) ./decompose.bash Cloned/*  (which calls ./charlint.pl)
+
+4.) ./removeDiacritics.bash Decomposed/*
+
+5.) ./finalMerge.bash ../../../XML_Files/foo*
+
+6.) rm ../../../XML_Files_Derived/*
+    cp Final/foo* ../../../XML_Files_Derived/
+
+from wiki:
+
+Processing the XML for searching
+Overview
+
+This processing takes place on the development server (currently Polo), NOT on the production server (currently Jamestown).
+
+The <div type="transcription"> is copied from the original file in [SERVER-PATH]/Inscriptions/XML_Files/ and put into [SERVER-PATH]/Inscriptions/Search/Admin/Unicode-strip/Cloned/ . Then it is run through a couple of Perl scripts that operate on the Unicode. Finally it is merged with a copy of the original XML file, so that we end up with the original file PLUS a new element <div type="simpleTranscription">. The new file is then put in [SERVER-PATH]/Inscriptions/XML_Files_Derived/.
+Sequence in detail
+
+All the commands assume you are on Polo and in [SERVER-PATH]/Inscriptions/Search/Admin/Unicode-strip/
+
+1.) Check that these four directories are present: Cloned/, Decomposed/, Stripped/, Final/.
+
+2.) ./clone.bash ../../XML_Files/*.xml (or /foo* if you only want to process a particular group of files, eg. caes*)
+
+clone.bash runs cloneDivToNewFile.xsl on all files specified; the stylesheet takes each <div type="transcription"> and copies it into Cloned/ as a <div type="simpleTranscription"> XML fragment file.
+
+3.) ./decompose.bash Cloned/*
+
+decompose.bash calls charlint.pl on the XML fragment files. WHAT DOES THIS DO? - I don't know, it changes some of the Unicode hex values, but unfortunately exactly what it is doing was never documented; most likely it takes a combined character (which is a single code-point) and de-composes it into its two-code-point equivalent - eg. the single-code-point 00EF (i+diaresis) can also be represented by the code sequence 0069 0308. NOTE charlint.pl uses the file UnicodeData.txt, so don't delete that file! The output files are put in Decomposed/
+
+4.) ./removeDiacritics.bash Decomposed/*
+
+removeDiacritics.bash calls removeDiacriticsFinal.pl on the fragment files in Decomposed. It strips out things like the Greek oxia (looks like an acute accent), and the other combining accent codes (0300, 0301, etc.). The resulting fragment files are put into Stripped/
+
+5.) ./finalMerge.bash ../../../XML_Files/*.xml
+
+finalMerge.bash runs copy.xsl on all the files in ../../../XML_Files/. It copies each file into Final/ and at the same time inserts the appropriate <div type="simpleTranscription"> from Stripped/ (it does this by having the relevant filename passed in as a parameter).
+
+6. rm ../../../XML_Files_Derived/*.xml
+mv Final/* ../../../XML_Files_Derived/
+
+lastly we move the processed files into the directory where the search function expects to find them.
+
+After completing this process, view some of the files on the web to see that they are displaying properly in browse and search modes. If you are happy with them, copy them over to the /XML_Files_Derived/ directory on the production server.
+
+

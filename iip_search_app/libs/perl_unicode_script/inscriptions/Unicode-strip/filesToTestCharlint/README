@@ -1,0 +1,4 @@
+The files in this directory were created by Syd Bauman and Peter DiCamillo to debug a problem we were having with charlint.pl when we moved Inscriptions from the old development machine (Cushing/Dev) to Polo. Basically they show that charlint.pl reads files one byte at a time, and so on Polo any Bash scripts that call it need to set the locale to "C" (otherwise the Perl on Polo will try to feed in the input file one *character* at a time).
+
+
+Paul Caton  06/27/07
