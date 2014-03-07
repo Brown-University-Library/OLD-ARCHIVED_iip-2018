@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime, os, pprint, random, subprocess
+import requests
 
 
 class Processor( object ):
@@ -16,6 +17,8 @@ class Processor( object ):
         self.MUNGER_SCRIPT_DIRECTORY = unicode( os.environ.get(u'IIP_SEARCH__MUNGER_SCRIPT_DIRECTORY') )
         self.MUNGER_SCRIPT_XML_DIRECTORY = unicode( os.environ.get(u'IIP_SEARCH__MUNGER_SCRIPT_XML_DIRECTORY') )
         self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY = unicode( os.environ.get(u'IIP_SEARCH__MUNGER_SCRIPT_MUNGED_XML_DIRECTORY') )
+        self.SOLR_DOC_STYLESHEET_PATH = unicode( os.environ.get(u'IIP_SEARCH__SOLR_DOC_STYLESHEET_PATH') )
+        self.TRANSFORMER_URL = unicode( os.environ.get(u'IIP_SEARCH__TRANSFORMER_URL') )
 
     def process_file( self, file_id, current_display_facet=None ):
         """ Takes file_id string.
@@ -106,7 +109,6 @@ class Processor( object ):
 
     ##
 
-
     def _make_temp_filepath( self, prefix ):
         """ Takes prefix string.
                 Creates file name based on prefix, date, and random number.
@@ -116,7 +118,6 @@ class Processor( object ):
         random_string = random.randint( 1000,9999 )
         filepath = u'%s/%s_%s_%s' % ( self.TEMPFILES_DIR_PATH , prefix, now_string, random_string )
         return filepath
-
 
     ##
 
@@ -139,6 +140,10 @@ class Processor( object ):
     ##
 
     def run_munger( self, source_xml ):
+        """ Takes source xml unicode string.
+                Applies perl munger.
+                Returns processed xml.
+            Called by process_file(). """
         assert type(source_xml) == unicode, type(source_xml)
         assert type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY)
         assert type(self.MUNGER_SCRIPT_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_XML_DIRECTORY)
@@ -199,38 +204,34 @@ class Processor( object ):
     ##
 
     def make_initial_solr_doc( self, munged_xml ):
-        '''
-        Applies the iip munged-data-to-solrdoc stylesheet to create the solrdoc.
-        '''
-        try:
-            import requests
-            assert type(settings_app.SOLR_DOC_STYLESHEET_PATH) == unicode, type(settings_app.SOLR_DOC_STYLESHEET_PATH)
-            assert type(settings_app.TRANSFORMER_URL) == unicode, type(settings_app.TRANSFORMER_URL)
-            assert type(self.xml_munged) == unicode, type(self.xml_munged)
-            iip_solrdoc_string = 'init'
-            ## get stylesheet
-            f = open( settings_app.SOLR_DOC_STYLESHEET_PATH )
-            stylesheet_string = f.read()
-            f.close()
-            assert type(stylesheet_string) == str, type(stylesheet_string)
-            stylesheet_ustring = stylesheet_string.decode(u'utf-8')
-            ## hit the post xslt transformer
-            url = settings_app.TRANSFORMER_URL
-            payload = {
-                u'source_string': self.xml_munged,
-                u'stylesheet_string': stylesheet_ustring }
-            headers = { u'content-type': u'text/xml; charset=utf-8' }
-            r = requests.post( url, data=payload, headers=headers )
-            self.xml_xslted = r.content.decode(u'utf-8')
-            self.save()
-        except:
-            '''
-            For reference, one possible return on error:
-            {u'solr_doc_string': u'FAILURE', u'message': "error-type - <class 'urllib2.URLError'>; error-message - <urlopen error timed out>; line-number - 249"}
-            '''
-            message = common.makeErrorString()
-            self.problem_log = smart_unicode( message )
-            self.save()
+        """ Takes munged xml unicode string.
+                Applies xsl transformation to create a solr doc.
+                Returns processed xml.
+            Called by process_file(). """
+        assert type(self.SOLR_DOC_STYLESHEET_PATH) == unicode, type(self.SOLR_DOC_STYLESHEET_PATH)
+        assert type(self.TRANSFORMER_URL) == unicode, type(self.TRANSFORMER_URL)
+        assert type(munged_xml) == unicode, type(xml_munged)
+        iip_solrdoc_string = 'init'
+        ## get stylesheet
+        f = open( self.SOLR_DOC_STYLESHEET_PATH )
+        stylesheet_string = f.read()
+        f.close()
+        assert type(stylesheet_string) == str, type(stylesheet_string)
+        stylesheet_ustring = stylesheet_string.decode(u'utf-8')
+        ## hit the post xslt transformer
+        url = self.TRANSFORMER_URL
+        payload = {
+            u'source_string': munged_xml,
+            u'stylesheet_string': stylesheet_ustring }
+        headers = { u'content-type': u'text/xml; charset=utf-8' }
+        r = requests.post( url, data=payload, headers=headers )
+        transformed_xml = r.content.decode(u'utf-8')
+        # print u'- transformed_xml, ```%s```' % transformed_xml
+        return {
+            u'initial_munged_xml': munged_xml,
+            u'stylesheet_xml': stylesheet_ustring,
+            u'transformed_xml': transformed_xml
+            }
 
     ##
 
