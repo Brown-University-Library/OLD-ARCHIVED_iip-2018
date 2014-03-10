@@ -142,7 +142,7 @@ class Processor( object ):
     def run_munger( self, source_xml ):
         """ Takes source xml unicode string.
                 Applies perl munger.
-                Returns processed xml.
+                Returns processed xml unicode string.
             Called by process_file(). """
         self._run_munger_asserts( source_xml )  # validates input-data type
         ( file_name, file_name_root ) = self._save_source_xml( source_xml )  # saves source-xml to to-be-munged directory
@@ -157,12 +157,20 @@ class Processor( object ):
             }
 
     def _run_munger_asserts( self, source_xml ):
+        """ Takes source_xml.
+                Runs type asserts.
+            Called by run_munger(). """
         assert type(source_xml) == unicode, type(source_xml)
         assert type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY)
         assert type(self.MUNGER_SCRIPT_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_XML_DIRECTORY)
         assert type(self.TEMPFILES_DIR_PATH) == unicode, type(self.TEMPFILES_DIR_PATH)
+        return
 
     def _save_source_xml( self, source_xml ):
+        """ Takes source_xml.
+                Gives it a unique filename and saves it to directory for subsequent script call.
+                Returns file_name and file_name_root strings.
+            Called by run_munger(). """
         ## save file w/identifier as part of name
         file_name_root = u'FILE_%s' % random.randint(1000,9999)    # need this root part later
         file_name = u'%s.xml' % file_name_root
@@ -173,6 +181,8 @@ class Processor( object ):
         return ( file_name, file_name_root )
 
     def _setup_munger_stdstuff( self ):
+        """ Sets up and returns stderr and stdout file-objects and paths.
+            Called by run_munger(). """
         ( temp_stdout_filepath, temp_stderr_filepath ) = ( self._make_temp_filepath(u'stdout_munger'), self._make_temp_filepath(u'stderr_munger') )
         f_stdout = open( temp_stdout_filepath, u'w' )
         f_stderr = open( temp_stderr_filepath, u'w' )
@@ -181,16 +191,23 @@ class Processor( object ):
         return ( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath )
 
     def _call_munger( self, f_stdout, f_stderr):
-        ## call script (called script automatically saves file in various processing and a final directory)
+        """ Takes stdout and stderr file-objects.
+                Sets cwd and calls perl script.
+                Returns current_working_directory.
+            Called by run_munger(). """
+        ## setup call
         current_working_directory = os.getcwd()
         os.chdir( self.MUNGER_SCRIPT_DIRECTORY )
         var = u'1'    # days; required by script; tells script to process all files updated in last day
         command_list = [ u'./strip.pl', var ]
         ## run command
-        subprocess.call( command_list, stdout=f_stdout, stderr=f_stderr )
+        subprocess.call( command_list, stdout=f_stdout, stderr=f_stderr )  # called script saves temp-files in various directories
         return current_working_directory
 
     def _close_munger_stdstuff( self, f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath ):
+        """ Takes stdout and stderr file objects and filepaths.
+                Closes and deletes them.
+            Called by run_munger(). """
         f_stdout.close()
         f_stderr.close()
         f_stdout = open( temp_stdout_filepath, u'r' )
@@ -204,6 +221,10 @@ class Processor( object ):
         return
 
     def _get_munged_xml( self, file_name ):
+        """ Takes file_name.
+                Opens and reads the munged file.
+                Returns the string.
+            Called by run_munger(). """
         filepath = u'%s/%s' % ( self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY, file_name )
         f = open( filepath )
         munged_utf8_xml = f.read()
@@ -213,6 +234,9 @@ class Processor( object ):
         return munged_xml
 
     def _delete_munger_detritus( self, file_name, file_name_root, current_working_directory ):
+        """ Takes file_name and path info and current_working_directory.
+                Deletes temp working files and resets original current_working_directory.
+            Called by run_munger(). """
         files_to_delete = [
             u'%s/%s' % ( self.MUNGER_SCRIPT_XML_DIRECTORY, file_name ),
             u'%s/%s' % ( self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY, file_name ),
