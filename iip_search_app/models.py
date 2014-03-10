@@ -144,10 +144,25 @@ class Processor( object ):
                 Applies perl munger.
                 Returns processed xml.
             Called by process_file(). """
+        self._run_munger_asserts( source_xml )  # validates input-data type
+        ( file_name, file_name_root ) = self._save_source_xml( source_xml )  # saves source-xml to to-be-munged directory
+        ( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath ) = self._setup_munger_stdstuff()
+        current_working_directory = self._call_munger( f_stdout, f_stderr )
+        self._close_munger_stdstuff( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath )
+        munged_xml = self._get_munged_xml( file_name )
+        self._delete_munger_detritus( file_name, file_name_root, current_working_directory )
+        return {
+            u'source_xml': source_xml,
+            u'munged_xml': munged_xml
+            }
+
+    def _run_munger_asserts( self, source_xml ):
         assert type(source_xml) == unicode, type(source_xml)
         assert type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY)
         assert type(self.MUNGER_SCRIPT_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_XML_DIRECTORY)
         assert type(self.TEMPFILES_DIR_PATH) == unicode, type(self.TEMPFILES_DIR_PATH)
+
+    def _save_source_xml( self, source_xml ):
         ## save file w/identifier as part of name
         file_name_root = u'FILE_%s' % random.randint(1000,9999)    # need this root part later
         file_name = u'%s.xml' % file_name_root
@@ -155,30 +170,49 @@ class Processor( object ):
         f = open( filepath, u'w' )
         f.write( source_xml.encode(u'utf-8') )
         f.close()
-        ## call script (called script automatically saves file in various processing and a final directory)
-        current_working_directory = os.getcwd()
-        os.chdir( self.MUNGER_SCRIPT_DIRECTORY )
-        var = u'1'    # days; required by script; tells script to process all files updated in last day
-        command_list = [ u'./strip.pl', var ]
-        ## open temp files
+        return ( file_name, file_name_root )
+
+    def _setup_munger_stdstuff( self ):
         ( temp_stdout_filepath, temp_stderr_filepath ) = ( self._make_temp_filepath(u'stdout_munger'), self._make_temp_filepath(u'stderr_munger') )
         f_stdout = open( temp_stdout_filepath, u'w' )
         f_stderr = open( temp_stderr_filepath, u'w' )
         f_stdout.write( u'' )
         f_stderr.write( u'' )
+        return ( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath )
+
+    def _call_munger( self, f_stdout, f_stderr):
+        ## call script (called script automatically saves file in various processing and a final directory)
+        current_working_directory = os.getcwd()
+        os.chdir( self.MUNGER_SCRIPT_DIRECTORY )
+        var = u'1'    # days; required by script; tells script to process all files updated in last day
+        command_list = [ u'./strip.pl', var ]
         ## run command
         subprocess.call( command_list, stdout=f_stdout, stderr=f_stderr )
-        ## populate output
+        return current_working_directory
+
+    def _close_munger_stdstuff( self, f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath ):
         f_stdout.close()
         f_stderr.close()
-        ## read output file into string
+        f_stdout = open( temp_stdout_filepath, u'r' )
+        f_stderr = open( temp_stderr_filepath, u'r' )
+        var_stdout = f_stdout.readlines()
+        var_stderr = f_stderr.readlines()
+        f_stdout.close()
+        f_stderr.close()
+        os.remove( temp_stdout_filepath )
+        os.remove( temp_stderr_filepath )
+        return
+
+    def _get_munged_xml( self, file_name ):
         filepath = u'%s/%s' % ( self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY, file_name )
         f = open( filepath )
-        munged_xml_string = f.read()
-        assert type(munged_xml_string) == str, type(munged_xml_string)
-        munged_xml_ustring = munged_xml_string.decode(u'utf-8')
+        munged_utf8_xml = f.read()
+        assert type(munged_utf8_xml) == str, type(munged_utf8_xml)
+        munged_xml = munged_utf8_xml.decode(u'utf-8')
         f.close()
-        ## cleanup & return
+        return munged_xml
+
+    def _delete_munger_detritus( self, file_name, file_name_root, current_working_directory ):
         files_to_delete = [
             u'%s/%s' % ( self.MUNGER_SCRIPT_XML_DIRECTORY, file_name ),
             u'%s/%s' % ( self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY, file_name ),
@@ -188,18 +222,79 @@ class Processor( object ):
             u'%s/Final/%s' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name ),
             u'%s/Stripped/%s.cloned.decomposed.stripped.xml' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
             ]
-        # print u'files_to_delete...'; pprint.pprint( files_to_delete )
         for entry in files_to_delete:
             assert os.path.exists(entry) == True, os.path.exists(entry)
             os.remove( entry )
             assert os.path.exists(entry) == False, os.path.exists(entry)
         os.chdir( current_working_directory )    # otherwise may affect other scripts
-        ## return
-        return {
-            u'source_xml': source_xml,
-            u'munged_xml': munged_xml_ustring
-            }
-        # end def runMunger()
+        return
+
+
+
+
+
+
+    # def run_munger( self, source_xml ):
+    #     """ Takes source xml unicode string.
+    #             Applies perl munger.
+    #             Returns processed xml.
+    #         Called by process_file(). """
+    #     assert type(source_xml) == unicode, type(source_xml)
+    #     assert type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY)
+    #     assert type(self.MUNGER_SCRIPT_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_XML_DIRECTORY)
+    #     assert type(self.TEMPFILES_DIR_PATH) == unicode, type(self.TEMPFILES_DIR_PATH)
+    #     ## save file w/identifier as part of name
+    #     file_name_root = u'FILE_%s' % random.randint(1000,9999)    # need this root part later
+    #     file_name = u'%s.xml' % file_name_root
+    #     filepath = u'%s/%s' % ( self.MUNGER_SCRIPT_XML_DIRECTORY, file_name )
+    #     f = open( filepath, u'w' )
+    #     f.write( source_xml.encode(u'utf-8') )
+    #     f.close()
+    #     ## call script (called script automatically saves file in various processing and a final directory)
+    #     current_working_directory = os.getcwd()
+    #     os.chdir( self.MUNGER_SCRIPT_DIRECTORY )
+    #     var = u'1'    # days; required by script; tells script to process all files updated in last day
+    #     command_list = [ u'./strip.pl', var ]
+    #     ## open temp files
+    #     ( temp_stdout_filepath, temp_stderr_filepath ) = ( self._make_temp_filepath(u'stdout_munger'), self._make_temp_filepath(u'stderr_munger') )
+    #     f_stdout = open( temp_stdout_filepath, u'w' )
+    #     f_stderr = open( temp_stderr_filepath, u'w' )
+    #     f_stdout.write( u'' )
+    #     f_stderr.write( u'' )
+    #     ## run command
+    #     subprocess.call( command_list, stdout=f_stdout, stderr=f_stderr )
+    #     ## populate output
+    #     f_stdout.close()
+    #     f_stderr.close()
+    #     ## read output file into string
+    #     filepath = u'%s/%s' % ( self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY, file_name )
+    #     f = open( filepath )
+    #     munged_xml_string = f.read()
+    #     assert type(munged_xml_string) == str, type(munged_xml_string)
+    #     munged_xml_ustring = munged_xml_string.decode(u'utf-8')
+    #     f.close()
+    #     ## cleanup & return
+    #     files_to_delete = [
+    #         u'%s/%s' % ( self.MUNGER_SCRIPT_XML_DIRECTORY, file_name ),
+    #         u'%s/%s' % ( self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY, file_name ),
+    #         u'%s/Cloned/%s.cloned.xml' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
+    #         u'%s/Copied/%s' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name ),
+    #         u'%s/Decomposed/%s.cloned.decomposed.xml' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
+    #         u'%s/Final/%s' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name ),
+    #         u'%s/Stripped/%s.cloned.decomposed.stripped.xml' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
+    #         ]
+    #     # print u'files_to_delete...'; pprint.pprint( files_to_delete )
+    #     for entry in files_to_delete:
+    #         assert os.path.exists(entry) == True, os.path.exists(entry)
+    #         os.remove( entry )
+    #         assert os.path.exists(entry) == False, os.path.exists(entry)
+    #     os.chdir( current_working_directory )    # otherwise may affect other scripts
+    #     ## return
+    #     return {
+    #         u'source_xml': source_xml,
+    #         u'munged_xml': munged_xml_ustring
+    #         }
+    #     # end def runMunger()
 
     ##
 
