@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import datetime, os, pprint, random, subprocess
+import datetime, os, pprint, random, subprocess, time
 import requests
+from lxml import etree
 
 
 class Processor( object ):
@@ -195,6 +196,7 @@ class Processor( object ):
                 Sets cwd and calls perl script.
                 Returns current_working_directory.
             Called by run_munger(). """
+        time.sleep( .1 )
         ## setup call
         current_working_directory = os.getcwd()
         os.chdir( self.MUNGER_SCRIPT_DIRECTORY )
@@ -202,6 +204,7 @@ class Processor( object ):
         command_list = [ u'./strip.pl', var ]
         ## run command
         subprocess.call( command_list, stdout=f_stdout, stderr=f_stderr )  # called script saves temp-files in various directories
+        time.sleep( .1 )
         return current_working_directory
 
     def _close_munger_stdstuff( self, f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath ):
@@ -258,7 +261,7 @@ class Processor( object ):
     def make_initial_solr_doc( self, munged_xml ):
         """ Takes munged xml unicode string.
                 Applies xsl transformation to create a solr doc.
-                Returns processed xml.
+                Returns processed xml in dict.
             Called by process_file(). """
         assert type(self.SOLR_DOC_STYLESHEET_PATH) == unicode, type(self.SOLR_DOC_STYLESHEET_PATH)
         assert type(self.TRANSFORMER_URL) == unicode, type(self.TRANSFORMER_URL)
@@ -287,28 +290,25 @@ class Processor( object ):
 
     ##
 
-    def update_display_facet( self, file_id, initial_solr_xml, current_display_facet ):
+    def update_display_facet( self, initial_solr_xml, current_display_facet=None ):
+        """ Takes transformed initial solr xml.
+                Doc-i-fies it and adds a display_status node.
+                Returns updated xml in dict.
+            Called by process_file(). """
         '''
         - Purpose: Takes solr doc and adds a 'display_status' field.
         TODO: POSSIBLE NEW-DISPLAY-FACET
         '''
-        try:
-            import StringIO, sys
-            from lxml import etree
-            assert type(self.xml_xslted) == unicode, type(self.xml_xslted)
-            doc = etree.fromstring( self.xml_xslted.encode(u'utf-8'))    # can't take unicode string due to xml file's encoding declaration
-            node = doc.xpath( u'//doc' )[0]
-            new_field = etree.SubElement( node, u'field' )
-            new_field.attrib[u'name'] = u'display_status'
-            new_field.text = u'to_approve'
-            xml_string = etree.tostring( doc, encoding=u'UTF-8', xml_declaration=True, pretty_print=False )
-            assert type(xml_string) == str, type(xml_string)
-            self.xml_statusified = xml_string.decode(u'utf-8')
-            self.save()
-        except:
-            message = common.makeErrorString()
-            self.problem_log = smart_unicode( message )
-            self.save()
+        assert type(initial_solr_xml) == unicode, type(initial_solr_xml)
+        doc = etree.fromstring( initial_solr_xml.encode(u'utf-8'))    # can't take unicode string due to xml file's encoding declaration
+        node = doc.xpath( u'//doc' )[0]
+        new_field = etree.SubElement( node, u'field' )
+        new_field.attrib[u'name'] = u'display_status'
+        new_field.text = u'to_approve'
+        utf8_xml = etree.tostring( doc, encoding=u'UTF-8', xml_declaration=True, pretty_print=False )
+        assert type(utf8_xml) == str, type(utf8_xml)
+        updated_xml = utf8_xml.decode(u'utf-8')
+        return { u'initial_solr_xml': initial_solr_xml, u'updated_xml': updated_xml }
 
     ##
 
