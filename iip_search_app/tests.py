@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import pprint
-import solr
+import json, pprint
+import requests, solr
 from iip_search_app import common, models, settings_app
 from django.test import TestCase
 from models import Processor
@@ -230,7 +230,7 @@ class ProcessorTest( TestCase ):
         grab_dict = p.grab_original_xml( file_id=u'beth0282' )
         munger_dict = p.run_munger( source_xml=grab_dict[u'xml'] )
         initial_doc_dict = p.make_initial_solr_doc( munger_dict[u'munged_xml'] )
-        updated_disply_dict = p.update_display_facet( initial_solr_xml=initial_doc_dict[u'transformed_xml'] )
+        updated_disply_dict = p.update_display_facet( initial_solr_xml=initial_doc_dict[u'transformed_xml'], display_status=u'to_approve' )
         ## type check
         self.assertEqual(
             unicode,
@@ -239,7 +239,39 @@ class ProcessorTest( TestCase ):
         well_formedness_dict = common.check_xml_wellformedness( xml=updated_disply_dict[u'updated_xml'] )
         self.assertEqual(
             True,
-            well_formedness_dict[u'well_formed']
+            well_formedness_dict[u'well_formed'] )
+
+    def test_update_solr( self ):
+        """ Tests solr response, and a before and after solr-query result. """
+        p = Processor()
+        # initial query
+        url = u'http://worfdev.services.brown.edu:8080/solr/iip_proofread/select?q=display_status:(to_approve)&wt=json&start=1&rows=1'  # second record
+        r = requests.get( url )
+        initial_dict = json.loads( r.content )
+        initial_document = initial_dict[u'response'][u'docs'][0]
+        initial_id = initial_dict[u'response'][u'docs'][0][u'inscription_id']
+        # process new item
+        grab_dict = p.grab_original_xml( file_id=initial_id )
+        munger_dict = p.run_munger( source_xml=grab_dict[u'xml'] )
+        initial_doc_dict = p.make_initial_solr_doc( munger_dict[u'munged_xml'] )
+        updated_disply_dict = p.update_display_facet( initial_solr_xml=initial_doc_dict[u'transformed_xml'], display_status=u'to_approve' )
+        update_solr_dict = p.update_solr( updated_disply_dict[u'updated_xml'] )
+        # test response
+        self.assertEqual(
+            200,
+            update_solr_dict[u'response_status_code']
             )
+        # test before and after
+        url = u'http://worfdev.services.brown.edu:8080/solr/iip_proofread/select?q=inscription_id:%s&wt=json' % initial_id
+        r = requests.get( url )
+        after_dict = json.loads( r.content )
+        after_document = after_dict[u'response'][u'docs'][0]
+        for ( key, initial_value ) in initial_document.items():
+            after_value = after_document[key]
+            self.assertEqual(
+                initial_value,
+                after_value
+                )
+
 
 # eof
