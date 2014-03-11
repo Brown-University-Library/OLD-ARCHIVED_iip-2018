@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import datetime, os, pprint, random, subprocess, time
+import datetime, logging, os, pprint, random, subprocess, time
 import requests
 from lxml import etree
+
+
+log = logging.getLogger(__name__)
 
 
 class Processor( object ):
@@ -20,6 +23,7 @@ class Processor( object ):
         self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY = unicode( os.environ.get(u'IIP_SEARCH__MUNGER_SCRIPT_MUNGED_XML_DIRECTORY') )
         self.SOLR_DOC_STYLESHEET_PATH = unicode( os.environ.get(u'IIP_SEARCH__SOLR_DOC_STYLESHEET_PATH') )
         self.TRANSFORMER_URL = unicode( os.environ.get(u'IIP_SEARCH__TRANSFORMER_URL') )
+        self.SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )
 
     def process_file( self, file_id, current_display_facet=None ):
         """ Takes file_id string.
@@ -290,21 +294,20 @@ class Processor( object ):
 
     ##
 
-    def update_display_facet( self, initial_solr_xml, current_display_facet=None ):
+    def update_display_facet( self, initial_solr_xml, display_status ):
         """ Takes transformed initial solr xml.
                 Doc-i-fies it and adds a display_status node.
                 Returns updated xml in dict.
-            Called by process_file(). """
-        '''
-        - Purpose: Takes solr doc and adds a 'display_status' field.
-        TODO: POSSIBLE NEW-DISPLAY-FACET
-        '''
+            Called by process_file().
+            Note: normally, vcs updates should trigger the display_status: u'to_approve'. """
+        log.debug( u'in update_display_facet(); initial_solr_xml is, ```%s```' % initial_solr_xml )
         assert type(initial_solr_xml) == unicode, type(initial_solr_xml)
+        assert display_status in [ u'to_approve', u'to_correct', u'approved' ]
         doc = etree.fromstring( initial_solr_xml.encode(u'utf-8'))    # can't take unicode string due to xml file's encoding declaration
         node = doc.xpath( u'//doc' )[0]
         new_field = etree.SubElement( node, u'field' )
         new_field.attrib[u'name'] = u'display_status'
-        new_field.text = u'to_approve'
+        new_field.text = display_status
         utf8_xml = etree.tostring( doc, encoding=u'UTF-8', xml_declaration=True, pretty_print=False )
         assert type(utf8_xml) == str, type(utf8_xml)
         updated_xml = utf8_xml.decode(u'utf-8')
@@ -312,36 +315,42 @@ class Processor( object ):
 
     ##
 
-    def updateSolr( self, file_id, updated_solr_xml ):
-        '''
-        - Purpose: posts solr-doc to solr & saves response.
-        '''
-        try:
-            import requests
-            assert type(settings_app.SOLR_URL) == unicode, type(settings_app.SOLR_URL)
-            assert type(self.xml_statusified) == unicode, type(xml_statusified)
-            update_url = u'%s/update/?commit=true' % settings_app.SOLR_URL
-            headers = { 'content-type': 'text/xml; charset=utf-8' }    # from common.updateSolr() testing, non-unicode-string posts were bullet-proof
-            r = requests.post(
-                update_url.encode(u'utf-8'),
-                headers=headers,
-                data=self.xml_statusified.encode(u'utf-8') )
-            self.solrization_response = r.content.decode(u'utf-8')
-            self.save()
-        except:
-            message = common.makeErrorString()
-            self.problem_log = smart_unicode( message )
-            self.save()
+    def update_solr( self, updated_solr_xml ):
+        """ Takes solr xml unicode string.
+                Posts it to solr.
+                Returns response dict.
+            Called by process_file(). """
+        assert type(self.SOLR_URL) == unicode, type(self.SOLR_URL)
+        assert type(updated_solr_xml) == unicode, type(updated_solr_xml)
+        update_url = u'%s/update/?commit=true' % self.SOLR_URL
+        headers = { 'content-type': 'text/xml; charset=utf-8' }    # from testing, NON-unicode-string posts were bullet-proof
+        r = requests.post(
+            update_url.encode(u'utf-8'),
+            headers=headers,
+            data=updated_solr_xml.encode(u'utf-8') )
+        return_dict = {
+            u'response_status_code': r.status_code, u'response_text': r.content.decode(u'utf-8'), u'submitted_xml': updated_solr_xml }
+        return return_dict
 
-    # def grabInscriptionId( self ):
+    # def updateSolr( self, file_id, updated_solr_xml ):
+    #     '''
+    #     - Purpose: posts solr-doc to solr & saves response.
+    #     '''
     #     try:
-    #         assert type(self.filepath) == unicode, type(filepath)
-    #         segment = self.filepath.split( u'/' )[-1]
-    #         if not segment[-4:] == u'.xml':
-    #             self.inscription_id = u'FAILURE'
-    #         else:
-    #             self.inscription_id = segment[0:-4]
-    #     except Exception, e:
-    #         self.problem_log = smart_unicode(e)
+    #         import requests
+    #         assert type(settings_app.SOLR_URL) == unicode, type(settings_app.SOLR_URL)
+    #         assert type(self.xml_statusified) == unicode, type(xml_statusified)
+    #         update_url = u'%s/update/?commit=true' % settings_app.SOLR_URL
+    #         headers = { 'content-type': 'text/xml; charset=utf-8' }    # from common.updateSolr() testing, non-unicode-string posts were bullet-proof
+    #         r = requests.post(
+    #             update_url.encode(u'utf-8'),
+    #             headers=headers,
+    #             data=self.xml_statusified.encode(u'utf-8') )
+    #         self.solrization_response = r.content.decode(u'utf-8')
+    #         self.save()
+    #     except:
+    #         message = common.makeErrorString()
+    #         self.problem_log = smart_unicode( message )
+    #         self.save()
 
     ## end class Processor()

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import pprint
-import solr
+import json, pprint
+import requests, solr
 from iip_search_app import common, models, settings_app
 from django.test import TestCase
 from models import Processor
@@ -185,8 +185,7 @@ class ProcessorTest( TestCase ):
         well_formedness_dict = common.check_xml_wellformedness( xml=grab_dict[u'xml'] )
         self.assertEqual(
             True,
-            well_formedness_dict[u'well_formed']
-            )
+            well_formedness_dict[u'well_formed'] )
 
     def test_run_munger( self ):
         """ Tests for well-formed xml and type of returned string.
@@ -202,8 +201,7 @@ class ProcessorTest( TestCase ):
         well_formedness_dict = common.check_xml_wellformedness( xml=munger_dict[u'munged_xml'] )
         self.assertEqual(
             True,
-            well_formedness_dict[u'well_formed']
-            )
+            well_formedness_dict[u'well_formed'] )
 
     def test_make_initial_solr_doc( self ):
         """ Tests for well-formed xml and type of returned string.
@@ -220,8 +218,7 @@ class ProcessorTest( TestCase ):
         well_formedness_dict = common.check_xml_wellformedness( xml=initial_doc_dict[u'transformed_xml'] )
         self.assertEqual(
             True,
-            well_formedness_dict[u'well_formed']
-            )
+            well_formedness_dict[u'well_formed'] )
 
     def test_update_display_facet( self ):
         """ Tests for well-formed xml and type of returned string.
@@ -230,7 +227,7 @@ class ProcessorTest( TestCase ):
         grab_dict = p.grab_original_xml( file_id=u'beth0282' )
         munger_dict = p.run_munger( source_xml=grab_dict[u'xml'] )
         initial_doc_dict = p.make_initial_solr_doc( munger_dict[u'munged_xml'] )
-        updated_disply_dict = p.update_display_facet( initial_solr_xml=initial_doc_dict[u'transformed_xml'] )
+        updated_disply_dict = p.update_display_facet( initial_solr_xml=initial_doc_dict[u'transformed_xml'], display_status=u'to_approve' )
         ## type check
         self.assertEqual(
             unicode,
@@ -239,7 +236,63 @@ class ProcessorTest( TestCase ):
         well_formedness_dict = common.check_xml_wellformedness( xml=updated_disply_dict[u'updated_xml'] )
         self.assertEqual(
             True,
-            well_formedness_dict[u'well_formed']
-            )
+            well_formedness_dict[u'well_formed'] )
+
+    ##
+
+    def test_update_solr( self ):
+        """ Tests solr response, and a before and after solr-query result. """
+        # test response
+        ( initial_document_dict, initial_id ) = self._setup_solr_test()
+        update_solr_dict = self._run_solr_steps( initial_id )
+        self.assertEqual(
+            200,
+            update_solr_dict[u'response_status_code'] )
+        # test before and after
+        after_document_dict = self._get_after_data( initial_id )
+        for ( key, initial_value ) in initial_document_dict.items():
+            after_value = after_document_dict[key]
+            self.assertEqual(
+                initial_value,
+                after_value )
+
+    def _setup_solr_test( self ):
+        """ Sets up variables.
+                Returns ( processor, initial_document_dict, initial_id ).
+            Called by test_update_solr(). """
+        # initial query
+        url = u'http://worfdev.services.brown.edu:8080/solr/iip_proofread/select?q=display_status:(to_approve)&wt=json&start=1&rows=1'  # second record
+        r = requests.get( url )
+        initial_dict = json.loads( r.content )
+        initial_document_dict = initial_dict[u'response'][u'docs'][0]
+        initial_id = initial_document_dict[u'inscription_id']
+        return ( initial_document_dict, initial_id )
+
+    def _run_solr_steps( self, initial_id ):
+        """ Takes initial_id string.
+                Runs through processing steps including running update_solr().
+                Returns update_solr_dict.
+            Called by test_update_solr(). """
+        p = Processor()
+        grab_dict = p.grab_original_xml( file_id=initial_id )
+        munger_dict = p.run_munger( source_xml=grab_dict[u'xml'] )
+        initial_doc_dict = p.make_initial_solr_doc( munger_dict[u'munged_xml'] )
+        updated_disply_dict = p.update_display_facet( initial_solr_xml=initial_doc_dict[u'transformed_xml'], display_status=u'to_approve' )
+        update_solr_dict = p.update_solr( updated_disply_dict[u'updated_xml'] )
+        return update_solr_dict
+
+    def _get_after_data( self, initial_id ):
+        """ Takes initial_id string.
+                Makes solr query.
+                Returns single-document dict.
+            Called by test_update_solr(). """
+        url = u'http://worfdev.services.brown.edu:8080/solr/iip_proofread/select?q=inscription_id:%s&wt=json' % initial_id
+        r = requests.get( url )
+        after_dict = json.loads( r.content )
+        after_document_dict = after_dict[u'response'][u'docs'][0]
+        return after_document_dict
+
+    ## end class ProcessorTest()
+
 
 # eof
