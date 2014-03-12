@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime, logging, os, pprint, random, subprocess, time
-import envoy, requests
+import envoy, redis, requests, rq
 from lxml import etree
 
 
@@ -17,7 +17,7 @@ class ProcessorUtils( object ):
         """ Settings. """
         self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
 
-    def run_svn_update( self ):
+    def call_svn_update( self ):
         """ Runs svn update.
                 Returns list of filenames.
             Called by (eventually) queue-task grab_updates(). """
@@ -373,25 +373,29 @@ class Processor( object ):
             u'response_status_code': r.status_code, u'response_text': r.content.decode(u'utf-8'), u'submitted_xml': updated_solr_xml }
         return return_dict
 
-    # def updateSolr( self, file_id, updated_solr_xml ):
-    #     '''
-    #     - Purpose: posts solr-doc to solr & saves response.
-    #     '''
-    #     try:
-    #         import requests
-    #         assert type(settings_app.SOLR_URL) == unicode, type(settings_app.SOLR_URL)
-    #         assert type(self.xml_statusified) == unicode, type(xml_statusified)
-    #         update_url = u'%s/update/?commit=true' % settings_app.SOLR_URL
-    #         headers = { 'content-type': 'text/xml; charset=utf-8' }    # from common.updateSolr() testing, non-unicode-string posts were bullet-proof
-    #         r = requests.post(
-    #             update_url.encode(u'utf-8'),
-    #             headers=headers,
-    #             data=self.xml_statusified.encode(u'utf-8') )
-    #         self.solrization_response = r.content.decode(u'utf-8')
-    #         self.save()
-    #     except:
-    #         message = common.makeErrorString()
-    #         self.problem_log = smart_unicode( message )
-    #         self.save()
-
     ## end class Processor()
+
+
+## queue runners ##
+
+q = rq.Queue( u'iip', connection=redis.Redis() )
+
+def run_call_svn_update():
+    """ z """
+    utils = ProcessorUtils()
+    result_dict = utils.call_svn_update()
+    for file_id in result_dict[u'file_ids']:
+        job = q.enqueue_call (
+            func=u'iip_search.models.run_process_file',
+            args = ( file_id=file_id, grab_latest_file=True, display_status=u'to_approve' )
+            )
+    return
+
+def run_process_file( file_id, grab_latest_file, display_status ):
+    """ z """
+    processor = Processor()
+    processor.process_file( file_id, grab_latest_file, display_status )
+    return
+
+
+## eof
