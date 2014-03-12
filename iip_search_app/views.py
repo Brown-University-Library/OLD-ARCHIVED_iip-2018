@@ -38,7 +38,7 @@ def _get_POST_context( request, log_id ):
             initial_qstring=initial_qstring, session_authz_dict=request.session['authz_info'], log_id=common.get_log_identifier(request.session) )['modified_qstring']
         context = common.paginateRequest( qstring=updated_qstring, resultsPage=resultsPage, log_id=common.get_log_identifier(request.session) )
         context[u'session_authz_info'] = request.session[u'authz_info']
-        context[u'admin_link'] = common.make_admin_link( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id )
+        context[u'admin_links'] = common.make_admin_links( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id )
         return context
 
 def _get_ajax_unistring( request ):
@@ -64,7 +64,7 @@ def _get_GET_context( request, log_id ):
         u'form': form,
         u'session_authz_info': request.session[u'authz_info'],
         u'settings_app': settings_app,
-        u'admin_link': common.make_admin_link( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id )
+        u'admin_links': common.make_admin_links( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id )
         }
     log.debug( u'in views._get_GET_context(); context, %s' % context )
     return context
@@ -159,7 +159,7 @@ def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, curr
         'chosen_display_status': current_display_status,
         'inscription_id': inscrid,
         'session_authz_info': request.session['authz_info'],
-        'admin_link': common.make_admin_link( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id )
+        'admin_links': common.make_admin_links( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id )
         }
     return_response = render( request, u'iip_search_templates/viewinscr.html', context )
     return return_response
@@ -224,7 +224,7 @@ def _make_response( request, log_id ):
     return response
 
 
-## logout ###
+## logout ##
 
 def logout( request ):
     """ Removes session-based authentication. """
@@ -235,6 +235,17 @@ def logout( request ):
         redirect_url = u'%s://%s%s' % (
             request.META[u'wsgi.url_scheme'], request.get_host(), reverse(u'search_url',) )
     return HttpResponseRedirect( redirect_url )
+
+
+## reprocess ##
+
+def reprocess( request, inscription_id ):
+    """ Initiated from view-inscription page.
+        Takes inscription_id and display_status.
+            Checks authN/Z; executes reprocess of current inscription.
+            Returns current view-inscription page.
+        """
+    return HttpResponse( u'coming' )
 
 
 ## testing ##

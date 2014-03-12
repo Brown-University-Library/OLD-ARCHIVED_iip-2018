@@ -40,7 +40,10 @@
       {% if session_authz_info.authorized %}
         <p>Welcome {{ session_authz_info.firstname }}</p>
       {% endif %}
+      {% for admin_link in admin_links %}
       <a id="admin_link" href="{{ admin_link.url }}">{{ admin_link.text }}</a>
+      {% if not forloop.last %}<br/><br/>{% endif %}
+      {% endfor %}
     </div>
 	</div>
 </div>
