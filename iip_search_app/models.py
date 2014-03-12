@@ -1,15 +1,56 @@
 # -*- coding: utf-8 -*-
 
 import datetime, logging, os, pprint, random, subprocess, time
-import requests
+import envoy, requests
 from lxml import etree
 
 
 log = logging.getLogger(__name__)
 
 
+class ProcessorUtils( object ):
+    """ Container for support-tasks for processing inscriptions -- actual processing tasks handled by Processor().
+        Non-django, plain-python model.
+        No dango dependencies, including settings. """
+
+    def __init__( self ):
+        """ Settings. """
+        self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
+
+    def run_svn_update( self ):
+        """ Runs svn update.
+                Returns list of filenames.
+            Called by (eventually) queue-task grab_updates(). """
+        command = u'svn update %s' % self.XML_DIR_PATH
+        r = envoy.run( command.encode(u'utf-8') )  # envoy requires strings
+        std_out = r.std_out.decode(u'utf-8')
+        return {
+            u'status_code': r.status_code,
+            u'std_out': std_out,
+            u'std_err': r.std_err.decode(u'utf-8'),
+            u'command': r.command,
+            u'history': r.history,
+            u'file_list': self.parse_update_output(std_out) }
+
+    def parse_update_output( self, std_out ):
+        """ Takes envoy stdout string.
+                Tries to create file_ids list.
+                Returns file list.
+            Called by self.run_svn_update(). """
+        assert type(std_out) == unicode
+        file_ids = []
+        lines = std_out.split()
+        for line in lines:
+            if u'.xml' in line:
+                segments = line.split( u'/' )
+                file_ids.append( segments[-1] )
+        return { u'file_ids': sorted(file_ids) }
+
+    ## end class ProcessorUtils()
+
+
 class Processor( object ):
-    """ Container for various tasks involved in processing inscription metadata.
+    """ Container for various tasks involved in processing metadata for a _single_ inscription.
         Non-django, plain-python model.
         No dango dependencies, including settings. """
 
