@@ -121,7 +121,7 @@ class CommonTest( TestCase ):
         self.assertEqual(
             True,
             data_dict[u'validate_result'] )
-        ## valid
+        ## not valid
         xml = u"""<?xml version="1.0" encoding="utf-8"?><a><c></c></a>"""
         data_dict = common.validate_xml( xml=xml, schema=schema )
         self.assertEqual(
