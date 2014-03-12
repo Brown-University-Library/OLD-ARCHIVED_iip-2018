@@ -150,13 +150,42 @@ class CommonTest( TestCase ):
 class ProcessorTest( TestCase ):
     """ Tests functions in 'models.py' Processor() """
 
-    # def test_process_file__check_keys( self ):
-    #     """ Tests keys. """
-    #     from models import Processor
-    #     p = Processor()
-    #     self.assertEqual(
-    #         [u'a__svn_export', u'b__grab_source_xml', u'c__run_munger', u'd__make_initial_solr_doc', u'e__update_display_facet', u'f__post_to_solr'],
-    #         sorted(p.process_file(u'dummy_id').keys()) )
+    def test_process_file( self ):
+        """ Tests keys, and a before and after solr-query result.
+            Similar to test_update_solr(). """
+        p = Processor()
+        ( initial_solrdoc_dict, initial_id ) = self._grab_initial_data()
+        result_dict = p.process_file( file_id=initial_id, grab_latest_file=True, display_status=u'to_approve' )
+        # print u'result_dict...'; pprint.pprint( result_dict )
+        ## test keys
+        self.assertEqual(
+            [u'a__grab_latest_file', u'b__grab_source_xml', u'c__run_munger', u'd__make_initial_solr_doc', u'e__update_display_facet', u'f__post_to_solr'],
+            sorted(result_dict.keys()) )
+        ## test post-to-solr
+        self.assertEqual(
+            200,
+            result_dict[u'f__post_to_solr'][u'response_status_code'] )
+        ## test subsequent solr query
+        after_document_dict = self._get_after_data( initial_id )  # down in test_update_solr()
+        for ( key, initial_value ) in initial_solrdoc_dict.items():
+            after_value = after_document_dict[key]
+            self.assertEqual(
+                initial_value,
+                after_value )
+
+    def _grab_initial_data( self ):
+        """ Calls solr for initial data to compare later.
+                Returns ( initial_document_dict, initial_id ).
+            Called by test_process_file(). """
+        # initial query
+        url = u'%s/select?q=display_status:(to_approve)&wt=json&start=1&rows=1' % settings_app.SOLR_URL  # second record
+        r = requests.get( url )
+        initial_dict = json.loads( r.content )
+        initial_solrdoc_dict = initial_dict[u'response'][u'docs'][0]
+        initial_id = initial_solrdoc_dict[u'inscription_id']
+        return ( initial_solrdoc_dict, initial_id )
+
+    ##
 
     def test_grab_latest_file( self ):
         """ Tests keys; no-errors; and success-message. """
@@ -261,7 +290,7 @@ class ProcessorTest( TestCase ):
                 Returns ( processor, initial_document_dict, initial_id ).
             Called by test_update_solr(). """
         # initial query
-        url = u'http://worfdev.services.brown.edu:8080/solr/iip_proofread/select?q=display_status:(to_approve)&wt=json&start=1&rows=1'  # second record
+        url = u'%s/select?q=display_status:(to_approve)&wt=json&start=1&rows=1' % settings_app.SOLR_URL  # second record
         r = requests.get( url )
         initial_dict = json.loads( r.content )
         initial_document_dict = initial_dict[u'response'][u'docs'][0]
@@ -286,7 +315,7 @@ class ProcessorTest( TestCase ):
                 Makes solr query.
                 Returns single-document dict.
             Called by test_update_solr(). """
-        url = u'http://worfdev.services.brown.edu:8080/solr/iip_proofread/select?q=inscription_id:%s&wt=json' % initial_id
+        url = u'%s/select?q=inscription_id:%s&wt=json' % ( settings_app.SOLR_URL, initial_id )
         r = requests.get( url )
         after_dict = json.loads( r.content )
         after_document_dict = after_dict[u'response'][u'docs'][0]
