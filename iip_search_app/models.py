@@ -25,9 +25,9 @@ class Processor( object ):
         self.TRANSFORMER_URL = unicode( os.environ.get(u'IIP_SEARCH__TRANSFORMER_URL') )
         self.SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )
 
-    def process_file( self, file_id, current_display_facet=None ):
+    def process_file( self, file_id, grab_latest_file, display_status ):
         """ Takes file_id string.
-                Runs svn-export on file,
+                Runs svn-export on file if grab_latest_file=True,
                 Grabs source xml,
                 Runs munger,
                 Runs xslt to create solr-doc,
@@ -40,25 +40,25 @@ class Processor( object ):
                 update-all-files script (current_display_facet looked up and passed in if available),
                 github commit hook (current_display_facet looked up and passed in if available). """
         process_dict = {
-            u'a__grab_latest_file': {u'status': u'', u'data': u''},
-            u'b__grab_source_xml': {u'status': u'', u'data': u''},
-            u'c__run_munger': {u'status': u'', u'data': u''},
-            u'd__make_initial_solr_doc': {u'status': u'', u'data': u''},
-            u'e__update_display_facet': {u'status': u'', u'data': u''},
-            u'f__post_to_solr': {u'status': u'', u'data': u''},
+            u'a__grab_latest_file': None,
+            u'b__grab_source_xml': None,
+            u'c__run_munger': None,
+            u'd__make_initial_solr_doc': None,
+            u'e__update_display_facet': None,
+            u'f__post_to_solr': None
             }
         process_dict[u'a__grab_latest_file'] = self.grab_latest_file(
             file_id )
         process_dict[u'b__grab_source_xml'] = self.grab_original_xml(
             file_id )
         process_dict[u'c__run_munger'] = self.run_munger(
-            source_xml=process_dict[u'b__grab_source_xml'][u'data'] )
+            source_xml=process_dict[u'b__grab_source_xml'][u'xml'] )
         process_dict[u'd__make_initial_solr_doc'] = self.make_initial_solr_doc(
-            munged_xml=process_dict[u'c__run_munger'][u'data'] )
+            munged_xml=process_dict[u'c__run_munger'][u'munged_xml'] )
         process_dict[u'e__update_display_facet'] = self.update_display_facet(
-            file_id=file_id, initial_solr_xml=process_dict[u'd__make_initial_solr_doc'][u'data'], current_display_facet=current_display_facet  )
-        process_dict[u'f__post_to_solr'] = self.post_to_solr(
-            file_id=file_id, updated_solr_xml=process_dict[u'e__update_display_facet'][u'data'] )
+            initial_solr_xml=process_dict[u'd__make_initial_solr_doc'][u'transformed_xml'], display_status=display_status )
+        process_dict[u'f__post_to_solr'] = self.update_solr(
+            updated_solr_xml=process_dict[u'e__update_display_facet'][u'updated_xml'] )
         return process_dict
 
     ## helpers for above ##
