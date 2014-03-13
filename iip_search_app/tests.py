@@ -327,10 +327,10 @@ class ProcessorTest( TestCase ):
 class ProcessorUtilsTest( TestCase ):
     """ Tests functions in 'models.py' ProcessorUtils() """
 
-    def test_run_svn_update( self ):
+    def test_call_svn_update( self ):
         """ Tests envoy output command. """
         utils = ProcessorUtils()
-        result = utils.run_svn_update()
+        result = utils.call_svn_update()
         # print u'- envoy result...'; pprint.pprint( result )
         self.assertEqual(
             u'Updating',
@@ -346,7 +346,7 @@ class ProcessorUtilsTest( TestCase ):
         dummy_stdout = u"""Updating '/path/to/iip/xml':\nU    /path/to/iip/xml/zoor0102.xml\nU    /path/to/iip/xml/beth0068.xml\nA    /path/to/iip/xml/zoor0261.xml\nA  """
         result = utils.parse_update_output( dummy_stdout )
         self.assertEqual( [
-            u'beth0068.xml', u'zoor0102.xml', u'zoor0261.xml' ],
+            u'beth0068', u'zoor0102', u'zoor0261' ],
             result[u'file_ids'] )
         ## tests empty output
         dummy_stdout = u"""Updating '/path/to/iip/xml':\nU    Updated to revision 11969.\n"""

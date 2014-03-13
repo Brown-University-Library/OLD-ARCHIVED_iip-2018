@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import solr
+import redis, rq, solr
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response, render
-from iip_search_app import common, settings_app
+from iip_search_app import common, models, settings_app
 from iip_search_app.utils import ajax_snippet
 from iip_search_app.forms import SearchForm
 
@@ -237,15 +237,23 @@ def logout( request ):
     return HttpResponseRedirect( redirect_url )
 
 
-## reprocess ##
+## process ##
 
-def reprocess( request, inscription_id ):
+def process( request, inscription_id ):
     """ Initiated from view-inscription page.
         Takes inscription_id and display_status.
-            Checks authN/Z; executes reprocess of current inscription.
+            Checks authN/Z; executes process of current inscription.
             Returns current view-inscription page.
         """
-    return HttpResponse( u'coming' )
+    q = rq.Queue( u'iip', connection=redis.Redis() )
+    if inscription_id == u'new':
+        job = q.enqueue_call (
+            func=u'iip_search_app.models.run_call_svn_update',
+            kwargs = {}
+            )
+        return HttpResponse( u'svn update initiated' )
+    else:
+        return HttpResponse( u'not yet implemented' )
 
 
 ## testing ##

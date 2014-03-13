@@ -24,13 +24,14 @@ class ProcessorUtils( object ):
         command = u'svn update %s' % self.XML_DIR_PATH
         r = envoy.run( command.encode(u'utf-8') )  # envoy requires strings
         std_out = r.std_out.decode(u'utf-8')
+        result_dict = self.parse_update_output( std_out )
         return {
             u'status_code': r.status_code,
             u'std_out': std_out,
             u'std_err': r.std_err.decode(u'utf-8'),
             u'command': r.command,
             u'history': r.history,
-            u'file_list': self.parse_update_output(std_out) }
+            u'file_ids': result_dict[u'file_ids'] }
 
     def parse_update_output( self, std_out ):
         """ Takes envoy stdout string.
@@ -43,7 +44,7 @@ class ProcessorUtils( object ):
         for line in lines:
             if u'.xml' in line:
                 segments = line.split( u'/' )
-                file_ids.append( segments[-1] )
+                file_ids.append( segments[-1][:-4] )  # last segment is abc.xml; file_id is all but last 4 characters
         return { u'file_ids': sorted(file_ids) }
 
     ## end class ProcessorUtils()
@@ -381,18 +382,22 @@ class Processor( object ):
 q = rq.Queue( u'iip', connection=redis.Redis() )
 
 def run_call_svn_update():
-    """ z """
+    """ Initiates svn update.
+            Spawns a call to Processor.process_file() for each result found.
+        Called by views.process(u'new') """
     utils = ProcessorUtils()
     result_dict = utils.call_svn_update()
+    # print u'- result_dict...'; pprint.pprint( result_dict )
     for file_id in result_dict[u'file_ids']:
         job = q.enqueue_call (
-            func=u'iip_search.models.run_process_file',
-            args = ( file_id=file_id, grab_latest_file=True, display_status=u'to_approve' )
+            func=u'iip_search_app.models.run_process_file',
+            kwargs = { u'file_id': file_id, u'grab_latest_file': True, u'display_status': u'to_approve' }
             )
     return
 
 def run_process_file( file_id, grab_latest_file, display_status ):
-    """ z """
+    """ Calls Processor.process_file().
+        Called by (queue-runner) run_call_svn_update(). """
     processor = Processor()
     processor.process_file( file_id, grab_latest_file, display_status )
     return
