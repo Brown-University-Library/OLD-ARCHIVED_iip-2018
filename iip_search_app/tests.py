@@ -4,7 +4,7 @@ import json, pprint
 import requests, solr
 from iip_search_app import common, models, settings_app
 from django.test import TestCase
-from models import Processor
+from models import Processor, ProcessorUtils
 
 
 class CommonTest( TestCase ):
@@ -322,6 +322,38 @@ class ProcessorTest( TestCase ):
         return after_document_dict
 
     ## end class ProcessorTest()
+
+
+class ProcessorUtilsTest( TestCase ):
+    """ Tests functions in 'models.py' ProcessorUtils() """
+
+    def test_call_svn_update( self ):
+        """ Tests envoy output command. """
+        utils = ProcessorUtils()
+        result = utils.call_svn_update()
+        # print u'- envoy result...'; pprint.pprint( result )
+        self.assertEqual(
+            u'Updating',
+            result[u'std_out'].split()[0] )
+        self.assertEqual(
+            True,
+            u'Updated to revision' in result[u'std_out'] or u'At revision' in result[u'std_out'] )
+
+    def test_parse_update_output( self ):
+        """ Tests for sorted file_ids when files found. """
+        utils = ProcessorUtils()
+        ## tests regular xml output
+        dummy_stdout = u"""Updating '/path/to/iip/xml':\nU    /path/to/iip/xml/zoor0102.xml\nU    /path/to/iip/xml/beth0068.xml\nA    /path/to/iip/xml/zoor0261.xml\nA  """
+        result = utils.parse_update_output( dummy_stdout )
+        self.assertEqual( [
+            u'beth0068', u'zoor0102', u'zoor0261' ],
+            result[u'file_ids'] )
+        ## tests empty output
+        dummy_stdout = u"""Updating '/path/to/iip/xml':\nU    Updated to revision 11969.\n"""
+        result = utils.parse_update_output( dummy_stdout )
+        self.assertEqual(
+            [],
+            result[u'file_ids'] )
 
 
 # eof

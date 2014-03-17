@@ -18,7 +18,7 @@ urlpatterns = patterns('',
 
     url( r'^viewinscr/(?P<inscrid>.*)/$', 'iip_search_app.views.viewinscr', name=u'inscription_url' ),
 
-    url( r'^reprocess/(?P<inscription_id>.*)/$', 'iip_search_app.views.reprocess', name=u'reprocess_url' ),
+    url( r'^process/(?P<inscription_id>.*)/$', 'iip_search_app.views.process', name=u'process_url' ),
 
     url( r'^$', redirect_to, {'url': 'search/'} ),
 

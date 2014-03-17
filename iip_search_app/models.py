@@ -1,15 +1,57 @@
 # -*- coding: utf-8 -*-
 
 import datetime, logging, os, pprint, random, subprocess, time
-import requests
+import envoy, redis, requests, rq
 from lxml import etree
 
 
 log = logging.getLogger(__name__)
 
 
+class ProcessorUtils( object ):
+    """ Container for support-tasks for processing inscriptions -- actual processing tasks handled by Processor().
+        Non-django, plain-python model.
+        No dango dependencies, including settings. """
+
+    def __init__( self ):
+        """ Settings. """
+        self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
+
+    def call_svn_update( self ):
+        """ Runs svn update.
+                Returns list of filenames.
+            Called by (eventually) queue-task grab_updates(). """
+        command = u'svn update %s' % self.XML_DIR_PATH
+        r = envoy.run( command.encode(u'utf-8') )  # envoy requires strings
+        std_out = r.std_out.decode(u'utf-8')
+        result_dict = self.parse_update_output( std_out )
+        return {
+            u'status_code': r.status_code,
+            u'std_out': std_out,
+            u'std_err': r.std_err.decode(u'utf-8'),
+            u'command': r.command,
+            u'history': r.history,
+            u'file_ids': result_dict[u'file_ids'] }
+
+    def parse_update_output( self, std_out ):
+        """ Takes envoy stdout string.
+                Tries to create file_ids list.
+                Returns file list.
+            Called by self.run_svn_update(). """
+        assert type(std_out) == unicode
+        file_ids = []
+        lines = std_out.split()
+        for line in lines:
+            if u'.xml' in line:
+                segments = line.split( u'/' )
+                file_ids.append( segments[-1][:-4] )  # last segment is abc.xml; file_id is all but last 4 characters
+        return { u'file_ids': sorted(file_ids) }
+
+    ## end class ProcessorUtils()
+
+
 class Processor( object ):
-    """ Container for various tasks involved in processing inscription metadata.
+    """ Container for various tasks involved in processing metadata for a _single_ inscription.
         Non-django, plain-python model.
         No dango dependencies, including settings. """
 
@@ -332,25 +374,33 @@ class Processor( object ):
             u'response_status_code': r.status_code, u'response_text': r.content.decode(u'utf-8'), u'submitted_xml': updated_solr_xml }
         return return_dict
 
-    # def updateSolr( self, file_id, updated_solr_xml ):
-    #     '''
-    #     - Purpose: posts solr-doc to solr & saves response.
-    #     '''
-    #     try:
-    #         import requests
-    #         assert type(settings_app.SOLR_URL) == unicode, type(settings_app.SOLR_URL)
-    #         assert type(self.xml_statusified) == unicode, type(xml_statusified)
-    #         update_url = u'%s/update/?commit=true' % settings_app.SOLR_URL
-    #         headers = { 'content-type': 'text/xml; charset=utf-8' }    # from common.updateSolr() testing, non-unicode-string posts were bullet-proof
-    #         r = requests.post(
-    #             update_url.encode(u'utf-8'),
-    #             headers=headers,
-    #             data=self.xml_statusified.encode(u'utf-8') )
-    #         self.solrization_response = r.content.decode(u'utf-8')
-    #         self.save()
-    #     except:
-    #         message = common.makeErrorString()
-    #         self.problem_log = smart_unicode( message )
-    #         self.save()
-
     ## end class Processor()
+
+
+## queue runners ##
+
+q = rq.Queue( u'iip', connection=redis.Redis() )
+
+def run_call_svn_update():
+    """ Initiates svn update.
+            Spawns a call to Processor.process_file() for each result found.
+        Called by views.process(u'new') """
+    utils = ProcessorUtils()
+    result_dict = utils.call_svn_update()
+    # print u'- result_dict...'; pprint.pprint( result_dict )
+    for file_id in result_dict[u'file_ids']:
+        job = q.enqueue_call (
+            func=u'iip_search_app.models.run_process_file',
+            kwargs = { u'file_id': file_id, u'grab_latest_file': True, u'display_status': u'to_approve' }
+            )
+    return
+
+def run_process_file( file_id, grab_latest_file, display_status ):
+    """ Calls Processor.process_file().
+        Called by (queue-runner) run_call_svn_update(). """
+    processor = Processor()
+    processor.process_file( file_id, grab_latest_file, display_status )
+    return
+
+
+## eof
