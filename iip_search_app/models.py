@@ -387,7 +387,7 @@ def run_call_svn_update():
         Called by views.process(u'new') """
     utils = ProcessorUtils()
     result_dict = utils.call_svn_update()
-    # print u'- result_dict...'; pprint.pprint( result_dict )
+    log.info( u'in (queue-called) run_call_svn_update(); result_dict is, ```%s```' % pprint.pformat(result_dict) )
     for file_id in result_dict[u'file_ids']:
         job = q.enqueue_call (
             func=u'iip_search_app.models.run_process_file',
@@ -399,7 +399,8 @@ def run_process_file( file_id, grab_latest_file, display_status ):
     """ Calls Processor.process_file().
         Called by (queue-runner) run_call_svn_update(). """
     processor = Processor()
-    processor.process_file( file_id, grab_latest_file, display_status )
+    process_dict = processor.process_file( file_id, grab_latest_file, display_status )
+    log.info( u'in (queue-called) run_process_file(); process_dict is, ```%s```' % pprint.pformat(process_dict) )
     return
 
 
