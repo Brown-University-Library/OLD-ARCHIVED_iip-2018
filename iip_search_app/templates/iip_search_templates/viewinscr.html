@@ -103,8 +103,7 @@
 
       {%if not biblioFull %}<div id="permalink"><a href="../viewinscr/{{i.inscription_id}}/">Link to this inscription</a></div>{%endif%}
 
-      <div id="viewXml"><a href="/cds/projects/iip/view_xml/{{i.inscription_id}}.xml">View XML</a></div>
-      <!-- <div id="viewXml"><a href="/cds/projects/iip/view_xml/{{i.inscription_id|lower}}.xml">View XML</a></div> -->
+      <div id="viewXml"><a href="{{ view_xml_url }}">View XML</a></div>
 
     </div>  <!-- end div id="details" -->
 

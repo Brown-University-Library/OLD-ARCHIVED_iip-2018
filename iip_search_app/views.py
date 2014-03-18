@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import logging
+import logging, pprint
 import redis, rq, solr
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 def iip_results( request ):
     """ Handles /search/ GET, POST, and ajax-GET. """
     log_id = common.get_log_identifier( request.session )
+    log.info( u'in iip_results(); id, %s; starting' % log_id )
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
     if request.method == u'POST':  # form has been submitted by user
@@ -75,14 +76,15 @@ def _get_GET_context( request, log_id ):
 def viewinscr( request, inscrid ):
     """ Handles view-inscription GET, ajax-GET, and approval-update POST. """
     log_id = _setup_viewinscr( request )
+    log.info( u'in viewinscr(); id, %s; starting' % log_id )
     if request.method == u'POST':  # TODO: call subfunction after getting approval working again
         return _handle_viewinscr_POST( request )
     else:  # GET
-        ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status ) = _prepare_viewinscr_get_data( request, inscrid )
+        ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, view_xml_url ) = _prepare_viewinscr_get_data( request, inscrid )
         if request.is_ajax():
-            return_response = _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn )
+            return_response = _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn, view_xml_url )
         else:
-            return_response = _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, log_id )
+            return_response = _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, view_xml_url, log_id )
         return return_response
 
 def _setup_viewinscr( request ):
@@ -90,6 +92,7 @@ def _setup_viewinscr( request ):
             updates session with authz_info and log_id;
             returns log_id.
         Called by viewinscr() """
+    log.debug( u'in _setup_viewinscr(); starting' )
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
     log_id = common.get_log_identifier( request.session )
@@ -99,6 +102,7 @@ def _handle_viewinscr_POST( request ):
     """ Handles view-inscription POST.
         Returns a response object.
         Called by viewinscr(). """
+    log.debug( u'in _handle_viewinscr_POST(); starting' )
     if request.session['authz_info']['authorized'] == False:
         return_response = HttpResponseForbidden( '403 / Forbidden' )
     # work_result = common.handleClick( original_status=request.session['current_display_status'], button_action=request.POST['action_button'], item_id=inscrid, log_id=log_id )
@@ -112,6 +116,7 @@ def _prepare_viewinscr_get_data( request, inscrid ):
     """ Prepares data for regular or ajax GET.
         Returns a tuple of vars.
         Called by viewinscr(). """
+    log.debug( u'in _prepare_viewinscr_get_data(); starting' )
     log_id = common.get_log_identifier( request.session )
     s = solr.SolrConnection( settings_app.SOLR_URL )
     stateQuery = request.GET.get('qstring')
@@ -130,25 +135,35 @@ def _prepare_viewinscr_get_data( request, inscrid ):
     bibDip = common.fetchBiblio( q.results, 'biblDiplomatic')
     bibTsc = common.fetchBiblio( q.results, 'biblTranscription')
     bibTrn = common.fetchBiblio( q.results, 'biblTranslation')
-    return ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status )
+    log.debug( u'in _prepare_viewinscr_get_data(); bib stuff grabbed' )
+    view_xml_url = u'%s://%s%s' % (
+        request.META[u'wsgi.url_scheme'],
+        request.get_host(),
+        reverse(u'xml_url', kwargs={u'inscription_id':inscrid}),
+        )
+    log.debug( u'in _prepare_viewinscr_get_data(); view_xml_url, %s' % view_xml_url )
+    return ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, view_xml_url )
 
-def _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn ):
+def _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn, view_xml_url ):
     """ Returns view-inscription response-object for ajax GET.
         Called by viewinscr() """
+    log.debug( u'in _prepare_viewinscr_ajax_get_response(); starting' )
     context = {
         'inscription': q,
         'biblios':bibs,
         'bibDip' : bibDip,
         'bibTsc' : bibTsc,
         'bibTrn' : bibTrn,
-        'biblioFull': False }
+        'biblioFull': False,
+        'view_xml_url': view_xml_url }
     return_str = ajax_snippet.render_block_to_string( 'iip_search_templates/viewinscr.html', 'viewinscr', context )
     return_response = HttpResponse( return_str )
     return return_response
 
-def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, log_id ):
+def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, view_xml_url, log_id ):
     """ Returns view-inscription response-object for regular GET.
         Called by viewinscr() """
+    log.debug( u'in _prepare_viewinscr_plain_get_response(); starting' )
     context = {
         'inscription': q,
         'biblios':bibs,
@@ -159,8 +174,10 @@ def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, curr
         'chosen_display_status': current_display_status,
         'inscription_id': inscrid,
         'session_authz_info': request.session['authz_info'],
-        'admin_links': common.make_admin_links( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id )
+        'admin_links': common.make_admin_links( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id ),
+        'view_xml_url': view_xml_url
         }
+    log.debug( u'in _prepare_viewinscr_plain_get_response(); context, %s' % pprint.pformat(context) )
     return_response = render( request, u'iip_search_templates/viewinscr.html', context )
     return return_response
 
@@ -171,7 +188,7 @@ def login( request ):
     """ Takes shib-eppn or 'dev_auth_hack' parameter (if enabled for non-shibbolized development) and checks it agains settings list of LEGIT_ADMINS. """
     ## init
     log_id = common.get_log_identifier( request.session )
-    log.info( u'in views.login(); id, %s; starting' % log_id )
+    log.info( u'in login(); id, %s; starting' % log_id )
     request.session['authz_info'] = { 'authorized': False }
     ## checks
     if _check_shib( request, log_id ) == False:
@@ -228,6 +245,7 @@ def _make_response( request, log_id ):
 
 def logout( request ):
     """ Removes session-based authentication. """
+    log.info( u'in logout(); starting' )
     request.session[u'authz_info'] = { u'authorized': False }
     if u'next' in request.GET:
         redirect_url = request.GET[u'next']
@@ -245,6 +263,7 @@ def process( request, inscription_id ):
             Checks authN/Z; executes process of current inscription.
             Returns current view-inscription page.
         """
+    log.info( u'in process(); starting' )
     q = rq.Queue( u'iip', connection=redis.Redis() )
     if inscription_id == u'new':
         job = q.enqueue_call (
@@ -256,10 +275,14 @@ def process( request, inscription_id ):
         return HttpResponse( u'not yet implemented' )
 
 
-## testing ##
+## view_xml ##
 
-def hello( request ):
-    """ Testing url handoff. """
-    log.debug( u'hello() starting' )
-    log.info( u'about to return' )
-    return HttpResponse( u'HELLO_WORLD!' )
+def view_xml( request, inscription_id ):
+    """ Returns inscription xml. """
+    log.info( u'in view_xml(); starting' )
+    file_path = u'%s/%s.xml' % ( settings_app.XML_DIR_PATH, inscription_id )
+    log.debug( u'in view_xml(); id, %s; file_path' % file_path )
+    with open( file_path ) as f:
+        xml_utf8 = f.read()
+        xml = xml_utf8.decode(u'utf-8')
+    return HttpResponse( xml, mimetype=u'text/xml' )
