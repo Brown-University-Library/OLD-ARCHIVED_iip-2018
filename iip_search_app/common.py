@@ -36,7 +36,7 @@ def fetchBiblio( q_results, target ):
         try:
             biblios = _get_biblio_results( r, target )
         except Exception as e:
-            log.error( u'in common.fetchBiblio(); id, %s; exception, %s' % (u'n/a', unicode(repr(e))) )
+            log.error( u'in common.fetchBiblio(); id, %s; exception, %s -- but NOT stopping processing' % (u'n/a', unicode(repr(e))) )
             biblios = []
     return biblios
 
