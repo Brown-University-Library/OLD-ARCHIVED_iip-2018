@@ -112,6 +112,20 @@ def _handle_viewinscr_POST( request ):
     return_response = HttpResponseRedirect( '.' )
     return return_response
 
+# def _handle_viewinscr_POST( request ):
+#     """ Handles view-inscription POST.
+#         Returns a response object.
+#         Called by viewinscr(). """
+#     log.debug( u'in _handle_viewinscr_POST(); starting' )
+#     if request.session['authz_info']['authorized'] == False:
+#         return_response = HttpResponseForbidden( '403 / Forbidden' )
+#     # work_result = common.handleClick( original_status=request.session['current_display_status'], button_action=request.POST['action_button'], item_id=inscrid, log_id=log_id )
+#     # common.updateLog( '- in views.viewinscr(); work_result is: %s' % work_result, log_id )
+#     # return HttpResponse( u'<p>INTERRUPT</p>')
+#     # request.session['click_confirmation_text'] = '%s has been marked as "%s"' % ( inscrid, work_result['new_display_status'] )
+#     return_response = HttpResponseRedirect( '.' )
+#     return return_response
+
 def _prepare_viewinscr_get_data( request, inscrid ):
     """ Prepares data for regular or ajax GET.
             Returns a tuple of vars.
