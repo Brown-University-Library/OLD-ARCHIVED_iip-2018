@@ -112,6 +112,20 @@ def _handle_viewinscr_POST( request ):
     return_response = HttpResponseRedirect( '.' )
     return return_response
 
+# def _handle_viewinscr_POST( request ):
+#     """ Handles view-inscription POST.
+#         Returns a response object.
+#         Called by viewinscr(). """
+#     log.debug( u'in _handle_viewinscr_POST(); starting' )
+#     if request.session['authz_info']['authorized'] == False:
+#         return_response = HttpResponseForbidden( '403 / Forbidden' )
+#     # work_result = common.handleClick( original_status=request.session['current_display_status'], button_action=request.POST['action_button'], item_id=inscrid, log_id=log_id )
+#     # common.updateLog( '- in views.viewinscr(); work_result is: %s' % work_result, log_id )
+#     # return HttpResponse( u'<p>INTERRUPT</p>')
+#     # request.session['click_confirmation_text'] = '%s has been marked as "%s"' % ( inscrid, work_result['new_display_status'] )
+#     return_response = HttpResponseRedirect( '.' )
+#     return return_response
+
 def _prepare_viewinscr_get_data( request, inscrid ):
     """ Prepares data for regular or ajax GET.
             Returns a tuple of vars.
@@ -156,43 +170,16 @@ def _get_bib_data( q_results ):
     """ Takes solrpy query-object results.
             Calls bib lookups.
             Returns tuple of lookup data.
-        Called by _prepare_viewinscr_get_data(). """
+        Called by _prepare_viewinscr_get_data().
+        TODO: move into models or common. """
+    log.debug( u'in _get_bib_data(); q_results, %s' % pprint.pformat(q_results) )
     bibs = common.fetchBiblio( q_results, 'bibl')
     bibDip = common.fetchBiblio( q_results, 'biblDiplomatic')
     bibTsc = common.fetchBiblio( q_results, 'biblTranscription')
     bibTrn = common.fetchBiblio( q_results, 'biblTranslation')
-    log.debug( u'in _get_bib_data(); bib stuff grabbed' )
-    return ( bibs, bibDip, bibTsc, bibTrn )
-
-# def _prepare_viewinscr_get_data( request, inscrid ):
-#     """ Prepares data for regular or ajax GET.
-#         Returns a tuple of vars.
-#         Called by viewinscr(). """
-#     log.debug( u'in _prepare_viewinscr_get_data(); starting' )
-#     log_id = common.get_log_identifier( request.session )
-#     s = solr.SolrConnection( settings_app.SOLR_URL )
-#     qstring = u'inscription_id:%s' % inscrid
-#     try:
-#         q = s.query(qstring)
-#     except:
-#         q = s.query('*:*', **args)
-#     ## add the current display_status to the session
-#     current_display_status = u'init'
-#     if int( q.numFound ) > 0:
-#         current_display_status = q.results[0]['display_status']
-#         request.session['current_display_status'] = current_display_status
-#     bibs = common.fetchBiblio( q.results, 'bibl')    # 2012-03-14, changed from fetchBiblio(q, '...') for easier testing
-#     bibDip = common.fetchBiblio( q.results, 'biblDiplomatic')
-#     bibTsc = common.fetchBiblio( q.results, 'biblTranscription')
-#     bibTrn = common.fetchBiblio( q.results, 'biblTranslation')
-#     log.debug( u'in _prepare_viewinscr_get_data(); bib stuff grabbed' )
-#     view_xml_url = u'%s://%s%s' % (
-#         request.META[u'wsgi.url_scheme'],
-#         request.get_host(),
-#         reverse(u'xml_url', kwargs={u'inscription_id':inscrid}),
-#         )
-#     log.debug( u'in _prepare_viewinscr_get_data(); view_xml_url, %s' % view_xml_url )
-#     return ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, view_xml_url )
+    return_tuple = ( bibs, bibDip, bibTsc, bibTrn )
+    log.debug( u'in _get_bib_data(); return_tuple, %s' % pprint.pformat(return_tuple) )
+    return return_tuple
 
 def _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn, view_xml_url ):
     """ Returns view-inscription response-object for ajax GET.

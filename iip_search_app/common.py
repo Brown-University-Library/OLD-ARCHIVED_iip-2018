@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging, pprint, random, re
-import solr
+import mysolr, requests, solr
 from StringIO import StringIO
 from django.core.urlresolvers import reverse
 from iip_search_app import settings_app
@@ -9,6 +9,37 @@ from lxml import etree
 
 
 log = logging.getLogger(__name__)
+
+
+def update_display_status( button_action, item_id, query_url, update_url, log_identifier=None ):
+    """ Takes original_status, button_action, and item_id strings.
+            Gets current solr info, updates the new display status and posts it back to solr.
+            Returns info dict.
+        Called by views.viewinscr() when user clicks status-button. """
+    ## setup
+    log.debug( u'in update_display_status(); button_action, %s; item_id, %s; query_url, %s' % (button_action, item_id, query_url) )
+    new_status_dict = {  # {button_action: updated status}
+      u'Approved': u'approved',
+      u'To Correct': u'to_correct',
+      u'To Approve': u'to_approve' }
+    ## get current data
+    payload = { u'q': u'inscription_id:%s' % item_id, u'indent': u'on', u'wt': u'json' }
+    r = requests.get( query_url, params=payload )  # url like: 'http://solr_url/solr/iip/select/?q=inscription_id%3Aakas0001&indent=on'
+    current_data_dict = r.json()
+    docs = current_data_dict[u'response'][u'docs']
+    doc_dict = docs[0]
+    ## update display status
+    doc_dict[u'display_status'] = new_status_dict[button_action]
+    ## update solr with new data
+    mysolr_reference = mysolr.Solr( update_url )
+    solr_response = mysolr_reference.update( [doc_dict], u'xml', commit=True )  # 'xml' param converts json to xml for post; required for our old version of solr
+    log.debug( u'in update_display_status(); solr_response.status, %s' % solr_response.status )
+    ## respond
+    return_dict = {
+        u'button_clicked': button_action,
+        u'new_display_status': new_status_dict[button_action],
+        u'solr_response_status': solr_response.status }
+    return return_dict
 
 
 def facetResults( facet ):

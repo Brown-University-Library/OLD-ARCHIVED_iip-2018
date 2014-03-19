@@ -144,6 +144,60 @@ class CommonTest( TestCase ):
             False,
             data_dict[u'well_formed'] )
 
+    ## start test_update_display_status()
+
+    def test_update_display_status(self):
+        """ Tests updated solr display-status. """
+        ## setup
+        ( SOLR_URL, TEST_INSCRIPTION_ID, solr_query_url, current_status_to_new_button_click_dict ) = self._setup_update_display_status_test()
+        current_display_status = self._get_current_display_status( item_id=settings_app.TEST_INSCRIPTION_ID, query_url=solr_query_url )
+        result_dict = common.update_display_status(
+            button_action=current_status_to_new_button_click_dict[current_display_status],
+            item_id=TEST_INSCRIPTION_ID,
+            query_url=u'%s/select/' % settings_app.SOLR_URL,
+            update_url=SOLR_URL )
+        pprint.pprint( result_dict )
+        checked_display_status = self._get_current_display_status( item_id=TEST_INSCRIPTION_ID, query_url=solr_query_url )
+        ## tests
+        self.assertEqual(
+            True,
+            current_display_status in [u'approved', u'to_approve', u'to_correct'] )
+        self.assertEqual(
+            [ u'button_clicked', u'new_display_status', u'solr_response_status' ],
+            sorted(result_dict.keys()) )
+        self.assertEqual(
+            checked_display_status,
+            result_dict[u'new_display_status'] )
+
+    def _setup_update_display_status_test(self):
+        """ Helper function.
+            Prepares variables.
+            Returns tuple of variables.
+            Called by test_update_display_status(). """
+        SOLR_URL = settings_app.SOLR_URL
+        TEST_INSCRIPTION_ID = settings_app.TEST_INSCRIPTION_ID
+        solr_query_url = u'%s/select/' % settings_app.SOLR_URL
+        current_status_to_new_button_click_dict = {  # simulates a button-click given the current-status
+            u'approved': u'To Correct',
+            u'to_correct': u'To Approve',
+            u'to_approve': u'Approved' }
+        return ( SOLR_URL, TEST_INSCRIPTION_ID, solr_query_url, current_status_to_new_button_click_dict )
+
+    def _get_current_display_status( self, item_id, query_url ):
+        """ Helper function.
+            Takes item_id string.
+            Performs solr lookup.
+            Returns the solr display_status.
+            Called by update_display_status(). """
+        payload = { u'q': u'inscription_id:%s' % item_id, u'indent': u'on', u'wt': u'json' }
+        r = requests.get( query_url, params=payload )  # url like: 'http://solr_url/solr/iip/select/?q=inscription_id%3Aakas0001&indent=on'
+        current_data_dict = r.json()
+        docs = current_data_dict[u'response'][u'docs']
+        doc_dict = docs[0]
+        return doc_dict[u'display_status']
+
+    ## end test_update_display_status()
+
     ## end class Common()
 
 
