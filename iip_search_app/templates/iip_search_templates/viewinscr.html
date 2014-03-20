@@ -21,7 +21,8 @@
 
     {% if session_authz_info.authorized %}
       <div id="action_buttons">
-        <form action="/cds/projects/iip/viewinscr/{{ inscription_id }}/" method="POST">
+        <form action="{{ current_url }}" method="POST">{% csrf_token %}
+        <!-- <form action="/cds/projects/iip/viewinscr/{{ inscription_id }}/" method="POST"> -->
           <p>( current display status: '{{ chosen_display_status }}' )</p>
           <p>New Status:</p>
           {% ifequal chosen_display_status 'to_approve' %}
