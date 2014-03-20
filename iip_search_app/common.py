@@ -11,7 +11,7 @@ from lxml import etree
 log = logging.getLogger(__name__)
 
 
-def update_display_status( button_action, item_id, query_url, update_url, log_identifier=None ):
+def update_display_status( button_action, item_id, query_url, update_url, log_id=None ):
     """ Takes original_status, button_action, and item_id strings.
             Gets current solr info, updates the new display status and posts it back to solr.
             Returns info dict.
