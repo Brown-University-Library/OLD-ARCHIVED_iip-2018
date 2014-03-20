@@ -89,20 +89,6 @@ def viewinscr( request, inscrid ):
             return_response = _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, view_xml_url, current_url, log_id )
         return return_response
 
-# def viewinscr( request, inscrid ):
-#     """ Handles view-inscription GET, ajax-GET, and approval-update POST. """
-#     log_id = _setup_viewinscr( request )
-#     log.info( u'in viewinscr(); id, %s; starting' % log_id )
-#     if request.method == u'POST':  # TODO: call subfunction after getting approval working again
-#         return _handle_viewinscr_POST( request )
-#     else:  # GET
-#         ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, view_xml_url, current_url ) = _prepare_viewinscr_get_data( request, inscrid )
-#         if request.is_ajax():
-#             return_response = _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn, view_xml_url )
-#         else:
-#             return_response = _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, view_xml_url, log_id )
-#         return return_response
-
 def _setup_viewinscr( request ):
     """ Takes request;
             updates session with authz_info and log_id;
@@ -121,7 +107,6 @@ def _handle_viewinscr_POST( request, inscrid, log_id ):
     log.debug( u'in _handle_viewinscr_POST(); starting' )
     if request.session['authz_info']['authorized'] == False:
         return_response = HttpResponseForbidden( '403 / Forbidden' )
-
     query_url=u'%s/select/' % settings_app.SOLR_URL
     work_result = common.update_display_status(
         button_action=request.POST['action_button'],
@@ -129,27 +114,10 @@ def _handle_viewinscr_POST( request, inscrid, log_id ):
         query_url=query_url,
         update_url=settings_app.SOLR_URL,
         log_id=log_id )
-    log.debug( u'in _handle_viewinscr_POST(); work_result, %s' % pprint.pformat(work_result) )
     request.session['click_confirmation_text'] = '%s has been marked as "%s"' % ( inscrid, work_result['new_display_status'] )
 
     return_response = HttpResponseRedirect( '.' )
     return return_response
-
-# def _handle_viewinscr_POST( request ):
-#     """ Handles view-inscription POST.
-#         Returns a response object.
-#         Called by viewinscr(). """
-#     log.debug( u'in _handle_viewinscr_POST(); starting' )
-#     if request.session['authz_info']['authorized'] == False:
-#         return_response = HttpResponseForbidden( '403 / Forbidden' )
-#     # work_result = common.handleClick( original_status=request.session['current_display_status'], button_action=request.POST['action_button'], item_id=inscrid, log_id=log_id )
-#     # common.updateLog( '- in views.viewinscr(); work_result is: %s' % work_result, log_id )
-#     # return HttpResponse( u'<p>INTERRUPT</p>')
-#     # request.session['click_confirmation_text'] = '%s has been marked as "%s"' % ( inscrid, work_result['new_display_status'] )
-#     # c = {}
-#     # c.update( csrf(request) )
-#     return_response = HttpResponseRedirect( '.' )
-#     return return_response
 
 def _prepare_viewinscr_get_data( request, inscrid ):
     """ Prepares data for regular or ajax GET.
@@ -160,17 +128,8 @@ def _prepare_viewinscr_get_data( request, inscrid ):
     q = _call_viewinsc_solr( inscrid )
     current_display_status = _update_viewinscr_display_status( request, q )
     ( bibs, bibDip, bibTsc, bibTrn ) = _get_bib_data( q.results )
-    view_xml_url = u'%s://%s%s' % (
-        request.META[u'wsgi.url_scheme'],
-        request.get_host(),
-        reverse(u'xml_url', kwargs={u'inscription_id':inscrid}),
-        )
-    current_url = u'%s://%s%s' % (
-        request.META[u'wsgi.url_scheme'],
-        request.get_host(),
-        reverse(u'inscription_url', kwargs={u'inscrid':inscrid}),
-        )
-    log.debug( u'in _prepare_viewinscr_get_data(); view_xml_url, %s' % view_xml_url )
+    view_xml_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'xml_url', kwargs={u'inscription_id':inscrid})  )
+    current_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'inscription_url', kwargs={u'inscrid':inscrid})  )
     return ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, view_xml_url, current_url )
 
 def _call_viewinsc_solr( inscription_id ):
