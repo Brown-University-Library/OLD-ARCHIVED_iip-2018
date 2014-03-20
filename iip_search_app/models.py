@@ -342,7 +342,7 @@ class Processor( object ):
                 Returns updated xml in dict.
             Called by process_file().
             Note: normally, vcs updates should trigger the display_status: u'to_approve'. """
-        log.debug( u'in update_display_facet(); initial_solr_xml is, ```%s```' % initial_solr_xml )
+        # log.debug( u'in update_display_facet(); initial_solr_xml is, ```%s```' % initial_solr_xml )
         assert type(initial_solr_xml) == unicode, type(initial_solr_xml)
         assert display_status in [ u'to_approve', u'to_correct', u'approved' ]
         doc = etree.fromstring( initial_solr_xml.encode(u'utf-8'))    # can't take unicode string due to xml file's encoding declaration

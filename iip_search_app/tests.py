@@ -156,7 +156,6 @@ class CommonTest( TestCase ):
             item_id=TEST_INSCRIPTION_ID,
             query_url=u'%s/select/' % settings_app.SOLR_URL,
             update_url=SOLR_URL )
-        pprint.pprint( result_dict )
         checked_display_status = self._get_current_display_status( item_id=TEST_INSCRIPTION_ID, query_url=solr_query_url )
         ## tests
         self.assertEqual(

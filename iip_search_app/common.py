@@ -224,7 +224,7 @@ def validate_xml( xml=None, schema=None, xml_path=None, schema_path=None ):
         Called by: nothing yet.  :(  I need a schema!
         TODO: add exception handling -- document may not be, eg, well-formed. """
     ( the_xml, the_schema ) = _setup_validate_xml( xml, schema, xml_path, schema_path )
-    log.debug( u'in common.validate_xml(); the_xml, `%s`; the_schema, `%s`' % (the_xml, the_schema) )
+    # log.debug( u'in common.validate_xml(); the_xml, `%s`; the_schema, `%s`' % (the_xml, the_schema) )
     schema_file = StringIO( the_schema.encode(u'utf-8') )  # _str_ required if xml includes an encoding-declaration
     schema_doc = etree.parse( schema_file )
     schema_object = etree.XMLSchema( schema_doc )
