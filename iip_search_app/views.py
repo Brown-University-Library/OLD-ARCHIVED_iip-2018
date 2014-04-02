@@ -29,6 +29,19 @@ def iip_results( request ):
     else:  # regular GET
         return render( request, u'iip_search_templates/search_form.html', _get_GET_context(request, log_id) )
 
+def iip_results_z( request ):
+    """ Handles /search_zotero/ GET, POST, and ajax-GET. """
+    log_id = common.get_log_identifier( request.session )
+    log.info( u'in iip_results_z(); id, %s; starting' % log_id )
+    if not u'authz_info' in request.session:
+        request.session[u'authz_info'] = { u'authorized': False }
+    if request.method == u'POST':  # form has been submitted by user
+        return render( request, u'iip_search_templates/base_zotero.html', _get_POST_context(request, log_id) )
+    elif request.is_ajax():  # user has requested another page, a facet, etc.
+        return HttpResponse( _get_ajax_unistring(request) )
+    else:  # regular GET
+        return render( request, u'iip_search_templates/search_form_zotero.html', _get_GET_context(request, log_id) )
+
 def _get_POST_context( request, log_id ):
     """ Returns correct context for POST.
         Called by iip_results() """
@@ -88,6 +101,53 @@ def viewinscr( request, inscrid ):
         else:
             return_response = _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, view_xml_url, current_url, log_id )
         return return_response
+
+def viewinscr_zotero(request, inscrid):
+    """ Handles view-inscription GET with new Javascript and Zotero bibliography. """
+    log_id = _setup_viewinscr( request )
+    log.info( u'in viewinscr(); id, %s; starting' % log_id )
+    if request.method == u'POST':  # TODO: call subfunction after getting approval working again
+        return _handle_viewinscr_POST( request, inscrid, log_id )
+    else:  # GET
+        ( q, z_bibids, specific_sources, current_display_status, view_xml_url, current_url ) = _z_prepare_viewinscr_get_data( request, inscrid )
+        if request.is_ajax():
+            return_response = _z_prepare_viewinscr_ajax_get_response( q, z_bibids, specific_sources, view_xml_url )
+        else:
+            return_response = _z_prepare_viewinscr_plain_get_response( q, z_bibids, specific_sources, current_display_status, inscrid, request, view_xml_url, current_url, log_id )
+        return return_response
+
+# Prepare an inscription using zotero rather than biblio
+def _z_prepare_viewinscr_get_data (request, inscrid):
+    """ Prepares data for regular or ajax GET.
+            Returns a tuple of vars.
+        Called by viewinscr(). """
+    log.debug( u'in _z_prepare_viewinscr_get_data(); starting' )
+    log_id = common.get_log_identifier( request.session )
+
+    # The results of the solr query to find the inscription. q.results is list of dictionaries of values.
+    q = _call_viewinsc_solr( inscrid ) 
+    
+    current_display_status = _update_viewinscr_display_status( request, q ) 
+
+    # Now, rather than make a call to biblio, parse out the bibl fields in q
+    # z_bibids = set() # What will be a set of tuples of bibliographic info
+    # for bibl in q.results[0]['bibl']:
+    #     (zid, ntype, n) = bibl.split("|") # Bibl is something like "bibl=IIP-403.xml|nType=page|n=79-85"
+    #     zid = zid[5:]      #parse off 'bibl='
+    #     ntype = ntype[6:]  #parse off 'nType='
+    #     n = n[2:]          #parse off 'n='
+    #     zid = zid.rstrip(".xml") #parse off '.xml' if necessary
+    #     z_bibids |= set((zid, ntype, n)) #Add in the tuple to the set of bibliography entries
+    z_bibids = [x.replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", "") for x in q.results[0]['bibl']]
+
+    specific_sources = dict()
+    specific_sources['transcription'] = q.results[0]['biblTranscription'][0] if 'biblTranscription' in q.results[0] else ""
+    specific_sources['translation'] = q.results[0]['biblTranslation'][0] if 'biblTranslation' in q.results[0] else ""
+    specific_sources['diplomatic'] = q.results[0]['biblDiplomatic'][0] if 'biblDiplomatic' in q.results[0] else ""
+
+    view_xml_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'xml_url', kwargs={u'inscription_id':inscrid})  )
+    current_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'inscription_url', kwargs={u'inscrid':inscrid})  )
+    return ( q, z_bibids, specific_sources, current_display_status, view_xml_url, current_url )
 
 def _setup_viewinscr( request ):
     """ Takes request;
@@ -206,6 +266,44 @@ def _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, curr
         }
     # log.debug( u'in _prepare_viewinscr_plain_get_response(); context, %s' % pprint.pformat(context) )
     return_response = render( request, u'iip_search_templates/viewinscr.html', context )
+    return return_response
+
+def _z_prepare_viewinscr_ajax_get_response( q, z_bibids, specific_sources, view_xml_url ):
+    """ Returns view-inscription response-object for ajax GET.
+        Called by viewinscr() """
+    log.debug( u'in _prepare_viewinscr_ajax_get_response(); starting' )
+    context = {
+        'inscription': q,
+        'z_ids': z_bibids,
+        'biblDiplomatic' : specific_sources['diplomatic'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
+        'biblTranscription' : specific_sources['transcription'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
+        'biblTranslation' : specific_sources['translation'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
+        'biblioFull': False,
+        'view_xml_url': view_xml_url }
+    return_str = ajax_snippet.render_block_to_string( 'iip_search_templates/viewinscr_zotero.html', 'viewinscr', context )
+    return_response = HttpResponse( return_str )
+    return return_response
+
+def _z_prepare_viewinscr_plain_get_response( q, z_bibids, specific_sources, current_display_status, inscrid, request, view_xml_url, current_url, log_id ):
+    """ Returns view-inscription response-object for regular GET.
+        Called by viewinscr() """
+    log.debug( u'in _prepare_viewinscr_plain_get_response(); starting' )
+    context = {
+        'inscription': q,
+        'z_ids': z_bibids,
+        'biblDiplomatic' : specific_sources['diplomatic'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
+        'biblTranscription' : specific_sources['transcription'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
+        'biblTranslation' : specific_sources['translation'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
+        'biblioFull': True,
+        'chosen_display_status': current_display_status,
+        'inscription_id': inscrid,
+        'session_authz_info': request.session['authz_info'],
+        'admin_links': common.make_admin_links( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id ),
+        'view_xml_url': view_xml_url,
+        'current_url': current_url
+        }
+    # log.debug( u'in _prepare_viewinscr_plain_get_response(); context, %s' % pprint.pformat(context) )
+    return_response = render( request, u'iip_search_templates/viewinscr_zotero.html', context )
     return return_response
 
 
