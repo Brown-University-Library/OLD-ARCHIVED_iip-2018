@@ -8,6 +8,7 @@ import json, os
 ## solr ##
 
 SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )  # main solr instance
+# SOLR_URL = unicode("http://localhost:8983/solr/iip_inscriptions/select") # Local Solr instance
 BIBSOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__BIBSOLR_URL') )  # biblio solr instance
 TEST_INSCRIPTION_ID = unicode( os.environ.get(u'IIP_SEARCH__TEST_INSCRIPTION_ID') )  # for testing common.update_display_status()
 

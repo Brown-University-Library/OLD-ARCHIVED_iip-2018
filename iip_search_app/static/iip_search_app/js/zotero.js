@@ -40,15 +40,10 @@ function render_bibliography() {
 	retrieve_bib(id_list, function() {
 		if(this.status == 200) {
 			var data = this.responseXML;
-			console.log(data.documentElement);
 			var entries = data.documentElement.getElementsByTagName('entry');
-			console.log(entries);
 			for (var i = 0; i < entries.length; i++) {
-				console.log(entries[i]);
 				var contents = entries[i].getElementsByTagName("content")[0].getElementsByTagName('subcontent');
-				console.log(contents);
 				var entryjson = JSON.parse(contents[1].innerHTML);
-				console.log(entryjson.archiveLocation);
 				bibliographies[entryjson.archiveLocation] = {};
 				bibliographies[entryjson.archiveLocation]['parsed'] = entryjson;
 				bibliographies[entryjson.archiveLocation]['full'] = contents[0].innerHTML;
@@ -64,16 +59,25 @@ function render_bibliography() {
 				if(b[1] === "page") {
 					ntype = "Page";
 				}
-				this.innerHTML = "<br/>" +  bibliographies[b[0]]['full'] + "(" + ntype + " " + b[2] + ") <a href='" + bibliographies[b[0]]['url'] + "'>Full Entry</a><br/>";
+				try {
+					this.innerHTML = "<br/>" +  bibliographies[b[0]]['full'] + "(" + ntype + " " + b[2] + ") <a href='" + bibliographies[b[0]]['url'] + "'>Full Entry</a><br/>";
+				}
+				catch(err) {
+					this.innerHTML = "Bibliography Not Found";
+				}
 				this.attributes.class.value = "";
 			});
 			$("span.biblToRetrieve").each(function() {
 				var b = this.innerText.split("|");
-				var entry = bibliographies[b[0]]['parsed'];
-				var colon = ": ";
-				if(b[2] === "") colon = "";
-				var h = entry.creators[0]['lastName'] + ". " + entry.title + ", " + entry.date + colon + b[2] + " (<a href='" + bibliographies[b[0]]['url'] + "'>Full</a>)";
-				this.innerHTML = h;
+				try {
+					var entry = bibliographies[b[0]]['parsed'];
+					var colon = ": ";
+					if(b[2] === "") colon = "";
+					this.innerHTML = entry.creators[0]['lastName'] + ". " + entry.title + ", " + entry.date + colon + b[2] + " (<a href='" + bibliographies[b[0]]['url'] + "'>Full</a>)";
+				}
+				catch(err) {
+					this.innerHTML = "Bibliography Not Found";
+				}
 				this.attributes.class.value = "";
 			})
 		}
