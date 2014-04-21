@@ -1,0 +1,107 @@
+{% extends "iip_search_templates/search_zotero.html" %}
+{% load iipCustomFilters %}
+
+{%block viewinscr%}
+
+<div id="single_inscription">
+
+  {% for i in inscription %}
+
+    {% autoescape off %}
+    <!--    <div class="resultTitle">
+            <p style="float:left"><span class="short_header">{{i.inscription_id|upper}} - {{i.short_description}}</span></p>
+            <p style="float:right"><a href="/iip/viewinscr/{{i.inscription_id}}/">View single inscription</a></p>
+            <p style="clear:both;"></p>
+
+        </div>-->
+
+    <div class="resultTitle">
+      <p style="clear: both"><span class="short_header">{{i.inscription_id|upper}} - {{i.short_description}}</span></p>
+    </div>
+
+    {% if session_authz_info.authorized %}
+      <div id="action_buttons">
+        <form action="{{ current_url }}" method="POST">{% csrf_token %}
+        <!-- <form action="/cds/projects/iip/viewinscr/{{ inscription_id }}/" method="POST"> -->
+          <p>( current display status: '{{ chosen_display_status }}' )</p>
+          <p>New Status:</p>
+          {% ifequal chosen_display_status 'to_approve' %}
+            <input type="submit" name="action_button" value="Approved" /> <input type="submit" name="action_button" value="To Correct" />
+          {% endifequal %}
+          {% ifequal chosen_display_status 'approved' %}
+            <input type="submit" name="action_button" value="To Correct" />
+          {% endifequal %}
+          {% ifequal chosen_display_status 'to_correct' %}
+            <input type="submit" name="action_button" value="To Approve" />
+          {% endifequal %}
+        </form>
+      </div>
+    {% endif %}  {% comment %}end of '''if session_authz_info.authorized'''{% endcomment %}
+
+    <div id="details">
+
+      <div class="insText">
+        <h4>Diplomatic:</h4>
+        <p>{%if i.diplomatic%}{{i.diplomatic}}{%else%}No diplomatic{%endif%}</p>
+        <h4>Transcription:</h4>
+        <p>{%if i.transcription%}{{i.transcription}}{%else%}No transcription{%endif%}</p>
+        <h4>Translation:</h4>
+        <p>{%if i.translation%}{{i.translation}}{%else%}No translation{%endif%}</p>
+      </div>
+
+      <div class="insMetadata">
+        {% if i.image %}
+          <p class="thumbnail">
+          {% for thumb in i.image %}
+            <a href="/django_z_media/iip_z_media/inscription_images/display_size/{{thumb}}.jpg"><img src="/django_z_media/iip_z_media/inscription_images/thumbnails/{{thumb}}_t.jpg"/></a><br />
+          {% endfor %}
+          </p>
+        {% endif %}
+        <p><strong>Language:</strong>&nbsp;&nbsp;{%for l in i.language%}{{l}}{%endfor%}</p>
+        <p><strong>Dimensions:</strong>&nbsp;&nbsp;{%if i.dimensions%}{{i.dimensions}}{%endif%}</p>
+        <p><strong>Date:</strong>&nbsp;&nbsp;{%if i.notBefore%}{{i.notBefore|cleanDates}} to {{i.notAfter|cleanDates}}{%endif%}</p>
+        <p><strong>Place found:</strong>&nbsp;&nbsp;{%if i.place_found%}{{i.place_found}}{%endif%}</p>
+        <p><strong>Note:</strong>&nbsp;&nbsp;{%if i.description%}{{i.description}}{%endif%}</p>
+        <p><strong>Figures:</strong>&nbsp;&nbsp;{%for f in i.figure%}{{f}}<br />{%endfor%}</p>
+
+        {%if biblDiplomatic %}<p><strong>Source of Diplomatic:&nbsp;</strong><span id="diplomatic" class="biblToRetrieve">{{biblDiplomatic}}</span>{% endif %}
+        {%if biblTranscription %}<p><strong>Source of Transcription:&nbsp;</strong><span id="transcription" class="biblToRetrieve">{{biblTranscription}}</span>{% endif %}
+        {%if biblTranslation %}<p><strong>Source of Translation:&nbsp;</strong><span id="translation" class="biblToRetrieve">{{biblTranslation}}</span>{% endif %}
+
+        {% if i.imageSource %}
+          <p><strong>Image Source:</strong>&nbsp;{{i.imageSource.0}}</p>
+        {% endif %}
+
+        
+          <p style="{% if not biblioFull %}display: none;{% endif %}"><strong>Bibliography:</strong>&nbsp;&nbsp;
+          <ul style="{% if not biblioFull %}display: none;{% endif %}">
+          {% for b in z_ids %}
+            <li class="biblToRetrieve">
+            {{ b }}
+            </li>
+          {%endfor%}
+          </ul>
+          </p>
+        
+
+      </div>  <!-- end of div class="insMetadata" -->
+
+      <div style="clear:both"></div>
+
+      {%if not biblioFull %}<div id="permalink"><a href="../viewinscr_zotero/{{i.inscription_id}}/">Link to this inscription</a></div>{%endif%}
+
+      <div id="viewXml"><a href="{{ view_xml_url }}">View XML</a></div>
+
+    </div>  <!-- end div id="details" -->
+    {% endautoescape %}
+    {%if biblioFull %}
+    <script type="text/javascript">
+      $(document).ready(render_bibliography);
+    </script>
+    {%endif%}
+
+  {%endfor%}  {% comment %} end of '''for i in inscription''' {% endcomment %}
+
+</div> <!-- end div id="single_inscription" -->
+
+{%endblock%}
