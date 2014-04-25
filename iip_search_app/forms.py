@@ -4,6 +4,8 @@ import logging, re
 import solr
 from django import forms
 from iip_search_app import common, settings_app
+import requests
+import xml.etree.ElementTree as ET
 
 log = logging.getLogger(__name__)
 
@@ -32,16 +34,53 @@ def doDateEra(self,f,v):
             v = u"%s" % v.replace('-','')
         return u"[%s TO 10000]" % v
 
+def make_vocab_list(vocab_dict, solr_facet):
+    outlist = []
+    for item in solr_facet:
+        if item:
+            if item in vocab_dict.keys():
+                outlist.append((item, vocab_dict[item]))
+            else:
+                outlist.append((item, item))
+    return outlist
 
 class SearchForm( forms.Form ):
+    vocab_request = requests.get("http://cds.library.brown.edu/projects/iip/include_taxonomies.xml")
+    vocab = ET.fromstring(vocab_request.content)
+
+
+
+    # Turns out XPath is only supported in Python 2.7+, and we have to use 2.6...
+    # types = [(element.attrib['id'], element.find('catDesc').text) for element in vocab.findall(".//taxonomy[@id='IIP-genre']/category")]
+    # physical_types = [(element.attrib['id'], element.find('catDesc').text) for element in vocab.findall(".//taxonomy[@id='IIP-form']/category")]
+    # religions = [(element.attrib['id'], element.find('catDesc').text) for element in vocab.findall(".//taxonomy[@id='IIP-religion']/category")]
+
+    # Find all the taxonomy elements
+    taxonomies = vocab.findall('{http://www.tei-c.org/ns/1.0}taxonomy')
+
+    # Filter out the three we need
+    type_tax = [tax for tax in taxonomies if tax.attrib.values()[0] == 'IIP-genre'][0]
+    phys_types_tax = [tax for tax in taxonomies if tax.attrib.values()[0] == 'IIP-form'][0]
+    religions_tax = [tax for tax in taxonomies if tax.attrib.values()[0] == 'IIP-religion'][0]
+
+    # Get the xml:id and text of the catDesc element of each category element
+    types_dict = dict([(element.attrib.values()[0], element.find('{http://www.tei-c.org/ns/1.0}catDesc').text) for element in type_tax.findall('{http://www.tei-c.org/ns/1.0}category')])
+    physical_types_dict = dict([(element.attrib.values()[0], element.find('{http://www.tei-c.org/ns/1.0}catDesc').text) for element in phys_types_tax.findall('{http://www.tei-c.org/ns/1.0}category')])
+    religions = [(element.attrib.values()[0], element.find('{http://www.tei-c.org/ns/1.0}catDesc').text) for element in religions_tax.findall('{http://www.tei-c.org/ns/1.0}category')]
+
     #regions =  [(item, item) for item in sorted( common.facetResults('region').keys())]
     #cities =  [(item, item) for item in sorted( common.facetResults('city').keys())]
     #places = [(val, item) for item, val  in sorted(generatePlaceForm().items()) if item]
     places = [(item, item) for item in sorted( common.facetResults('placeMenu').keys()) if item]
-    types =  [(item, item) for item in sorted( common.facetResults('type').keys()) if item]
-    physical_types =  [(item, item) for item in sorted( common.facetResults('physical_type').keys()) if item]
-    languages = [(item, u"%s" % item.replace('-',' ')) for item in sorted( common.facetResults('language').keys()) if item]
-    religions = [(u'"%s"'% item,  u"%s" % item.replace('-',' ')) for item in sorted( common.facetResults('religion').keys()) if item]
+    types =  make_vocab_list(types_dict, sorted( common.facetResults('type').keys()))
+    physical_types =  make_vocab_list(physical_types_dict, sorted( common.facetResults('physical_type').keys()))
+    # languages = [(item, u"%s" % item.replace('-',' ')) for item in sorted( common.facetResults('language').keys()) if item]
+    languages = [("arc", "Aramaic"),
+                 ("grc", "Greek"),
+                 ("la", "Latin"),
+                 ("hbo", "Hebrew"),
+                 ("x-unknown", "Unknown")]
+    # religions = [(u'"%s"'% item,  u"%s" % item.replace('-',' ')) for item in sorted( common.facetResults('religion').keys()) if item]
     #
     DISPLAY_STATUSES = [
     ('approved', 'Approved'),  # ( 'value', 'label' )
@@ -87,7 +126,7 @@ class SearchForm( forms.Form ):
                         if vListFirst:
                             vListFirst = False
                         else:
-                            vlist += " OR "
+                            vlist += " OR " if ((f != u'religion') and (f != u'language')) else " AND "
                         vlist += u"%s" % c
                     v = u"(%s)" % vlist
                 else:
@@ -98,8 +137,8 @@ class SearchForm( forms.Form ):
                     if first:
                         first = False
                     else:
-                        response += " AND "
-                    response += u"%s:%s" % (f,v)
+                        if(v != ''): response += " AND "
+                    if(v != ''): response += u"%s:%s" % (f,v)
         return response
 
 

@@ -186,7 +186,7 @@ def _run_paginator_page_query( q, resultsPage, log_id ):
         pg = p.page(resultsPage)
     except Exception as e:
         pg = ''
-    log.debug( u'in common._run_paginator_page_query(); id, %s; pg is, `%s`; pg.__dict__ is, `%s`' % (log_id, pg, pg.__dict__) )
+    ## log.debug( u'in common._run_paginator_page_query(); id, %s; pg is, `%s`; pg.__dict__ is, `%s`' % (log_id, pg, pg.__dict__) )
     return ( p, pg )
 
 def _run_paginator_facet_counts( fq ):
