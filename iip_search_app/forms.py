@@ -75,10 +75,10 @@ class SearchForm( forms.Form ):
     types =  make_vocab_list(types_dict, sorted( common.facetResults('type').keys()))
     physical_types =  make_vocab_list(physical_types_dict, sorted( common.facetResults('physical_type').keys()))
     # languages = [(item, u"%s" % item.replace('-',' ')) for item in sorted( common.facetResults('language').keys()) if item]
-    languages = [("arc", "Aramaic"),
-                 ("grc", "Greek"),
-                 ("la", "Latin"),
-                 ("hbo", "Hebrew"),
+    languages = [("Aramaic", "Aramaic"),
+                 ("Greek", "Greek"),
+                 ("Latin", "Latin"),
+                 ("Hebrew", "Hebrew"),
                  ("x-unknown", "Unknown")]
     # religions = [(u'"%s"'% item,  u"%s" % item.replace('-',' ')) for item in sorted( common.facetResults('religion').keys()) if item]
     #
