@@ -55,7 +55,7 @@ for filepath in "$@"; do
 #		echo "   $path"
 #		echo "   $file"
 #		echo "   $name"
-		perl removeDiacriticsFinal.perl < $filepath > Stripped/$name.stripped.xml
+		echo $filepath > Stripped/$name.stripped.xml
 
     fi
     done

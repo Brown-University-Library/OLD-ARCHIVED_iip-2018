@@ -74,12 +74,14 @@ class SearchForm( forms.Form ):
     places = [(item, item) for item in sorted( common.facetResults('placeMenu').keys()) if item]
     types =  make_vocab_list(types_dict, sorted( common.facetResults('type').keys()))
     physical_types =  make_vocab_list(physical_types_dict, sorted( common.facetResults('physical_type').keys()))
-    # languages = [(item, u"%s" % item.replace('-',' ')) for item in sorted( common.facetResults('language').keys()) if item]
-    languages = [("Aramaic", "Aramaic"),
-                 ("Greek", "Greek"),
-                 ("Latin", "Latin"),
-                 ("Hebrew", "Hebrew"),
-                 ("x-unknown", "Unknown")]
+    languages_dict = {
+        "he":"Hebrew",
+        "la": "Latin",
+        "grc": "Greek",
+        "arc": "Aramaic",
+        "x-unknown":"Unknown"
+    }
+    languages = make_vocab_list(languages_dict, sorted( common.facetResults('language').keys()))
     # religions = [(u'"%s"'% item,  u"%s" % item.replace('-',' ')) for item in sorted( common.facetResults('religion').keys()) if item]
     #
     DISPLAY_STATUSES = [
