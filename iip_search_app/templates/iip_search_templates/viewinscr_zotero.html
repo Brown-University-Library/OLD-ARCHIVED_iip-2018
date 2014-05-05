@@ -57,7 +57,7 @@
           {% endfor %}
           </p>
         {% endif %}
-        <p><strong>Language:</strong>&nbsp;&nbsp;{%for l in i.language%}{{l}}{%endfor%}</p>
+        <p><strong>Language:</strong>&nbsp;&nbsp;{%if i.language_display%}{%for l in i.language_display%}{{l}},&nbsp;{%endfor%}{%else%}{%for l in i.language%}{{l}},&nbsp;{%endfor%}}{%endif%}</p>
         <p><strong>Dimensions:</strong>&nbsp;&nbsp;{%if i.dimensions%}{{i.dimensions}}{%endif%}</p>
         <p><strong>Date:</strong>&nbsp;&nbsp;{%if i.notBefore%}{{i.notBefore|cleanDates}} to {{i.notAfter|cleanDates}}{%endif%}</p>
         <p><strong>Place found:</strong>&nbsp;&nbsp;{%if i.place_found%}{{i.place_found}}{%endif%}</p>
