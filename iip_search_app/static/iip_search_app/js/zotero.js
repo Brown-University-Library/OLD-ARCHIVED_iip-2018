@@ -27,6 +27,7 @@ function retrieve_bib (id_list, callback) {
 
 var bibliographies = {};
 
+var x;
 
 function render_bibliography() {
 	var bib_entries = $("li.biblToRetrieve");
@@ -43,11 +44,12 @@ function render_bibliography() {
 			var entries = data.documentElement.getElementsByTagName('entry');
 			for (var i = 0; i < entries.length; i++) {
 				var contents = entries[i].getElementsByTagName("content")[0].getElementsByTagName('subcontent');
-				var entryjson = JSON.parse(contents[1].innerHTML);
+				x = contents[1];
+				var entryjson = JSON.parse(contents[1].textContent);
 				bibliographies[entryjson.archiveLocation] = {};
 				bibliographies[entryjson.archiveLocation]['parsed'] = entryjson;
-				bibliographies[entryjson.archiveLocation]['full'] = contents[0].innerHTML;
-				bibliographies[entryjson.archiveLocation]['url'] = entries[i].getElementsByTagName("id")[0].innerHTML;
+				bibliographies[entryjson.archiveLocation]['full'] = contents[0].textContent;
+				bibliographies[entryjson.archiveLocation]['url'] = entries[i].getElementsByTagName("id")[0].textContent;
 			};
 
 			$("li.biblToRetrieve").each(function() {
