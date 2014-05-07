@@ -128,7 +128,7 @@ class SearchForm( forms.Form ):
                         if vListFirst:
                             vListFirst = False
                         else:
-                            vlist += " OR " if ((f != u'religion') and (f != u'language')) else " AND "
+                            vlist += " OR " if not ((f == u'religion') or (f == u'language')) else " AND "
                         vlist += u"%s" % c
                     v = u"(%s)" % vlist
                 else:
