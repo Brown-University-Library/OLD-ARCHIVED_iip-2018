@@ -209,7 +209,7 @@ def updateQstring( initial_qstring, session_authz_dict, log_id ):
     if ( (session_authz_dict == None)
          or (not u'authorized' in session_authz_dict)
          or (not session_authz_dict['authorized'] == True) ):
-        qstring = u'display_status:(approved) AND ' + initial_qstring
+        qstring = u'display_status:(approved) AND ' + initial_qstring if initial_qstring != '' else u'display_status:(approved)'
     else:
         qstring = initial_qstring
     return { 'modified_qstring': qstring }

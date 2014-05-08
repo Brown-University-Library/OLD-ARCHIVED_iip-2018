@@ -27,12 +27,11 @@ function retrieve_bib (id_list, callback) {
 
 var bibliographies = {};
 
-
 function render_bibliography() {
 	var bib_entries = $("li.biblToRetrieve");
 	var id_list = [];
 	for (var i = 0; i < bib_entries.length; i++) {
-		var b = bib_entries[i].innerText.split("|");
+		var b = bib_entries[i].textContent.split("|");
 		if(id_list.indexOf(b[0]) == -1) {
 			id_list.push(b[0]);
 		};
@@ -42,16 +41,25 @@ function render_bibliography() {
 			var data = this.responseXML;
 			var entries = data.documentElement.getElementsByTagName('entry');
 			for (var i = 0; i < entries.length; i++) {
-				var contents = entries[i].getElementsByTagName("content")[0].getElementsByTagName('subcontent');
-				var entryjson = JSON.parse(contents[1].innerHTML);
+				var contents;
+				var contents_f = entries[i].getElementsByTagName("content")[0];
+				if(contents_f.children) {
+					contents = contents_f.children;
+				} else {
+					contents = contents_f.getElementsByTagName("subcontent");
+				}
+				var entryjson = JSON.parse(contents[1].textContent);
 				bibliographies[entryjson.archiveLocation] = {};
 				bibliographies[entryjson.archiveLocation]['parsed'] = entryjson;
-				bibliographies[entryjson.archiveLocation]['full'] = contents[0].innerHTML;
-				bibliographies[entryjson.archiveLocation]['url'] = entries[i].getElementsByTagName("id")[0].innerHTML;
+				bibliographies[entryjson.archiveLocation]['full'] = contents[0].textContent;
+				bibliographies[entryjson.archiveLocation]['url'] = entries[i].getElementsByTagName("id")[0].textContent;
 			};
 
 			$("li.biblToRetrieve").each(function() {
-				var b = this.innerText.split("|");
+				
+				var b = this.innerHTML.split("|");
+				b[0] = b[0].trim();
+
 				var ntype = "";
 				if(b[1] === "insc") {
 					ntype = "Inscription";
@@ -68,7 +76,7 @@ function render_bibliography() {
 				this.attributes.class.value = "";
 			});
 			$("span.biblToRetrieve").each(function() {
-				var b = this.innerText.split("|");
+				var b = this.innerHTML.split("|");
 				try {
 					var entry = bibliographies[b[0]]['parsed'];
 					var colon = ": ";
