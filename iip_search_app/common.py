@@ -158,7 +158,7 @@ def _run_paginator_main_query( qstring, log_id ):
     """ Performs a lookup on the query-string; returns solr object and query object.
         Called by paginateRequest()."""
     s = solr.SolrConnection( settings_app.SOLR_URL )
-    args = {'rows':25}
+    args = {'rows':25, 'sort':'inscription_id asc'}
     try:
         q = s.query((qstring.encode('utf-8')),**args)
         log.debug( u'in common._run_paginator_main_query(); id, %s; q created via try' % log_id )

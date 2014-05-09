@@ -643,6 +643,13 @@
     <xsl:text>]</xsl:text>
   </xsl:template>
   
+  <xsl:template match="tei:choice">
+    <xsl:apply-templates select="tei:expan"/>
+  </xsl:template>
+  
+  <xsl:template match="tei:sic">
+    <xsl:apply-templates select="tei:corr"/>
+  </xsl:template>
 <!--
   <xsl:template name="get-figures">
     <xsl:param name="figures"/>
