@@ -387,12 +387,12 @@ display: inline;
     margin: 0;
 	text-align:left;
 	line-height: 1.0em;
-	font-size: 1.0em;
+	font-size: 1.1em;
 	}
 
 .resultTitle {
 	font-weight:bold;
-	font-size: 1.1em
+	font-size: 1.1em;
 	color:#6c3370;
 	vertical-align: top;
 }

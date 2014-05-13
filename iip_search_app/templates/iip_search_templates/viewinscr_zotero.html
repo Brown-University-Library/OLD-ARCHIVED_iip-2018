@@ -74,7 +74,7 @@
 
         
           <p style="{% if not biblioFull %}display: none;{% endif %}"><strong>Bibliography:</strong>&nbsp;&nbsp;
-          <ul style="{% if not biblioFull %}display: none;{% endif %}">
+          <ol style="{% if not biblioFull %}display: none;{% endif %}">
           {% for b,l in z_ids.items %}
             <li class="biblToRetrieve">
             <span class='z_id'>{{ b }}</span>
@@ -85,7 +85,7 @@
             </ul>
             </li>
           {%endfor%}
-          </ul>
+          </ol>
           </p>
         
 
