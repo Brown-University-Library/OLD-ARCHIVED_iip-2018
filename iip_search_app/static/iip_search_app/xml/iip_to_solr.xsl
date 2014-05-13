@@ -360,6 +360,9 @@
       <xsl:element name="field">
         <xsl:attribute name="name"><xsl:value-of select="$field_name"/></xsl:attribute>
         <xsl:choose>
+          <xsl:when test=".='#MS' or .='MS' or .='#MLS' or .='MLS'">
+            <xsl:text>ms</xsl:text>
+          </xsl:when>
           <xsl:when test="starts-with(., '#')">
             <xsl:variable name="trimmed_id" select="substring(., 2)"></xsl:variable>
             <xsl:text/>

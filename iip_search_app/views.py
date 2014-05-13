@@ -138,7 +138,15 @@ def _z_prepare_viewinscr_get_data (request, inscrid):
     #     n = n[2:]          #parse off 'n='
     #     zid = zid.rstrip(".xml") #parse off '.xml' if necessary
     #     z_bibids |= set((zid, ntype, n)) #Add in the tuple to the set of bibliography entries
-    z_bibids = [x.replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", "") for x in q.results[0]['bibl']]
+    z_bibids_initial = [x.replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", "") for x in q.results[0]['bibl']]
+    z_bibids = {}
+    for entry in z_bibids_initial:
+        bibid, ntype, n = entry.split("|")
+        if(not bibid in z_bibids):
+            z_bibids[bibid] = []
+        if(not (ntype, n) in z_bibids[bibid]):
+            z_bibids[bibid].append((ntype, n))
+    
 
     specific_sources = dict()
     specific_sources['transcription'] = q.results[0]['biblTranscription'][0] if 'biblTranscription' in q.results[0] else ""

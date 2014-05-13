@@ -75,9 +75,14 @@
         
           <p style="{% if not biblioFull %}display: none;{% endif %}"><strong>Bibliography:</strong>&nbsp;&nbsp;
           <ul style="{% if not biblioFull %}display: none;{% endif %}">
-          {% for b in z_ids %}
+          {% for b,l in z_ids.items %}
             <li class="biblToRetrieve">
-            {{ b }}
+            <span class='z_id'>{{ b }}</span>
+            <ul>
+            {% for ntype,n in l %}
+              <li>{{ntype}}|{{n}}</li>
+            {%endfor%}
+            </ul>
             </li>
           {%endfor%}
           </ul>
