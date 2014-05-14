@@ -360,6 +360,9 @@
       <xsl:element name="field">
         <xsl:attribute name="name"><xsl:value-of select="$field_name"/></xsl:attribute>
         <xsl:choose>
+          <xsl:when test=".='#MS' or .='MS' or .='#MLS' or .='MLS'">
+            <xsl:text>ms</xsl:text>
+          </xsl:when>
           <xsl:when test="starts-with(., '#')">
             <xsl:variable name="trimmed_id" select="substring(., 2)"></xsl:variable>
             <xsl:text/>
@@ -643,6 +646,13 @@
     <xsl:text>]</xsl:text>
   </xsl:template>
   
+  <xsl:template match="tei:choice">
+    <xsl:apply-templates select="tei:expan"/>
+  </xsl:template>
+  
+  <xsl:template match="tei:sic">
+    <xsl:apply-templates select="tei:corr"/>
+  </xsl:template>
 <!--
   <xsl:template name="get-figures">
     <xsl:param name="figures"/>

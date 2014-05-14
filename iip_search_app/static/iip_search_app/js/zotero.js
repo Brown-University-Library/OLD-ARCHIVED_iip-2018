@@ -28,12 +28,13 @@ function retrieve_bib (id_list, callback) {
 var bibliographies = {};
 
 function render_bibliography() {
-	var bib_entries = $("li.biblToRetrieve");
+	var bib_entries = $("span.z_id");
 	var id_list = [];
 	for (var i = 0; i < bib_entries.length; i++) {
 		var b = bib_entries[i].textContent.split("|");
-		if(id_list.indexOf(b[0]) == -1) {
-			id_list.push(b[0]);
+		var new_id = b[0].trim();
+		if(id_list.indexOf(new_id) == -1) {
+			id_list.push(new_id);
 		};
 	};
 	retrieve_bib(id_list, function() {
@@ -57,23 +58,39 @@ function render_bibliography() {
 
 			$("li.biblToRetrieve").each(function() {
 				
-				var b = this.innerHTML.split("|");
-				b[0] = b[0].trim();
+				var bspan = $(this).find('span')[0];
+				b = bspan.innerHTML.trim();
 
-				var ntype = "";
-				if(b[1] === "insc") {
-					ntype = "Inscription";
-				} 
-				if(b[1] === "page") {
-					ntype = "Page";
-				}
+				var pages = $(this).find('ul li');
+				var new_html;
+
 				try {
-					this.innerHTML = "<br/>" +  bibliographies[b[0]]['full'] + "(" + ntype + " " + b[2] + ") <a href='" + bibliographies[b[0]]['url'] + "'>Full Entry</a><br/>";
+					new_html = bibliographies[b]['full'] + "<br/>";
 				}
 				catch(err) {
-					this.innerHTML = "Bibliography Not Found";
+					new_html = "Bibliography Not Found";
 				}
 				this.attributes.class.value = "";
+
+				if(pages.length != 0) new_html += "(";
+				var semicolon = "; ";
+				for (var i = 0; i < pages.length; i++) {
+					if(i == pages.length - 1) {
+						semicolon = "";
+					}
+					var entry = pages[i].innerHTML.split("|");
+					if(entry[0] == 'page') {
+						new_html += "Page " + entry[1] + semicolon;
+					} else {
+						new_html += entry[1] + semicolon;
+					}
+				};
+				if(pages.length != 0) new_html += ")<br/>";
+				$(this).find("ul")[0].innerHTML = "";
+				if(bibliographies[b]['url']) new_html += "<a href='" + bibliographies[b]['url'] + "'>Link to Full Entry</a>"
+
+				bspan.innerHTML = new_html;
+				
 			});
 			$("span.biblToRetrieve").each(function() {
 				var b = this.innerHTML.split("|");
@@ -84,7 +101,11 @@ function render_bibliography() {
 					this.innerHTML = entry.creators[0]['lastName'] + ". " + entry.title + ", " + entry.date + colon + b[2] + " (<a href='" + bibliographies[b[0]]['url'] + "'>Full</a>)";
 				}
 				catch(err) {
-					this.innerHTML = "Bibliography Not Found";
+					if(b[0] == "ms") {
+						this.innerHTML = "Supplied by Michael Satlow"
+					} else {
+						this.innerHTML = "Bibliography Not Found";
+					}
 				}
 				this.attributes.class.value = "";
 			})
