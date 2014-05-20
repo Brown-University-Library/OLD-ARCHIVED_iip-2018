@@ -511,10 +511,10 @@
       <xsl:attribute name="name">transcription_search</xsl:attribute>
       <xsl:choose>
         <xsl:when test="string-length(tei:text/tei:body/tei:div[@type='simpleTranscription']) != 0">
-          <xsl:value-of select="tei:text/tei:body/tei:div[@type='simpleTranscription']"/>
+          <xsl:value-of select="normalize-space(tei:text/tei:body/tei:div[@type='simpleTranscription'])"/>
         </xsl:when>
         <xsl:when test="tei:text/tei:body/tei:div[@subtype='transcription']">
-          <xsl:value-of select="tei:text/tei:body/tei:div[@subtype='transcription']"/>
+          <xsl:apply-templates select="tei:text/tei:body/tei:div[@subtype='transcription']" mode="search"/>
         </xsl:when>
       </xsl:choose>
     </xsl:element>
@@ -563,6 +563,25 @@
       </xsl:for-each>
     </xsl:if>
   </xsl:template>
+
+  <xsl:template match="tei:choice" mode="search">
+    <xsl:choose>
+      <xsl:when test="tei:abbr">
+        <xsl:apply-templates select="tei:abbr" mode="search"/>
+        <xsl:text> </xsl:text>
+        <xsl:apply-templates select="tei:expan" mode="search"/>
+      </xsl:when>
+      <xsl:when test="tei:sic">
+        <xsl:apply-templates select="tei:sic" mode="search"/>
+        <xsl:text> </xsl:text>
+        <xsl:apply-templates select="tei:corr" mode="search"/>
+      </xsl:when>
+    </xsl:choose>
+  </xsl:template>
+  
+  <xsl:template match="tei:lb" mode="search">
+    <xsl:text></xsl:text>
+  </xsl:template>  
     
   <xsl:template match="tei:note"> </xsl:template>
 
@@ -647,11 +666,14 @@
   </xsl:template>
   
   <xsl:template match="tei:choice">
-    <xsl:apply-templates select="tei:expan"/>
-  </xsl:template>
-  
-  <xsl:template match="tei:sic">
-    <xsl:apply-templates select="tei:corr"/>
+    <xsl:choose>
+      <xsl:when test="tei:abbr">
+        <xsl:apply-templates select="tei:expan"/>
+      </xsl:when>
+      <xsl:when test="tei:sic">
+        <xsl:apply-templates select="tei:corr"/>
+      </xsl:when>
+    </xsl:choose>
   </xsl:template>
 <!--
   <xsl:template name="get-figures">
