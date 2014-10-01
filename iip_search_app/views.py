@@ -125,9 +125,9 @@ def _z_prepare_viewinscr_get_data (request, inscrid):
     log_id = common.get_log_identifier( request.session )
 
     # The results of the solr query to find the inscription. q.results is list of dictionaries of values.
-    q = _call_viewinsc_solr( inscrid ) 
-    
-    current_display_status = _update_viewinscr_display_status( request, q ) 
+    q = _call_viewinsc_solr( inscrid )
+
+    current_display_status = _update_viewinscr_display_status( request, q )
 
     # Now, rather than make a call to biblio, parse out the bibl fields in q
     # z_bibids = set() # What will be a set of tuples of bibliographic info
@@ -146,7 +146,7 @@ def _z_prepare_viewinscr_get_data (request, inscrid):
             z_bibids[bibid] = []
         if(not (ntype, n) in z_bibids[bibid]):
             z_bibids[bibid].append((ntype, n))
-    
+
 
     specific_sources = dict()
     specific_sources['transcription'] = q.results[0]['biblTranscription'][0] if 'biblTranscription' in q.results[0] else ""
@@ -184,7 +184,11 @@ def _handle_viewinscr_POST( request, inscrid, log_id ):
         log_id=log_id )
     request.session['click_confirmation_text'] = '%s has been marked as "%s"' % ( inscrid, work_result['new_display_status'] )
 
-    return_response = HttpResponseRedirect( '.' )
+    # return_response = HttpResponseRedirect( '.' )
+    redirect_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'inscription_url', kwargs={u'inscrid':inscrid})  )
+    log.debug( u'in _handle_viewinscr_POST(); redirect_url, `%s`' % redirect_url )
+    return_response = HttpResponseRedirect( redirect_url )
+
     return return_response
 
 def _prepare_viewinscr_get_data( request, inscrid ):
