@@ -162,10 +162,11 @@ LOGGING = {
     'handlers': {
         'logfile': {
             'level':'DEBUG',
-            'class':'logging.handlers.RotatingFileHandler',
+            # 'class':'logging.handlers.RotatingFileHandler',
+            'class':'logging.FileHandler',  # note: configure server to use system's log-rotate to avoid permissions issues
             'filename': unicode( os.environ.get(u'IIP_SEARCH__LOG_PATH') ),
-            'maxBytes': 1024 * 1024 * 2,
-            'backupCount': 1,
+            # 'maxBytes': 1024 * 1024 * 2,
+            # 'backupCount': 1,
             'formatter': 'standard',
         },
         'console':{
