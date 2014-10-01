@@ -88,19 +88,19 @@ def _get_GET_context( request, log_id ):
 
 ## view inscription ##
 
-def viewinscr( request, inscrid ):
-    """ Handles view-inscription GET, ajax-GET, and approval-update POST. """
-    log_id = _setup_viewinscr( request )
-    log.info( u'in viewinscr(); id, %s; starting' % log_id )
-    if request.method == u'POST':  # TODO: call subfunction after getting approval working again
-        return _handle_viewinscr_POST( request, inscrid, log_id )
-    else:  # GET
-        ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, view_xml_url, current_url ) = _prepare_viewinscr_get_data( request, inscrid )
-        if request.is_ajax():
-            return_response = _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn, view_xml_url )
-        else:
-            return_response = _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, view_xml_url, current_url, log_id )
-        return return_response
+# def viewinscr( request, inscrid ):
+#     """ Handles view-inscription GET, ajax-GET, and approval-update POST. """
+#     log_id = _setup_viewinscr( request )
+#     log.info( u'in viewinscr(); id, %s; starting' % log_id )
+#     if request.method == u'POST':  # TODO: call subfunction after getting approval working again
+#         return _handle_viewinscr_POST( request, inscrid, log_id )
+#     else:  # GET
+#         ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, view_xml_url, current_url ) = _prepare_viewinscr_get_data( request, inscrid )
+#         if request.is_ajax():
+#             return_response = _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn, view_xml_url )
+#         else:
+#             return_response = _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, view_xml_url, current_url, log_id )
+#         return return_response
 
 def viewinscr_zotero(request, inscrid):
     """ Handles view-inscription GET with new Javascript and Zotero bibliography. """
@@ -154,7 +154,7 @@ def _z_prepare_viewinscr_get_data (request, inscrid):
     specific_sources['diplomatic'] = q.results[0]['biblDiplomatic'][0] if 'biblDiplomatic' in q.results[0] else ""
 
     view_xml_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'xml_url', kwargs={u'inscription_id':inscrid})  )
-    current_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'inscription_url', kwargs={u'inscrid':inscrid})  )
+    current_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'inscription_url_zotero', kwargs={u'inscrid':inscrid})  )
     return ( q, z_bibids, specific_sources, current_display_status, view_xml_url, current_url )
 
 def _setup_viewinscr( request ):
@@ -185,7 +185,7 @@ def _handle_viewinscr_POST( request, inscrid, log_id ):
     request.session['click_confirmation_text'] = '%s has been marked as "%s"' % ( inscrid, work_result['new_display_status'] )
 
     # return_response = HttpResponseRedirect( '.' )
-    redirect_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'inscription_url', kwargs={u'inscrid':inscrid})  )
+    redirect_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'inscription_url_zotero', kwargs={u'inscrid':inscrid})  )
     log.debug( u'in _handle_viewinscr_POST(); redirect_url, `%s`' % redirect_url )
     return_response = HttpResponseRedirect( redirect_url )
 
@@ -201,7 +201,7 @@ def _prepare_viewinscr_get_data( request, inscrid ):
     current_display_status = _update_viewinscr_display_status( request, q )
     ( bibs, bibDip, bibTsc, bibTrn ) = _get_bib_data( q.results )
     view_xml_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'xml_url', kwargs={u'inscription_id':inscrid})  )
-    current_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'inscription_url', kwargs={u'inscrid':inscrid})  )
+    current_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'inscription_url_zotero', kwargs={u'inscrid':inscrid})  )
     return ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, view_xml_url, current_url )
 
 def _call_viewinsc_solr( inscription_id ):
