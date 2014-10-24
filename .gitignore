@@ -1,7 +1,6 @@
-
+*.pyc
 .DS_Store
 .hg
 .svn
-*.pyc
 env
-
+iip_config/tmp
