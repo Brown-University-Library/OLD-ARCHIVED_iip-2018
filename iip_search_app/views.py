@@ -375,13 +375,12 @@ def process( request, inscription_id ):
         return HttpResponseForbidden( '403 / Forbidden' )
     q = rq.Queue( u'iip', connection=redis.Redis() )
     if inscription_id == u'new':
-        job = q.enqueue_call (
-            func=u'iip_search_app.models.run_call_svn_update',
-            kwargs = {}
-            )
-        return HttpResponse( u'svn update initiated' )
+        q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
+        return HttpResponse( u'Started processing updated inscriptions.' )
+    elif inscription_id == u'all':
+        return HttpResponse( u'Full reindex not yet implemented' )
     else:
-        return HttpResponse( u'not yet implemented' )
+        return HttpResponse( u'Single-item reindex not yet implemented' )
 
 # def process( request, inscription_id ):
 #     """ Initiated from view-inscription page.
