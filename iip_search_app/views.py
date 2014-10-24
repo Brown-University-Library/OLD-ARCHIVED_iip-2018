@@ -2,7 +2,6 @@
 
 import logging, pprint
 import redis, rq, solr
-# from django.core.context_processors import csrf
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response, render
@@ -88,20 +87,6 @@ def _get_GET_context( request, log_id ):
 
 ## view inscription ##
 
-# def viewinscr( request, inscrid ):
-#     """ Handles view-inscription GET, ajax-GET, and approval-update POST. """
-#     log_id = _setup_viewinscr( request )
-#     log.info( u'in viewinscr(); id, %s; starting' % log_id )
-#     if request.method == u'POST':  # TODO: call subfunction after getting approval working again
-#         return _handle_viewinscr_POST( request, inscrid, log_id )
-#     else:  # GET
-#         ( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, view_xml_url, current_url ) = _prepare_viewinscr_get_data( request, inscrid )
-#         if request.is_ajax():
-#             return_response = _prepare_viewinscr_ajax_get_response( q, bibs, bibDip, bibTsc, bibTrn, view_xml_url )
-#         else:
-#             return_response = _prepare_viewinscr_plain_get_response( q, bibs, bibDip, bibTsc, bibTrn, current_display_status, inscrid, request, view_xml_url, current_url, log_id )
-#         return return_response
-
 def viewinscr_zotero(request, inscrid):
     """ Handles view-inscription GET with new Javascript and Zotero bibliography. """
     log_id = _setup_viewinscr( request )
@@ -123,21 +108,8 @@ def _z_prepare_viewinscr_get_data (request, inscrid):
         Called by viewinscr(). """
     log.debug( u'in _z_prepare_viewinscr_get_data(); starting' )
     log_id = common.get_log_identifier( request.session )
-
-    # The results of the solr query to find the inscription. q.results is list of dictionaries of values.
-    q = _call_viewinsc_solr( inscrid )
-
+    q = _call_viewinsc_solr( inscrid )  # The results of the solr query to find the inscription. q.results is list of dictionaries of values.
     current_display_status = _update_viewinscr_display_status( request, q )
-
-    # Now, rather than make a call to biblio, parse out the bibl fields in q
-    # z_bibids = set() # What will be a set of tuples of bibliographic info
-    # for bibl in q.results[0]['bibl']:
-    #     (zid, ntype, n) = bibl.split("|") # Bibl is something like "bibl=IIP-403.xml|nType=page|n=79-85"
-    #     zid = zid[5:]      #parse off 'bibl='
-    #     ntype = ntype[6:]  #parse off 'nType='
-    #     n = n[2:]          #parse off 'n='
-    #     zid = zid.rstrip(".xml") #parse off '.xml' if necessary
-    #     z_bibids |= set((zid, ntype, n)) #Add in the tuple to the set of bibliography entries
     z_bibids_initial = [x.replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", "") for x in q.results[0]['bibl']]
     z_bibids = {}
     for entry in z_bibids_initial:
@@ -146,8 +118,6 @@ def _z_prepare_viewinscr_get_data (request, inscrid):
             z_bibids[bibid] = []
         if(not (ntype, n) in z_bibids[bibid]):
             z_bibids[bibid].append((ntype, n))
-
-
     specific_sources = dict()
     specific_sources['transcription'] = q.results[0]['biblTranscription'][0] if 'biblTranscription' in q.results[0] else ""
     specific_sources['translation'] = q.results[0]['biblTranslation'][0] if 'biblTranslation' in q.results[0] else ""
