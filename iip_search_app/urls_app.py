@@ -2,7 +2,6 @@
 
 from django.conf.urls.defaults import patterns, include, url
 from django.views.generic.simple import redirect_to
-# from usep_app import settings_app
 
 
 urlpatterns = patterns('',
