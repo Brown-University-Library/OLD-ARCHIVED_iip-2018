@@ -3,7 +3,7 @@
 import logging, pprint
 import redis, rq, solr
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response, render
 from iip_search_app import common, models, settings_app
 from iip_search_app.forms import SearchForm
@@ -11,6 +11,7 @@ from iip_search_app.utils import ajax_snippet
 
 
 log = logging.getLogger(__name__)
+q = rq.Queue( u'iip', connection=redis.Redis() )
 
 
 ## search and results ##
@@ -364,6 +365,25 @@ def logout( request ):
 
 ## process ##  request.session['authz_info'] = { 'authorized': True, 'firstname': request.META['Shibboleth-givenName'] }
 
+# def process( request, inscription_id ):
+#     """ Initiated from view-inscription page.
+#         Takes inscription_id and display_status.
+#             Checks authN/Z; executes process of current inscription.
+#             Returns current view-inscription page.
+#         """
+#     log.info( u'in process(); starting' )
+#     if request.session[u'authz_info'][u'authorized'] == False:
+#         return HttpResponseForbidden( '403 / Forbidden' )
+#     q = rq.Queue( u'iip', connection=redis.Redis() )
+#     if inscription_id == u'new':
+#         q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
+#         return HttpResponse( u'Started processing updated inscriptions.' )
+#     elif inscription_id == u'delete_orphans':
+#         q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
+#         return HttpResponse( u'Started processing solr orphan deletion.' )
+#     else:
+#         return HttpResponseBadRequest( u'400 / Bad Request; invalid process parameter' )
+
 def process( request, inscription_id ):
     """ Initiated from view-inscription page.
         Takes inscription_id and display_status.
@@ -373,31 +393,14 @@ def process( request, inscription_id ):
     log.info( u'in process(); starting' )
     if request.session[u'authz_info'][u'authorized'] == False:
         return HttpResponseForbidden( '403 / Forbidden' )
-    q = rq.Queue( u'iip', connection=redis.Redis() )
     if inscription_id == u'new':
         q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
         return HttpResponse( u'Started processing updated inscriptions.' )
-    elif inscription_id == u'all':
-        return HttpResponse( u'Full reindex not yet implemented' )
+    elif inscription_id == u'delete_orphans':
+        q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
+        return HttpResponse( u'Started processing solr orphan deletion.' )
     else:
-        return HttpResponse( u'Single-item reindex not yet implemented' )
-
-# def process( request, inscription_id ):
-#     """ Initiated from view-inscription page.
-#         Takes inscription_id and display_status.
-#             Checks authN/Z; executes process of current inscription.
-#             Returns current view-inscription page.
-#         """
-#     log.info( u'in process(); starting' )
-#     q = rq.Queue( u'iip', connection=redis.Redis() )
-#     if inscription_id == u'new':
-#         job = q.enqueue_call (
-#             func=u'iip_search_app.models.run_call_svn_update',
-#             kwargs = {}
-#             )
-#         return HttpResponse( u'svn update initiated' )
-#     else:
-#         return HttpResponse( u'not yet implemented' )
+        return HttpResponseBadRequest( u'400 / Bad Request; invalid process parameter' )
 
 
 ## view_xml ##
