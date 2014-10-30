@@ -377,6 +377,33 @@ class Processor( object ):
     ## end class Processor()
 
 
+class OrphanKiller( object ):
+    """ Container for various tasks involved in deleting orphaned inscription data from the solr index.
+        Non-django, plain-python model.
+        No dango dependencies, including settings. """
+
+    def __init__( self, log ):
+        """ Settings. """
+        self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
+        self.SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )
+
+    # def build_directory_inscription_ids( self ):
+    #     """ Returns list of file-system ids.
+    #         Called by (queue-runner) models.run_delete_orphans(). """
+    #     file_system_ids = []
+    #     for file_path in inscriptions:
+    #         filename = file_path.split( u'/' )[-1]
+    #         inscription_id = filename.strip().split(u'.xml')[0]
+    #         file_system_ids.append( inscription_id )
+    #     self.log.debug( u'in utils.reindex_all_support._make_file_system_ids(); len(file_system_ids), `%s`' % len(file_system_ids) )
+    #     self.log.debug( u'in utils.reindex_all_support._make_file_system_ids(); file_system_ids[0:2], `%s`' % pprint.pformat(file_system_ids[0:2]) )
+    #     return file_system_ids
+
+    ## end class OrphanKiller()
+
+
+
+
 ## queue runners ##
 
 q = rq.Queue( u'iip', connection=redis.Redis() )
@@ -397,10 +424,33 @@ def run_call_svn_update():
 
 def run_process_file( file_id, grab_latest_file, display_status ):
     """ Calls Processor.process_file().
-        Called by (queue-runner) run_call_svn_update(). """
+        Called by (queue-runner) models.run_call_svn_update(). """
     processor = Processor()
     process_dict = processor.process_file( file_id, grab_latest_file, display_status )
     log.info( u'in (queue-called) run_process_file(); process_dict is, ```%s```' % pprint.pformat(process_dict) )
+    return
+
+def run_delete_orphans():
+    """ Initiates deletion of orphaned solr entries.
+        Called by views.process( u'delete_orphans' ) """
+    killer = OrphanKiller()
+    utils.call_svn_update()  # output not important; just need to ensure the xml-dir is fresh
+    directory_inscription_ids = killer.build_directory_inscription_ids()
+    solr_inscription_ids = killer.build_solr_inscription_ids()
+    orphans = the_set_function_here
+    for inscription_id in orphans:
+        job = q.enqueue_call (
+            func=u'iip_search_app.models.run_delete_solr_entry',
+            kwargs = { u'inscription_id': inscription_id }
+            )
+    return
+
+def run_delete_solr_entry( inscription_id ):
+    """ Calls Processor.delete_solr_entry().
+        Called by (queue-runner) models.run_delete_orphans(). """
+    killer = OrphanKiller()
+    log.info( u'in (queue-called) models.run_delete_solr_entry(); deleting solr inscription_id, `%s`' % inscription_id )
+    killer.delete_orphan( inscription_id )
     return
 
 
