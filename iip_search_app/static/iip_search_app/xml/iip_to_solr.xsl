@@ -230,12 +230,34 @@
           <xsl:if test="$locus"><xsl:value-of select="$locus"/><xsl:text> in </xsl:text></xsl:if>
           <xsl:if test="$site"><xsl:value-of select="$site"/><xsl:text>. </xsl:text></xsl:if>
           <xsl:if test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p">
+            <xsl:text>&#10;</xsl:text>
+            <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p"/>
+          </xsl:if>
+        </xsl:when>
+
+        <xsl:when test="$region!=''">
+          <xsl:value-of select="$region"/>
+          <xsl:if test="$settlement"><xsl:text> (</xsl:text><xsl:value-of select="$settlement"/><xsl:text>)</xsl:text></xsl:if><xsl:text>. &#10;</xsl:text>
+          
+          <xsl:if test="$locus"><xsl:value-of select="$locus"/><xsl:text> in </xsl:text></xsl:if>
+          <xsl:if test="$site"><xsl:value-of select="$site"/><xsl:text>. </xsl:text></xsl:if>
+          <xsl:if test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p">
             <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p"/>
           </xsl:if>
         </xsl:when>
         
         <xsl:otherwise>
-          <xsl:text></xsl:text>
+          <xsl:choose>
+            <xsl:when test="$locus or $site or tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p">
+              <xsl:if test="$locus"><xsl:value-of select="$locus"/></xsl:if>
+              <xsl:if test="$locus and $site"><xsl:text> in </xsl:text></xsl:if>
+              <xsl:if test="$site"><xsl:value-of select="$site"/><xsl:text>. </xsl:text></xsl:if>
+              <xsl:if test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p">
+                <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p"/>
+              </xsl:if>
+            </xsl:when>
+            <xsl:otherwise><xsl:text>[No Location]</xsl:text></xsl:otherwise>
+          </xsl:choose>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:element>
