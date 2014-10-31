@@ -12,7 +12,7 @@
     <xsl:apply-templates select="*|@*|text()|processing-instruction()|comment()" />
   </xsl:copy>
   <xsl:if test="self::div">
-    <xsl:if test="@type='transcription'">
+    <xsl:if test="@subtype='transcription'">
       <xsl:apply-templates select="document($filename)"/>
     </xsl:if>
   </xsl:if>
