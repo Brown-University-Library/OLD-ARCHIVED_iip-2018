@@ -222,6 +222,7 @@ class Processor( object ):
         file_name_root = u'FILE_%s' % random.randint(1000,9999)    # need this root part later
         file_name = u'%s.xml' % file_name_root
         filepath = u'%s/%s' % ( self.MUNGER_SCRIPT_XML_DIRECTORY, file_name )
+        log.info( u'in iip_search_app.models.Processor._save_source_xml(); filepath, `%s`' % filepath )
         f = open( filepath, u'w' )
         f.write( source_xml.encode(u'utf-8') )
         f.close()
@@ -231,6 +232,8 @@ class Processor( object ):
         """ Sets up and returns stderr and stdout file-objects and paths.
             Called by run_munger(). """
         ( temp_stdout_filepath, temp_stderr_filepath ) = ( self._make_temp_filepath(u'stdout_munger'), self._make_temp_filepath(u'stderr_munger') )
+        log.info( u'in iip_search_app.models.Processor._setup_munger_stdstuff(); temp_stdout_filepath, `%s`' % temp_stdout_filepath )
+        log.info( u'in iip_search_app.models.Processor._setup_munger_stdstuff(); temp_stderr_filepath, `%s`' % temp_stderr_filepath )
         f_stdout = open( temp_stdout_filepath, u'w' )
         f_stderr = open( temp_stderr_filepath, u'w' )
         f_stdout.write( u'' )
@@ -342,7 +345,6 @@ class Processor( object ):
                 Returns updated xml in dict.
             Called by process_file().
             Note: normally, vcs updates should trigger the display_status: u'to_approve'. """
-        # log.debug( u'in update_display_facet(); initial_solr_xml is, ```%s```' % initial_solr_xml )
         assert type(initial_solr_xml) == unicode, type(initial_solr_xml)
         assert display_status in [ u'to_approve', u'to_correct', u'approved' ]
         doc = etree.fromstring( initial_solr_xml.encode(u'utf-8'))    # can't take unicode string due to xml file's encoding declaration
@@ -390,16 +392,16 @@ class OrphanKiller( object ):
     def build_directory_inscription_ids( self ):
         """ Returns list of file-system ids.
             Called by (queue-runner) models.run_delete_orphans(). """
-        self.log.debug( u'in models.OrphanKiller.build_directory_inscription_ids(); inscriptions_dir_path, `%s`' % self.XML_DIR_PATH )
+        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); inscriptions_dir_path, `%s`' % self.XML_DIR_PATH )
         inscriptions = glob.glob( u'%s/*.xml' % self.XML_DIR_PATH )
-        self.log.debug( u'in models.OrphanKiller.build_directory_inscription_ids(); inscriptions[0:3], `%s`' % pprint.pformat(inscriptions[0:3]) )
+        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); inscriptions[0:3], `%s`' % pprint.pformat(inscriptions[0:3]) )
         return { u'inscriptions': inscriptions }
 
     def build_solr_inscription_ids( self ):
         """ Returns list of solr inscription ids.
             Called by (queue-runner) models.run_delete_orphans(). """
         url = u'%s/select?q=*:*&fl=id&rows=100000&wt=json' % self.SOLR_URL
-        self.log.debug( u'in models.OrphanKiller.build_solr_inscription_ids(); url, `%s`' % url )
+        self.log.info( u'in models.OrphanKiller.build_solr_inscription_ids(); url, `%s`' % url )
         r = requests.get( url )
         json_dict = r.json()
         docs = json_dict[u'response'][u'docs']  # list of dicts
@@ -407,7 +409,7 @@ class OrphanKiller( object ):
         for doc in docs:
             doc_list.append( doc[u'id'] )
         sorted_list = sorted( doc_list )
-        self.log.debug( u'in models.OrphanKiller.build_solr_inscription_ids(); sorted_list[0:3], `%s`' % pprint.pformat(sorted_list[0:3]) )
+        self.log.info( u'in models.OrphanKiller.build_solr_inscription_ids(); sorted_list[0:3], `%s`' % pprint.pformat(sorted_list[0:3]) )
         return sorted_list
 
     def build_orphan_list( self, directory_inscription_ids, solr_inscription_ids ):
@@ -417,7 +419,7 @@ class OrphanKiller( object ):
         solr_set = set( solr_inscription_ids )
         deletion_set = solr_set - directory_set
         orphan_list = list( deletion_set )
-        self.log.debug( u'in models.OrphanKiller.build_orphan_list(); orphan_list, `%s`' % pprint.pformat(orphan_list) )
+        self.log.info( u'in models.OrphanKiller.build_orphan_list(); orphan_list, `%s`' % pprint.pformat(orphan_list) )
         return orphan_list
 
     # def delete_orphan( self, inscription_id ):
@@ -438,6 +440,7 @@ def run_call_svn_update():
     """ Initiates svn update.
             Spawns a call to Processor.process_file() for each result found.
         Called by views.process(u'new') """
+    log.info( u'in (queue-called) iip_search_app.models.run_call_svn_update(); starting at `%s`' % unicode(datetime.datetime.now()) )
     utils = ProcessorUtils()
     result_dict = utils.call_svn_update()
     log.info( u'in (queue-called) run_call_svn_update(); result_dict is, ```%s```' % pprint.pformat(result_dict) )
@@ -451,6 +454,7 @@ def run_call_svn_update():
 def run_process_file( file_id, grab_latest_file, display_status ):
     """ Calls Processor.process_file().
         Called by (queue-runner) models.run_call_svn_update(). """
+    log.info( u'in (queue-called) iip_search_app.models.run_process_file(); starting at `%s`' % unicode(datetime.datetime.now()) )
     processor = Processor()
     process_dict = processor.process_file( file_id, grab_latest_file, display_status )
     log.info( u'in (queue-called) run_process_file(); process_dict is, ```%s```' % pprint.pformat(process_dict) )
