@@ -248,12 +248,14 @@ class Processor( object ):
         time.sleep( .1 )
         ## setup call
         current_working_directory = os.getcwd()
+        log.info( u'in iip_search_app.models.Processor._call_munger(); initial current_working_directory, `%s`' % current_working_directory )
+        log.info( u'in iip_search_app.models.Processor._call_munger(); changing to directory, `%s`' % self.MUNGER_SCRIPT_DIRECTORY )
         os.chdir( self.MUNGER_SCRIPT_DIRECTORY )
         var = u'1'    # days; required by script; tells script to process all files updated in last day
         command_list = [ u'./strip.pl', var ]
         ## run command
         subprocess.call( command_list, stdout=f_stdout, stderr=f_stderr )  # called script saves temp-files in various directories
-        time.sleep( .1 )
+        time.sleep( .2 )
         return current_working_directory
 
     def _close_munger_stdstuff( self, f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath ):
@@ -265,7 +267,9 @@ class Processor( object ):
         f_stdout = open( temp_stdout_filepath, u'r' )
         f_stderr = open( temp_stderr_filepath, u'r' )
         var_stdout = f_stdout.readlines()
+        log.info( u'in iip_search_app.models.Processor._close_munger_stdstuff(); var_stdout just before deletion, `%s`' % var_stdout )
         var_stderr = f_stderr.readlines()
+        log.info( u'in iip_search_app.models.Processor._close_munger_stdstuff(); var_stderr just before deletion, `%s`' % var_stderr )
         f_stdout.close()
         f_stderr.close()
         os.remove( temp_stdout_filepath )
@@ -278,6 +282,7 @@ class Processor( object ):
                 Returns the string.
             Called by run_munger(). """
         filepath = u'%s/%s' % ( self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY, file_name )
+        log.info( u'in iip_search_app.models.Processor._get_munged_xml(); filepath, `%s`' % filepath )
         f = open( filepath )
         munged_utf8_xml = f.read()
         assert type(munged_utf8_xml) == str, type(munged_utf8_xml)
@@ -299,9 +304,15 @@ class Processor( object ):
             u'%s/Stripped/%s.cloned.decomposed.stripped.xml' % ( self.MUNGER_SCRIPT_DIRECTORY, file_name_root ),
             ]
         for entry in files_to_delete:
-            assert os.path.exists(entry) == True, os.path.exists(entry)
-            os.remove( entry )
-            assert os.path.exists(entry) == False, os.path.exists(entry)
+            log.info( u'in iip_search_app.models.Processor._delete_munger_detritus(); file in process, `%s`' % entry )
+            if os.path.exists( entry ):
+                log.info( u'in iip_search_app.models.Processor._delete_munger_detritus(); file exists' )
+                os.remove( entry )
+                log.info( u'in iip_search_app.models.Processor._delete_munger_detritus(); file removed' )
+                assert os.path.exists(entry) == False, os.path.exists(entry)
+                log.info( u'in iip_search_app.models.Processor._delete_munger_detritus(); removal confirmed' )
+            else:
+               log.info( u'in iip_search_app.models.Processor._delete_munger_detritus(); file does not exist' )
         os.chdir( current_working_directory )    # otherwise may affect other scripts
         return
 
