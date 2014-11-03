@@ -433,10 +433,11 @@ class OrphanKiller( object ):
         self.log.info( u'in models.OrphanKiller.build_orphan_list(); orphan_list, `%s`' % pprint.pformat(orphan_list) )
         return orphan_list
 
-    # def delete_orphan( self, inscription_id ):
-    #     """ Deletes specified inscription_id.
-    #         Called by (queue-runner) models.run_delete_orphans(). """
-    #     pass
+    def delete_orphan( self, inscription_id ):
+        """ Deletes specified inscription_id from solr.
+            Called by (queue-runner) models.run_delete_orphans(). """
+        self.log.info( u'in models.OrphanKiller.delete_orphan(); inscription_id, `%s`' % inscription_id )
+        pass
 
     ## end class OrphanKiller()
 
@@ -474,7 +475,7 @@ def run_process_file( file_id, grab_latest_file, display_status ):
 def run_delete_orphans():
     """ Initiates deletion of orphaned solr entries.
         Called by views.process( u'delete_orphans' ) """
-    killer = OrphanKiller( log )
+    ( killer, utils ) = ( OrphanKiller(log), ProcessorUtils() )
     utils.call_svn_update()  # output not important; just need to ensure the xml-dir is fresh
     directory_inscription_ids = killer.build_directory_inscription_ids()
     solr_inscription_ids = killer.build_solr_inscription_ids()
