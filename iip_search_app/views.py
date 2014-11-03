@@ -365,25 +365,6 @@ def logout( request ):
 
 ## process ##  request.session['authz_info'] = { 'authorized': True, 'firstname': request.META['Shibboleth-givenName'] }
 
-# def process( request, inscription_id ):
-#     """ Initiated from view-inscription page.
-#         Takes inscription_id and display_status.
-#             Checks authN/Z; executes process of current inscription.
-#             Returns current view-inscription page.
-#         """
-#     log.info( u'in process(); starting' )
-#     if request.session[u'authz_info'][u'authorized'] == False:
-#         return HttpResponseForbidden( '403 / Forbidden' )
-#     q = rq.Queue( u'iip', connection=redis.Redis() )
-#     if inscription_id == u'new':
-#         q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
-#         return HttpResponse( u'Started processing updated inscriptions.' )
-#     elif inscription_id == u'delete_orphans':
-#         q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
-#         return HttpResponse( u'Started processing solr orphan deletion.' )
-#     else:
-#         return HttpResponseBadRequest( u'400 / Bad Request; invalid process parameter' )
-
 def process( request, inscription_id ):
     """ Initiated from view-inscription page.
         Takes inscription_id and display_status.
