@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import datetime, logging, os, pprint, random, subprocess, time
+import datetime, glob, logging, os, pprint, random, subprocess, time
 import envoy, redis, requests, rq
 from lxml import etree
 
@@ -399,29 +399,40 @@ class OrphanKiller( object ):
         """ Settings. """
         self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
         self.SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )
+        self.log = log
 
     def build_directory_inscription_ids( self ):
         """ Returns list of file-system ids.
             Called by (queue-runner) models.run_delete_orphans(). """
         self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); inscriptions_dir_path, `%s`' % self.XML_DIR_PATH )
-        inscriptions = glob.glob( u'%s/*.xml' % self.XML_DIR_PATH )
-        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); inscriptions[0:3], `%s`' % pprint.pformat(inscriptions[0:3]) )
-        return { u'inscriptions': inscriptions }
+        inscription_paths = glob.glob( u'%s/*.xml' % self.XML_DIR_PATH )
+        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); len(inscription_paths), `%s`' % len(inscription_paths) )
+        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); inscription_paths[0:3], `%s`' % pprint.pformat(inscription_paths[0:3]) )
+        directory_inscription_ids = []
+        for path in inscription_paths:
+            filename = path.split( u'/' )[-1]
+            inscription_id = filename.split( u'.xml' )[0]
+            directory_inscription_ids.append( inscription_id )
+        directory_inscription_ids = sorted( directory_inscription_ids )
+        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); len(directory_inscription_ids), `%s`' % directory_inscription_ids )
+        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); directory_inscription_ids[0:3], `%s`' % pprint.pformat(directory_inscription_ids[0:3]) )
+        return directory_inscription_ids
 
     def build_solr_inscription_ids( self ):
         """ Returns list of solr inscription ids.
             Called by (queue-runner) models.run_delete_orphans(). """
-        url = u'%s/select?q=*:*&fl=id&rows=100000&wt=json' % self.SOLR_URL
+        url = u'%s/select?q=*:*&fl=inscription_id&rows=100000&wt=json' % self.SOLR_URL
         self.log.info( u'in models.OrphanKiller.build_solr_inscription_ids(); url, `%s`' % url )
         r = requests.get( url )
         json_dict = r.json()
         docs = json_dict[u'response'][u'docs']  # list of dicts
-        doc_list = []
+        solr_inscription_ids = []
         for doc in docs:
-            doc_list.append( doc[u'id'] )
-        sorted_list = sorted( doc_list )
-        self.log.info( u'in models.OrphanKiller.build_solr_inscription_ids(); sorted_list[0:3], `%s`' % pprint.pformat(sorted_list[0:3]) )
-        return sorted_list
+            solr_inscription_ids.append( doc[u'inscription_id'] )
+        solr_inscription_idssolr_inscription_ids = sorted( solr_inscription_ids )
+        self.log.info( u'in models.OrphanKiller.build_solr_inscription_ids(); len(solr_inscription_ids), `%s`' % len(solr_inscription_ids) )
+        self.log.info( u'in models.OrphanKiller.build_solr_inscription_ids(); solr_inscription_ids[0:3], `%s`' % pprint.pformat(solr_inscription_ids[0:3]) )
+        return solr_inscription_ids
 
     def build_orphan_list( self, directory_inscription_ids, solr_inscription_ids ):
         """ Returns list of solr-entries to delete.
