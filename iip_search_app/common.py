@@ -114,8 +114,10 @@ def make_admin_links( session_authz_dict, url_host, log_id ):
         admin_links = [
             { u'text': u'[ logout ]',
               u'url': u'%s://%s%s' % (settings_app.URL_SCHEME, url_host, reverse(u'logout_url',)) },
-            { u'text': u'process updated version-control inscriptions',
-              u'url': u'%s://%s%s' % (settings_app.URL_SCHEME, url_host, reverse(u'process_url', kwargs={u'inscription_id': u'new'})) }
+            { u'text': u'process new',
+              u'url': u'%s://%s%s' % (settings_app.URL_SCHEME, url_host, reverse(u'process_url', kwargs={u'inscription_id': u'new'})) },
+            # { u'text': u'delete orphans',
+            #   u'url': u'%s://%s%s' % (settings_app.URL_SCHEME, url_host, reverse(u'process_url', kwargs={u'inscription_id': u'delete_orphans'})) },
             ]
     else:
         admin_links = [
