@@ -49,23 +49,6 @@ class ProcessorUtils( object ):
                 file_ids.append( segments[-1][:-4] )  # last segment is abc.xml; file_id is all but last 4 characters
         return { u'file_ids': sorted(file_ids) }
 
-    # def backup_display_statuses( self ):
-    #     """ Queries solr for current display-statuses and saves them to a json file.
-    #         Called by iip_search_app.models.run_delete_orphans() and eventually any other multi-index updater. """
-    #     url = u'%s/select?q=*:*&rows=6000&fl=inscription_id,display_status&wt=json&indent=true' % self.SOLR_URL
-    #     r = requests.get( url )
-    #     filename = u'display_statuses_backup_%s.json' % unicode( datetime.datetime.now() ).replace( u' ', u'_' )
-    #     filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, filename )
-    #     with open( filepath, u'w' ) as f:
-    #         f.write( r.content )
-    #     now = time.time()
-    #     seconds_in_day = 60*60*24; thirty_days = seconds_in_day*30
-    #     for backup_filename in os.listdir( self.DISPLAY_STATUSES_BACKUP_DIR ):
-    #         backup_filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, backup_filename )
-    #         if os.stat( backup_filepath ).st_mtime < now - thirty_days:
-    #             os.remove( backup_filepath )
-    #     return
-
     def backup_display_statuses( self ):
         """ Queries solr for current display-statuses and saves them to a json file.
             Called by iip_search_app.models.run_delete_orphans() and eventually any other multi-index updater. """
@@ -89,6 +72,16 @@ class ProcessorUtils( object ):
             if os.stat( backup_filepath ).st_mtime < now - thirty_days:
                 os.remove( backup_filepath )
         return
+
+    def validate_inscription_id( self, inscription_id ):
+        """ Ensures inscription_id is valid.
+            Returns boolean.
+            Called by (queue runner) iip_search_app.models.run_process_single_file(). """
+        killer = OrphanKiller( log )
+        solr_inscription_ids = killer.build_solr_inscription_ids()
+        validity = inscription_id in solr_inscription_ids
+        log.info( u'in iip_search_app.models.validate_inscription_id(); validity, `%s`' % unicode(repr(validity)) )
+        return validity
 
     ## end class ProcessorUtils()
 
@@ -504,6 +497,8 @@ class OrphanKiller( object ):
 
 q = rq.Queue( u'iip', connection=redis.Redis() )
 
+## triggered via views.py
+
 def run_call_svn_update():
     """ Initiates svn update.
             Spawns a call to Processor.process_file() for each result found.
@@ -519,15 +514,6 @@ def run_call_svn_update():
             )
     return
 
-def run_process_file( file_id, grab_latest_file, display_status ):
-    """ Calls Processor.process_file().
-        Called by (queue-runner) models.run_call_svn_update(). """
-    log.info( u'in (queue-called) iip_search_app.models.run_process_file(); starting at `%s`' % unicode(datetime.datetime.now()) )
-    processor = Processor()
-    process_dict = processor.process_file( file_id, grab_latest_file, display_status )
-    log.info( u'in (queue-called) run_process_file(); process_dict is, ```%s```' % pprint.pformat(process_dict) )
-    return
-
 def run_delete_orphans():
     """ Initiates deletion of orphaned solr entries.
         Called by views.process( u'delete_orphans' ) """
@@ -541,6 +527,31 @@ def run_delete_orphans():
         job = q.enqueue_call (
             func=u'iip_search_app.models.run_delete_solr_entry',
             kwargs = { u'inscription_id': inscription_id } )
+    return
+
+def run_process_single_file( inscription_id ):
+    """ Triggers processing of single inscription.
+        Called by views.process( u'INSCRIPTION_ID') """
+    log.info( u'in iip_search_app.models.run_process_single_file(); starting at `%s`; inscription_id, `%s`' % (unicode(datetime.datetime.now()), inscription_id) )
+    utils = ProcessorUtils()
+    if utils.validate_inscription_id( inscription_id ) == False:
+        return
+    current_display_status = utils.grab_current_display_status( inscription_id )
+    q.enqueue_call(
+        func = u'iip_search_app.models.run_process_file',
+        kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
+        )
+    return
+
+## triggered by one of above queue-runners
+
+def run_process_file( file_id, grab_latest_file, display_status ):
+    """ Calls Processor.process_file().
+        Called by (queue-runner) models.run_call_svn_update(). """
+    log.info( u'in (queue-called) iip_search_app.models.run_process_file(); starting at `%s`' % unicode(datetime.datetime.now()) )
+    processor = Processor()
+    process_dict = processor.process_file( file_id, grab_latest_file, display_status )
+    log.info( u'in (queue-called) run_process_file(); process_dict is, ```%s```' % pprint.pformat(process_dict) )
     return
 
 def run_delete_solr_entry( inscription_id ):
