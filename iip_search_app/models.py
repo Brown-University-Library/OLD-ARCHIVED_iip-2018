@@ -65,7 +65,7 @@ class ProcessorUtils( object ):
         for backup_filename in os.listdir( self.DISPLAY_STATUSES_BACKUP_DIR ):
             backup_filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, backup_filename )
             if os.stat( backup_filepath ).st_mtime < now - thirty_days:
-                os remove( backup_filepath )
+                os.remove( backup_filepath )
         return
 
     ## end class ProcessorUtils()
