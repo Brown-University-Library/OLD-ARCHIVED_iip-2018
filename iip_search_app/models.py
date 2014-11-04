@@ -16,6 +16,8 @@ class ProcessorUtils( object ):
     def __init__( self ):
         """ Settings. """
         self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
+        self.SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )
+        self.DISPLAY_STATUSES_BACKUP_DIR = unicode( os.environ.get(u'IIP_SEARCH__DISPLAY_STATUSES_BACKUP_DIR') )
 
     def call_svn_update( self ):
         """ Runs svn update.
@@ -37,7 +39,7 @@ class ProcessorUtils( object ):
         """ Takes envoy stdout string.
                 Tries to create file_ids list.
                 Returns file list.
-            Called by self.run_svn_update(). """
+            Called by self.call_svn_update(). """
         assert type(std_out) == unicode
         file_ids = []
         lines = std_out.split()
@@ -46,6 +48,25 @@ class ProcessorUtils( object ):
                 segments = line.split( u'/' )
                 file_ids.append( segments[-1][:-4] )  # last segment is abc.xml; file_id is all but last 4 characters
         return { u'file_ids': sorted(file_ids) }
+
+
+    def backup_display_statuses( self ):
+        """ Queries solr for current display-statuses and saves them to a file.
+            Called by process/delete_orphans url and eventually any other multi-index update. """
+        url = u'%s/select?q=*%3A*&rows=6000&fl=inscription_id%2Cdisplay_status&wt=json&indent=true' % self.SOLR_URL
+        r = requests.get( url )
+        filename = u'display_statuses_backup_%s.json' % unicode( datetime.datetime.now() ).replace( u' ', u'_' )
+        filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, filename )
+        with open( filepath, u'w' ) as f:
+            f.write( r.content )
+        ## delete old files
+        now = time.time()
+        seconds_in_day = 60*60*24; thirty_days = seconds_in_day*30
+        for backup_filename in os.listdir( self.DISPLAY_STATUSES_BACKUP_DIR ):
+            backup_filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, backup_filename )
+            if os.stat( backup_filepath ).st_mtime < now - thirty_days:
+                os remove( backup_filepath )
+        return
 
     ## end class ProcessorUtils()
 
@@ -406,16 +427,14 @@ class OrphanKiller( object ):
             Called by (queue-runner) models.run_delete_orphans(). """
         self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); inscriptions_dir_path, `%s`' % self.XML_DIR_PATH )
         inscription_paths = glob.glob( u'%s/*.xml' % self.XML_DIR_PATH )
-        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); len(inscription_paths), `%s`' % len(inscription_paths) )
-        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); inscription_paths[0:3], `%s`' % pprint.pformat(inscription_paths[0:3]) )
+        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); len(inscription_paths), `%s`; inscription_paths[0:3], `%s`' % (len(inscription_paths), pprint.pformat(inscription_paths[0:3]) ) )
         directory_inscription_ids = []
         for path in inscription_paths:
             filename = path.split( u'/' )[-1]
             inscription_id = filename.split( u'.xml' )[0]
             directory_inscription_ids.append( inscription_id )
         directory_inscription_ids = sorted( directory_inscription_ids )
-        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); len(directory_inscription_ids), `%s`' % directory_inscription_ids )
-        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); directory_inscription_ids[0:3], `%s`' % pprint.pformat(directory_inscription_ids[0:3]) )
+        self.log.info( u'in models.OrphanKiller.build_directory_inscription_ids(); len(directory_inscription_ids), `%s`; directory_inscription_ids[0:3], `%s`' % (len(directory_inscription_ids), pprint.pformat(directory_inscription_ids[0:3])) )
         return directory_inscription_ids
 
     def build_solr_inscription_ids( self ):
@@ -430,8 +449,7 @@ class OrphanKiller( object ):
         for doc in docs:
             solr_inscription_ids.append( doc[u'inscription_id'] )
         solr_inscription_idssolr_inscription_ids = sorted( solr_inscription_ids )
-        self.log.info( u'in models.OrphanKiller.build_solr_inscription_ids(); len(solr_inscription_ids), `%s`' % len(solr_inscription_ids) )
-        self.log.info( u'in models.OrphanKiller.build_solr_inscription_ids(); solr_inscription_ids[0:3], `%s`' % pprint.pformat(solr_inscription_ids[0:3]) )
+        self.log.info( u'in models.OrphanKiller.build_solr_inscription_ids(); len(solr_inscription_ids), `%s`; solr_inscription_ids[0:3], `%s`' % (len(solr_inscription_ids), pprint.pformat(solr_inscription_ids[0:3])) )
         return solr_inscription_ids
 
     def build_orphan_list( self, directory_inscription_ids, solr_inscription_ids ):
@@ -446,9 +464,14 @@ class OrphanKiller( object ):
 
     def delete_orphan( self, inscription_id ):
         """ Deletes specified inscription_id from solr.
-            Called by (queue-runner) models.run_delete_orphans(). """
+            Called by (queue-runner) models.run_delete_solr_entry(). """
         self.log.info( u'in models.OrphanKiller.delete_orphan(); inscription_id, `%s`' % inscription_id )
-        pass
+        s = solr.Solr( self.SOLR_URL )
+        response = s.delete( inscription_id=inscription_id )
+        s.commit()
+        s.close()
+        self.log.debug( u'in models.OrphanKiller.delete_orphan(); deletion-post complete; response is: %s' % response )
+        return
 
     ## end class OrphanKiller()
 
@@ -487,6 +510,7 @@ def run_delete_orphans():
     """ Initiates deletion of orphaned solr entries.
         Called by views.process( u'delete_orphans' ) """
     ( killer, utils ) = ( OrphanKiller(log), ProcessorUtils() )
+    utils.backup_display_statuses()
     utils.call_svn_update()  # output not important; just need to ensure the xml-dir is fresh
     directory_inscription_ids = killer.build_directory_inscription_ids()
     solr_inscription_ids = killer.build_solr_inscription_ids()
@@ -502,7 +526,7 @@ def run_delete_solr_entry( inscription_id ):
         Called by (queue-runner) models.run_delete_orphans(). """
     killer = OrphanKiller( log )
     log.info( u'in (queue-called) models.run_delete_solr_entry(); deleting solr inscription_id, `%s`' % inscription_id )
-    killer.delete_orphan( inscription_id )
+    # killer.delete_orphan( inscription_id )
     return
 
 
