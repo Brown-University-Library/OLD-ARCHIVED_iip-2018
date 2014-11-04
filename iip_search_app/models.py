@@ -17,7 +17,7 @@ class ProcessorUtils( object ):
         """ Settings. """
         self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
         self.SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )
-        self.DISPLAY_STATUSES_BACKUP_DIR = unicode( os.environ.get(u'IIP_SEARCH__DISPLAY_STATUSES_BACKUP_DIR') )
+        self.DISPLAY_STATUSES_BACKUP_DIR = unicode( os.environ.get(u'IIP_SEARCH__DISPLAY_STATUSES_DIR') )
 
     def call_svn_update( self ):
         """ Runs svn update.
@@ -53,7 +53,7 @@ class ProcessorUtils( object ):
     def backup_display_statuses( self ):
         """ Queries solr for current display-statuses and saves them to a file.
             Called by process/delete_orphans url and eventually any other multi-index update. """
-        url = u'%s/select?q=*%3A*&rows=6000&fl=inscription_id%2Cdisplay_status&wt=json&indent=true' % self.SOLR_URL
+        url = u'%s/select?q=*:*&rows=6000&fl=inscription_id,display_status&wt=json&indent=true' % self.SOLR_URL
         r = requests.get( url )
         filename = u'display_statuses_backup_%s.json' % unicode( datetime.datetime.now() ).replace( u' ', u'_' )
         filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, filename )
@@ -526,7 +526,7 @@ def run_delete_solr_entry( inscription_id ):
         Called by (queue-runner) models.run_delete_orphans(). """
     killer = OrphanKiller( log )
     log.info( u'in (queue-called) models.run_delete_solr_entry(); deleting solr inscription_id, `%s`' % inscription_id )
-    # killer.delete_orphan( inscription_id )
+    killer.delete_orphan( inscription_id )
     return
 
 
