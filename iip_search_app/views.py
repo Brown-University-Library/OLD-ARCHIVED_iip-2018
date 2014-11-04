@@ -381,7 +381,8 @@ def process( request, inscription_id ):
         q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
         return HttpResponse( u'Started processing solr orphan deletion.' )
     else:
-        return HttpResponseBadRequest( u'400 / Bad Request; invalid process parameter' )
+        q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
+        return HttpResponse( u'Started processing inscription-id.' )
 
 
 ## view_xml ##
