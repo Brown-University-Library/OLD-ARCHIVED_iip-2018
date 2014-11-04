@@ -86,10 +86,17 @@ class ProcessorUtils( object ):
     def grab_current_display_status( self, inscription_id ):
         """ Grabs and returns the current display status for given inscription_id.
             Called by (queue runner) iip_search_app.models.run_process_single_file(). """
-        pass
-        # url = u''
-        # r = requests.get( url )
-        # data_dict = r.json()
+        url = u'%s/select?q=*:*&rows=6000&fl=inscription_id,display_status&wt=json&indent=true' % self.SOLR_URL
+        r = requests.get( url )
+        d = r.json()
+        dicts = d[u'response'][u'docs']  # [ {u'display_status': u'to_approve', u'inscription_id': u'jeru0237'}, {etc} ]
+        found_display_status = u'init'
+        for dct in dicts:
+            if dct[u'inscription_id'] == inscription_id:
+                found_display_status = dct[u'display_status']
+                break
+        log.info( u'in iip_search_app.models.ProcessorUtils.grab_current_display_status(); found_display_status, `%s`' % found_display_status )
+        return found_display_status
 
     ## end class ProcessorUtils()
 
