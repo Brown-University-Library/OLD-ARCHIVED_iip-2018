@@ -80,8 +80,23 @@ class ProcessorUtils( object ):
         killer = OrphanKiller( log )
         solr_inscription_ids = killer.build_solr_inscription_ids()
         validity = inscription_id in solr_inscription_ids
-        log.info( u'in iip_search_app.models.validate_inscription_id(); validity, `%s`' % unicode(repr(validity)) )
+        log.info( u'in iip_search_app.models.ProcessorUtils.validate_inscription_id(); validity, `%s`' % unicode(repr(validity)) )
         return validity
+
+    def grab_current_display_status( self, inscription_id ):
+        """ Grabs and returns the current display status for given inscription_id.
+            Called by (queue runner) iip_search_app.models.run_process_single_file(). """
+        url = u'%s/select?q=*:*&rows=6000&fl=inscription_id,display_status&wt=json&indent=true' % self.SOLR_URL
+        r = requests.get( url )
+        d = r.json()
+        dicts = d[u'response'][u'docs']  # [ {u'display_status': u'to_approve', u'inscription_id': u'jeru0237'}, {etc} ]
+        found_display_status = u'init'
+        for dct in dicts:
+            if dct[u'inscription_id'] == inscription_id:
+                found_display_status = dct[u'display_status']
+                break
+        log.info( u'in iip_search_app.models.ProcessorUtils.grab_current_display_status(); found_display_status, `%s`' % found_display_status )
+        return found_display_status
 
     ## end class ProcessorUtils()
 
@@ -537,10 +552,10 @@ def run_process_single_file( inscription_id ):
     if utils.validate_inscription_id( inscription_id ) == False:
         return
     current_display_status = utils.grab_current_display_status( inscription_id )
-    q.enqueue_call(
-        func = u'iip_search_app.models.run_process_file',
-        kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
-        )
+    # q.enqueue_call(
+    #     func = u'iip_search_app.models.run_process_file',
+    #     kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
+    #     )
     return
 
 ## triggered by one of above queue-runners
