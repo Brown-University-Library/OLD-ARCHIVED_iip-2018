@@ -49,19 +49,41 @@ class ProcessorUtils( object ):
                 file_ids.append( segments[-1][:-4] )  # last segment is abc.xml; file_id is all but last 4 characters
         return { u'file_ids': sorted(file_ids) }
 
+    # def backup_display_statuses( self ):
+    #     """ Queries solr for current display-statuses and saves them to a json file.
+    #         Called by iip_search_app.models.run_delete_orphans() and eventually any other multi-index updater. """
+    #     url = u'%s/select?q=*:*&rows=6000&fl=inscription_id,display_status&wt=json&indent=true' % self.SOLR_URL
+    #     r = requests.get( url )
+    #     filename = u'display_statuses_backup_%s.json' % unicode( datetime.datetime.now() ).replace( u' ', u'_' )
+    #     filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, filename )
+    #     with open( filepath, u'w' ) as f:
+    #         f.write( r.content )
+    #     now = time.time()
+    #     seconds_in_day = 60*60*24; thirty_days = seconds_in_day*30
+    #     for backup_filename in os.listdir( self.DISPLAY_STATUSES_BACKUP_DIR ):
+    #         backup_filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, backup_filename )
+    #         if os.stat( backup_filepath ).st_mtime < now - thirty_days:
+    #             os.remove( backup_filepath )
+    #     return
 
     def backup_display_statuses( self ):
-        """ Queries solr for current display-statuses and saves them to a file.
-            Called by process/delete_orphans url and eventually any other multi-index update. """
+        """ Queries solr for current display-statuses and saves them to a json file.
+            Called by iip_search_app.models.run_delete_orphans() and eventually any other multi-index updater. """
         url = u'%s/select?q=*:*&rows=6000&fl=inscription_id,display_status&wt=json&indent=true' % self.SOLR_URL
         r = requests.get( url )
         filename = u'display_statuses_backup_%s.json' % unicode( datetime.datetime.now() ).replace( u' ', u'_' )
         filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, filename )
         with open( filepath, u'w' ) as f:
             f.write( r.content )
-        ## delete old files
+        self.delete_old_backups()
+        return
+
+    def delete_old_backups( self ):
+        """ Deletes old backup display status files.
+            Called by self.backup_display_statuses() """
         now = time.time()
-        seconds_in_day = 60*60*24; thirty_days = seconds_in_day*30
+        seconds_in_day = 60*60*24
+        thirty_days = seconds_in_day*30
         for backup_filename in os.listdir( self.DISPLAY_STATUSES_BACKUP_DIR ):
             backup_filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, backup_filename )
             if os.stat( backup_filepath ).st_mtime < now - thirty_days:
