@@ -397,12 +397,13 @@
           </xsl:when>
           <xsl:otherwise>
             <xsl:text/>
+            <xsl:variable name="id" select="."/>
             <xsl:text>bibl=</xsl:text>
-            <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=.]/tei:ptr/@target"/>
+            <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=$id]/tei:ptr/@target"/>
             <xsl:text>|nType=</xsl:text>
-            <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=.]/tei:biblScope/@type"/>
+            <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=$id]/tei:biblScope/@type"/>
             <xsl:text>|n=</xsl:text>
-            <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=.]/tei:biblScope"/>
+            <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=$id]/tei:biblScope"/>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:element>
