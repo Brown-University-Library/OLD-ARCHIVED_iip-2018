@@ -526,7 +526,7 @@ def run_delete_solr_entry( inscription_id ):
         Called by (queue-runner) models.run_delete_orphans(). """
     killer = OrphanKiller( log )
     log.info( u'in (queue-called) models.run_delete_solr_entry(); deleting solr inscription_id, `%s`' % inscription_id )
-    # killer.delete_orphan( inscription_id )
+    killer.delete_orphan( inscription_id )
     return
 
 
