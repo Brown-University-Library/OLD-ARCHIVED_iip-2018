@@ -365,22 +365,53 @@ def logout( request ):
 
 ## process ##  request.session['authz_info'] = { 'authorized': True, 'firstname': request.META['Shibboleth-givenName'] }
 
-def process( request, inscription_id ):
-    """ Initiated from view-inscription page.
-        Takes inscription_id and display_status.
-            Checks authN/Z; executes process of current inscription.
-            Returns current view-inscription page.
-        """
-    log.info( u'in iip_search_app.views.process(); starting' )
+def process_new( request ):
+    """ Triggers svn-update and processing of all new records. """
+    log.info( u'in iip_search_app.views.process_new(); starting' )
     if request.session[u'authz_info'][u'authorized'] == False:
+        log.info( u'in iip_search_app.views.process_new(); not authorized, returning Forbidden' )
         return HttpResponseForbidden( '403 / Forbidden' )
-    if inscription_id == u'new':
-        q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
-        return HttpResponse( u'Started processing updated inscriptions.' )
-    elif inscription_id == u'delete_orphans':
-        q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
-        return HttpResponse( u'Started processing solr orphan deletion.' )
-    elif inscription_id == u'INSCRIPTION_ID':
+    q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
+    return HttpResponse( u'Started processing updated inscriptions.' )
+
+def process_orphans( request ):
+    """ Triggers deletion of solr-inscription-ids that do not have corresponding repository ids. """
+    log.info( u'in iip_search_app.views.process_orphans(); starting' )
+    if request.session[u'authz_info'][u'authorized'] == False:
+        log.info( u'in iip_search_app.views.process_orphans(); not authorized, returning Forbidden' )
+        return HttpResponseForbidden( '403 / Forbidden' )
+    q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
+    return HttpResponse( u'Started processing solr orphan deletion.' )
+
+def process_all( request ):
+    """ Returns confirmation-required response. """
+    log.info( u'in iip_search_app.views.process_all(); starting' )
+    if request.session[u'authz_info'][u'authorized'] == False:
+        log.info( u'in iip_search_app.views.process_all(); not authorized, returning Forbidden' )
+        return HttpResponseForbidden( '403 / Forbidden' )
+    request.session[u'process_all_initiated'] = True
+    return HttpResponse( u'Please confirm: in url change `all` to `confirm_all`.' )
+
+def process_confirm_all( request ):
+    """ Triggers processing of all inscriptions. """
+    if request.session[u'authz_info'][u'authorized'] == False:
+        log.info( u'in iip_search_app.views.process_confirm_all(); not authorized, returning Forbidden' )
+        return HttpResponseForbidden( '403 / Forbidden' )
+    if request.session.get( u'process_all_initiated', False ) == True:  # if it doesn't exist, create and set to False
+        request.session[u'process_all_initiated'] = False
+        # q.enqueue_call( func=u'iip_search_app.models.run_process_all', kwargs = {} )
+        # return HttpResponse( u'Started processing all inscriptions; this will take about 15 minutes.' )
+        return HttpResponse( u'Under construction' )
+    else:
+        return HttpResponse( u'Initial url must be `all`, not `confirm_all`.' )
+
+def process_single( request, inscription_id ):
+    """ Triggers, after instruction, processing of given iscription. """
+    log.info( u'in iip_search_app.views.process_single(); starting; inscription_id, `%s`' % inscription_id )
+    if request.session[u'authz_info'][u'authorized'] == False:
+        log.info( u'in iip_search_app.views.process_single(); not authorized, returning Forbidden' )
+        return HttpResponseForbidden( '403 / Forbidden' )
+    if inscription_id == u'INSCRIPTION_ID':
         return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`.' )
     else:
         q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
