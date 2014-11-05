@@ -365,38 +365,6 @@ def logout( request ):
 
 ## process ##  request.session['authz_info'] = { 'authorized': True, 'firstname': request.META['Shibboleth-givenName'] }
 
-# def process( request, inscription_id ):
-#     """ Initiated from view-inscription page.
-#         Takes inscription_id and display_status.
-#             Checks authN/Z; executes process of current inscription.
-#             Returns current view-inscription page.
-#         """
-#     log.info( u'in iip_search_app.views.process(); starting' )
-#     if request.session[u'authz_info'][u'authorized'] == False:
-#         return HttpResponseForbidden( '403 / Forbidden' )
-#     if inscription_id == u'new':
-#         q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
-#         return HttpResponse( u'Started processing updated inscriptions.' )
-#     elif inscription_id == u'delete_orphans':
-#         q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
-#         return HttpResponse( u'Started processing solr orphan deletion.' )
-#     elif inscription_id == u'all':
-#         request.session[u'process_all_confirmation'] = { u'initial_request': True }
-#         return HttpResponse( u'Please confirm: in url change `all` to `confirm_all`.' )
-#     elif inscription_id == u'confirm_all':
-#         if u'process_all_confirmation' in request.session and request.session[u'process_all_confirmation'][u'initial_request'] == True:
-#             request.session[u'process_all_confirmation'] = { u'initial_request': False }
-#             # q.enqueue_call( func=u'iip_search_app.models.run_process_all', kwargs = {} )
-#             return HttpResponse( u'Started processing all inscriptions; this will take about 15 minutes.' )
-#         else:
-#             request.session[u'process_all_confirmation'] = { u'initial_request': False }
-#             return HttpResponse( u'Initial url must be `all`, not `confirm_all`.' )
-#     elif inscription_id == u'INSCRIPTION_ID':
-#         return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`.' )
-#     else:
-#         q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
-#         return HttpResponse( u'Started processing inscription-id.' )
-
 def process_new( request ):
     """ Triggers svn-update and processing of all new records. """
     log.info( u'in iip_search_app.views.process_new(); starting' )
@@ -426,8 +394,6 @@ def process_all( request ):
 
 def process_confirm_all( request ):
     """ Triggers processing of all inscriptions. """
-    log.info( u'in iip_search_app.views.process_confirm_all(); starting' )
-    log.info( u'in iip_search_app.views.process_confirm_all(); request.session, `%s`' % pprint.pformat(request.session.__dict__) )
     if request.session[u'authz_info'][u'authorized'] == False:
         log.info( u'in iip_search_app.views.process_confirm_all(); not authorized, returning Forbidden' )
         return HttpResponseForbidden( '403 / Forbidden' )
