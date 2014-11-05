@@ -551,11 +551,12 @@ def run_process_single_file( inscription_id ):
     utils = ProcessorUtils()
     if utils.validate_inscription_id( inscription_id ) == False:
         return
+    utils.backup_display_statuses()
     current_display_status = utils.grab_current_display_status( inscription_id )
-    # q.enqueue_call(
-    #     func = u'iip_search_app.models.run_process_file',
-    #     kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
-    #     )
+    q.enqueue_call(
+        func = u'iip_search_app.models.run_process_file',
+        kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
+        )
     return
 
 ## triggered by one of above queue-runners
