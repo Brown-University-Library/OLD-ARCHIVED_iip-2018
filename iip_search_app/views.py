@@ -399,7 +399,7 @@ def process_confirm_all( request ):
         return HttpResponseForbidden( '403 / Forbidden' )
     if request.session.get( u'process_all_initiated', False ) == True:  # if it doesn't exist, create and set to False
         request.session[u'process_all_initiated'] = False
-        q.enqueue_call( func=u'iip_search_app.models.run_process_all', kwargs = {} )
+        q.enqueue_call( func=u'iip_search_app.models.run_process_all_files', kwargs = {} )
         # return HttpResponse( u'Started processing all inscriptions; this will take about 15 minutes.' )
         return HttpResponse( u'Under construction' )
     else:
