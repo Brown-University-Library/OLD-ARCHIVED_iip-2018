@@ -562,7 +562,7 @@ def run_process_single_file( inscription_id ):
 def run_process_all_files():
     """ Triggers processing of all inscriptions.
         Called by views.process( u'all') """
-    log.info( u'in iip_search_app.models.run_process_all_files(); starting at `%s`; inscription_id, `%s`' % (unicode(datetime.datetime.now()), inscription_id) )
+    log.info( u'in iip_search_app.models.run_process_all_files(); starting at `%s`' % (unicode(datetime.datetime.now())) )
     ( killer, utils ) = ( OrphanKiller(log), ProcessorUtils() )
     utils.backup_display_statuses()
     utils.call_svn_update()  # run svn update to get most recent info
