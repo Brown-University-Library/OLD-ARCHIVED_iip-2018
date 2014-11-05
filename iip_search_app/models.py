@@ -559,6 +559,21 @@ def run_process_single_file( inscription_id ):
         )
     return
 
+def run_process_all_files( inscription_id ):
+    """ Triggers processing of all inscriptions.
+        Called by views.process( u'all') """
+    log.info( u'in iip_search_app.models.run_process_all_files(); starting at `%s`; inscription_id, `%s`' % (unicode(datetime.datetime.now()), inscription_id) )
+    ( killer, utils ) = ( OrphanKiller(log), ProcessorUtils() )
+    utils.backup_display_statuses()
+    utils.call_svn_update()  # run svn update to get most recent info
+    directory_inscription_ids = killer.build_directory_inscription_ids()  # get list of directory-inscription-ids
+    # for inscription_id in directory_inscription_ids:
+    #     current_display_status = utils.grab_current_display_status( inscription_id )
+    #     q.enqueue_call(
+    #         func = u'iip_search_app.models.run_process_file',
+    #         kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status } )
+    return
+
 ## triggered by one of above queue-runners
 
 def run_process_file( file_id, grab_latest_file, display_status ):
