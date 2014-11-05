@@ -561,37 +561,48 @@ def run_process_single_file( inscription_id ):
 
 def run_process_all_files():
     """ Triggers processing of all inscriptions.
+        Note: initially had this function grab display_status then call `run_process_file` directly,
+              but x-thousand display-status url-calls from single job timed out.
         Called by views.process( u'all') """
-    log.info( u'in iip_search_app.models.run_process_all_files(); starting at `%s`' % (unicode(datetime.datetime.now())) )
+    log.info( u'in iip_search_app.models.run_process_all_files(); starting at `%s`' % unicode(datetime.datetime.now()) )
     ( killer, utils ) = ( OrphanKiller(log), ProcessorUtils() )
     utils.backup_display_statuses()
     utils.call_svn_update()  # run svn update to get most recent info
     directory_inscription_ids = killer.build_directory_inscription_ids()  # get list of directory-inscription-ids
     for inscription_id in directory_inscription_ids:
-        current_display_status = utils.grab_current_display_status( inscription_id )
-        # q.enqueue_call(
-        #     func = u'iip_search_app.models.run_process_file',
-        #     kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status } )
+        q.enqueue_call(
+            func = u'iip_search_app.models.run_grab_status_then_process_file',
+            kwargs = { u'inscription_id': inscription_id } )
     return
 
 ## triggered by one of above queue-runners
 
 def run_process_file( file_id, grab_latest_file, display_status ):
     """ Calls Processor.process_file().
-        Called by (queue-runner) models.run_call_svn_update(). """
-    log.info( u'in (queue-called) iip_search_app.models.run_process_file(); starting at `%s`' % unicode(datetime.datetime.now()) )
+        Called by (queue-runner) iip_search_app.models.run_call_svn_update(). """
+    log.info( u'in (queue-runner) iip_search_app.models.run_process_file(); starting at `%s`' % unicode(datetime.datetime.now()) )
     processor = Processor()
     process_dict = processor.process_file( file_id, grab_latest_file, display_status )
-    log.info( u'in (queue-called) run_process_file(); process_dict is, ```%s```' % pprint.pformat(process_dict) )
+    log.info( u'in (queue-runner) iip_search_app.models.run_process_file(); process_dict is, ```%s```' % pprint.pformat(process_dict) )
     return
 
 def run_delete_solr_entry( inscription_id ):
     """ Calls OrphanKiller.delete_solr_entry().
-        Called by (queue-runner) models.run_delete_orphans(). """
+        Called by (queue-runner) iip_search_app.models.run_delete_orphans(). """
     killer = OrphanKiller( log )
-    log.info( u'in (queue-called) models.run_delete_solr_entry(); deleting solr inscription_id, `%s`' % inscription_id )
+    log.info( u'in (queue-runner) iip_search_app.models.run_delete_solr_entry(); deleting solr inscription_id, `%s`' % inscription_id )
     killer.delete_orphan( inscription_id )
     return
 
+def run_grab_status_then_process_file( inscription_id ):
+    """ Grabs current display_status and processes file.
+        Called by (queue-runner) iip_search_app.models.run_process_all_files() """
+    current_display_status = utils.grab_current_display_status( inscription_id )
+    log.info( u'in (queue-runner) iip_search_app.models.run_grab_status_then_process_file(); starting at `%s`' % unicode(datetime.datetime.now()) )
+    q.enqueue_call(
+        func = u'iip_search_app.models.run_process_file',
+        kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
+        )
+    return
 
 ## eof
