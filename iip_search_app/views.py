@@ -371,7 +371,7 @@ def process( request, inscription_id ):
             Checks authN/Z; executes process of current inscription.
             Returns current view-inscription page.
         """
-    log.info( u'in process(); starting' )
+    log.info( u'in iip_search_app.views.process(); starting' )
     if request.session[u'authz_info'][u'authorized'] == False:
         return HttpResponseForbidden( '403 / Forbidden' )
     if inscription_id == u'new':
@@ -380,6 +380,8 @@ def process( request, inscription_id ):
     elif inscription_id == u'delete_orphans':
         q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
         return HttpResponse( u'Started processing solr orphan deletion.' )
+    elif inscription_id == u'INSCRIPTION_ID':
+        return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`.' )
     else:
         q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
         return HttpResponse( u'Started processing inscription-id.' )
