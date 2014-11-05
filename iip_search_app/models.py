@@ -597,6 +597,7 @@ def run_delete_solr_entry( inscription_id ):
 def run_grab_status_then_process_file( inscription_id ):
     """ Grabs current display_status and processes file.
         Called by (queue-runner) iip_search_app.models.run_process_all_files() """
+    utils = ProcessorUtils()
     current_display_status = utils.grab_current_display_status( inscription_id )
     log.info( u'in (queue-runner) iip_search_app.models.run_grab_status_then_process_file(); starting at `%s`' % unicode(datetime.datetime.now()) )
     q.enqueue_call(
