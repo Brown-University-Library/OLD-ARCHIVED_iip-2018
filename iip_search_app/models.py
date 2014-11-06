@@ -579,8 +579,13 @@ def run_process_all_files():
 
 def run_process_file( file_id, grab_latest_file, display_status ):
     """ Calls Processor.process_file().
-        Called by (queue-runner) iip_search_app.models.run_call_svn_update(). """
-    log.info( u'in (queue-runner) iip_search_app.models.run_process_file(); starting at `%s`' % unicode(datetime.datetime.now()) )
+        Called by (queue-runner) iip_search_app.models.run_call_svn_update().
+                  (queue-runner) iip_search_app.models.run_process_single_file().
+                  (queue-runner) iip_search_app.models.run_grab_status_then_process_file(). """
+    log.info( u'in (queue-runner) iip_search_app.models.run_process_file(); starting at `%s`; file_id, `%s`' % (unicode(datetime.datetime.now()), inscription_id) )
+    if file_id in [ u'include_publicationStmt', u'include_taxonomies', u'interpretations', u'names', u'persons' ]:
+        log.info( u'in (queue-runner) iip_search_app.models.run_process_file(); file_id in ignore list; skipping' )
+        return
     processor = Processor()
     process_dict = processor.process_file( file_id, grab_latest_file, display_status )
     log.info( u'in (queue-runner) iip_search_app.models.run_process_file(); process_dict is, ```%s```' % pprint.pformat(process_dict) )
