@@ -1,6 +1,7 @@
 <xsl:stylesheet
   version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:tei="http://www.tei-c.org/ns/1.0"
 >
 
 <xsl:param name="filename">empty</xsl:param>
@@ -11,7 +12,7 @@
   <xsl:copy>
     <xsl:apply-templates select="*|@*|text()|processing-instruction()|comment()" />
   </xsl:copy>
-  <xsl:if test="self::div">
+  <xsl:if test="self::tei:div">
     <xsl:if test="@subtype='transcription'">
       <xsl:apply-templates select="document($filename)"/>
     </xsl:if>
