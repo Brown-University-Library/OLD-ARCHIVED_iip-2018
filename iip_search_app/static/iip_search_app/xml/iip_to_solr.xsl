@@ -515,6 +515,11 @@
           <xsl:otherwise><![CDATA[<span>]]></xsl:otherwise>
         </xsl:choose>
         <xsl:choose>
+          <xsl:when test="tei:text/tei:body/tei:div[@subtype='simpleTranscription'] != ''">
+            <!--<![CDATA[<br/>]]>-->
+            <xsl:apply-templates select="tei:text/tei:body/tei:div[@subtype='simpleTranscription']"/>
+            <!--<![CDATA[<br/>]]>-->
+          </xsl:when>
           <xsl:when test="tei:text/tei:body/tei:div[@subtype='transcription'] != ''">
             <!--<![CDATA[<br/>]]>-->
             <xsl:apply-templates select="tei:text/tei:body/tei:div[@subtype='transcription']"/>
@@ -529,12 +534,11 @@
         <![CDATA[</span>]]>
       
     </xsl:element>
-    <!-- this used to refer to a "simpleTranscription" field that no longer exists -->
     <xsl:element name="field">
       <xsl:attribute name="name">transcription_search</xsl:attribute>
       <xsl:choose>
-        <xsl:when test="string-length(tei:text/tei:body/tei:div[@type='simpleTranscription']) != 0">
-          <xsl:value-of select="normalize-space(tei:text/tei:body/tei:div[@type='simpleTranscription'])"/>
+        <xsl:when test="string-length(tei:text/tei:body/tei:div[@subtype='simpleTranscription']) != 0">
+          <xsl:value-of select="normalize-space(tei:text/tei:body/tei:div[@subtype='simpleTranscription'])"/>
         </xsl:when>
         <xsl:when test="tei:text/tei:body/tei:div[@subtype='transcription']">
           <xsl:apply-templates select="tei:text/tei:body/tei:div[@subtype='transcription']" mode="search"/>
