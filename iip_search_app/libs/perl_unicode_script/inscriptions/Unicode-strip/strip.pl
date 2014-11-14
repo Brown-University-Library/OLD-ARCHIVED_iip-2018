@@ -26,11 +26,11 @@ system("./clone.bash Copied/*.xml");
 print "cross line search adjust start...\n";
 system("./crossLineSearchAdjust.pl Cloned/*.xml");
 
-#print "decompose start...\n";
-#system("./decompose_zz.bash");
+# print "decompose start...\n";
+# system("./decompose_zz.bash");
 
-#print "removeDiacritics start...\n";
-#system("./removeDiacritics.bash Decomposed/*");
+# print "removeDiacritics start...\n";
+# system("./removeDiacritics.bash Decomposed/*");
 
 print "finalMerge start...\n";
 system("./finalMerge.bash ../xml/*.xml");

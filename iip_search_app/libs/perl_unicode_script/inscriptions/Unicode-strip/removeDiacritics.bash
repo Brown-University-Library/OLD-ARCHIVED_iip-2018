@@ -55,7 +55,7 @@ for filepath in "$@"; do
 #		echo "   $path"
 #		echo "   $file"
 #		echo "   $name"
-		echo $filepath > Stripped/$name.stripped.xml
+		cp $filepath Stripped/$name.stripped.xml
 
     fi
     done
