@@ -41,7 +41,7 @@ foreach my $file (@ARGV) {
 			print NEW;
 		} else {
 			$_ = ltrim(rtrimreturn($_));
-			$_ =~ s/\<lb\s*type\s*=\b*\"wordbreaking\"\s*\/\>\s*//; # remove word break
+			$_ =~ s/\<lb\s*break\s*=\b*\"no\"\s*\/\>\s*//; # remove word break
 			$_ =~ s/\<lb\s*\/\>\s*/ /; # remove line break
 			print NEW;
 		}
