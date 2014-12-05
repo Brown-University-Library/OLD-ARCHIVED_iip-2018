@@ -61,7 +61,7 @@ for filepath in "$@"; do
 #		echo "   $path"
 #		echo "   $file"
 #		echo "   $name"
-		perl charlint.pl -x $filepath  > Decomposed/$name.decomposed.xml
+		cp $filepath Decomposed/$name.decomposed.xml
     fi
     done
 

@@ -319,11 +319,28 @@
           <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions[@type='letter']/tei:height/@unit"></xsl:value-of>
         </xsl:when>
         <xsl:when test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@extent">
-          <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@atLeast"/>
-          <xsl:text>-</xsl:text>
-          <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@atMost"/>
-          <xsl:text> </xsl:text>
-          <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@unit"/>
+          <xsl:choose>
+            <!-- When there's an @quantity, use only the quantity and the unit --> 
+            <xsl:when test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@quantity">
+              <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@quantity"/>
+              <xsl:text> </xsl:text>
+              <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@unit"/>
+            </xsl:when>
+            <!-- When there's both @atLeast and @atMost, use both and the unit with a dash --> 
+            <xsl:when test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@atMost">
+              <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@atLeast"/>
+              <xsl:text>-</xsl:text>
+              <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@atMost"/>
+              <xsl:text> </xsl:text>
+              <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@unit"/>
+            </xsl:when>
+            <!-- When there's an @atLeast, but no @atMost use only the atLeast and the unit --> 
+            <xsl:otherwise>
+              <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@atLeast"/>
+              <xsl:text> </xsl:text>
+              <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:physDesc/tei:handDesc/tei:handNote/tei:dimensions/@unit"/>
+            </xsl:otherwise>
+          </xsl:choose>
         </xsl:when>
         <xsl:otherwise>
           <xsl:text>N/A</xsl:text>
@@ -483,23 +500,18 @@
       
         <xsl:choose>
           <xsl:when test="tei:text/tei:body/tei:div/@xml:lang='heb'">
-            <![CDATA[<span dir="rtl" class="rtl">]]>
-          </xsl:when>
+<![CDATA[<span dir="rtl" class="rtl">]]></xsl:when>
           <xsl:otherwise><![CDATA[<span>]]></xsl:otherwise>
         </xsl:choose>
         <xsl:choose>
           <xsl:when test="tei:text/tei:body/tei:div[@subtype='diplomatic'] != ''">
-            <!-- <![CDATA[<br/>]]>-->
             <xsl:apply-templates select="tei:text/tei:body/tei:div[@subtype='diplomatic']"/>
-            <!--<![CDATA[<br/>]]>-->
           </xsl:when>
           <xsl:otherwise>
-            <!--<![CDATA[<br/>]]>-->
             <xsl:text>[no diplomatic]</xsl:text>
-            <!--<![CDATA[<br/>]]>-->
           </xsl:otherwise>
         </xsl:choose>
-        <![CDATA[</span>]]>
+<![CDATA[</span>]]>
       
     </xsl:element>
   </xsl:template>
@@ -510,31 +522,29 @@
       
         <xsl:choose>
           <xsl:when test="tei:text/tei:body/tei:div/@xml:lang='heb'">
-            <![CDATA[<span dir="rtl" class="rtl">]]>
+<![CDATA[<span dir="rtl" class="rtl">]]>
           </xsl:when>
           <xsl:otherwise><![CDATA[<span>]]></xsl:otherwise>
         </xsl:choose>
         <xsl:choose>
+<!--           <xsl:when test="tei:text/tei:body/tei:div[@subtype='simpleTranscription'] != ''">
+            <xsl:apply-templates select="tei:text/tei:body/tei:div[@subtype='simpleTranscription']"/>
+          </xsl:when> -->
           <xsl:when test="tei:text/tei:body/tei:div[@subtype='transcription'] != ''">
-            <!--<![CDATA[<br/>]]>-->
             <xsl:apply-templates select="tei:text/tei:body/tei:div[@subtype='transcription']"/>
-            <!--<![CDATA[<br/>]]>-->
           </xsl:when>
           <xsl:otherwise>
-            <!--<![CDATA[<br/>]]>-->
             <xsl:text>[no transcription]</xsl:text>
-            <!--<![CDATA[<br/>]]>-->
           </xsl:otherwise>
         </xsl:choose>
-        <![CDATA[</span>]]>
+<![CDATA[</span>]]>
       
     </xsl:element>
-    <!-- this used to refer to a "simpleTranscription" field that no longer exists -->
     <xsl:element name="field">
       <xsl:attribute name="name">transcription_search</xsl:attribute>
       <xsl:choose>
-        <xsl:when test="string-length(tei:text/tei:body/tei:div[@type='simpleTranscription']) != 0">
-          <xsl:value-of select="normalize-space(tei:text/tei:body/tei:div[@type='simpleTranscription'])"/>
+        <xsl:when test="string-length(tei:text/tei:body/tei:div[@subtype='simpleTranscription']) != 0">
+          <xsl:apply-templates select="normalize-space(tei:text/tei:body/tei:div[@subtype='simpleTranscription'])" mode="search"/>
         </xsl:when>
         <xsl:when test="tei:text/tei:body/tei:div[@subtype='transcription']">
           <xsl:apply-templates select="tei:text/tei:body/tei:div[@subtype='transcription']" mode="search"/>
@@ -549,14 +559,10 @@
       
         <xsl:choose>
           <xsl:when test="tei:text/tei:body/tei:div[@type='translation'] != ''">
-            <!--<![CDATA[<br/>]]>-->
             <xsl:apply-templates select="tei:text/tei:body/tei:div[@type='translation']/tei:p"/>
-            <!--<![CDATA[<br/>]]>-->
           </xsl:when>
           <xsl:otherwise>
-            <!--<![CDATA[<br/>]]>-->
             <xsl:text>[no translation]</xsl:text>
-            <!--<![CDATA[<br/>]]>-->
           </xsl:otherwise>
         </xsl:choose>
       
@@ -608,32 +614,21 @@
     
   <xsl:template match="tei:note"> </xsl:template>
 
-  <xsl:template match="tei:lb">
-    <![CDATA[<br/>]]>
-  </xsl:template>
+  <xsl:template match="tei:lb"><![CDATA[<br/>]]></xsl:template>
 
   <xsl:template match="tei:span">
     <xsl:choose>
       <xsl:when test="tei:text/tei:body/tei:div/@xml:lang='heb'">
-        <![CDATA[<span dir="rtl" class="rtl">]]>
+<![CDATA[<span dir="rtl" class="rtl">]]>
       </xsl:when>
       <xsl:otherwise><![CDATA[<span>]]></xsl:otherwise>
     </xsl:choose>
-    <xsl:apply-templates/>
-    <![CDATA[</span>]]>
-  </xsl:template>
+    <xsl:apply-templates/><![CDATA[</span>]]></xsl:template>
 
   <xsl:template match="tei:unclear">
     <xsl:choose>
-      <xsl:when test="* | text()">
-        <![CDATA[<u>]]>
-        <xsl:apply-templates/>
-        <![CDATA[</u>]]>
-      </xsl:when>
-      <xsl:otherwise>
-        <![CDATA[<u>]]>
-        <![CDATA[</u>]]>
-      </xsl:otherwise>
+      <xsl:when test="* | text()"><![CDATA[<u>]]><xsl:apply-templates/><![CDATA[</u>]]></xsl:when>
+      <xsl:otherwise><![CDATA[<u>]]><![CDATA[</u>]]></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 

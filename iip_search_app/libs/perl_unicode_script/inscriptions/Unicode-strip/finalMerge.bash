@@ -39,14 +39,15 @@ for filepath in "$@"; do
     elif [ ! ${filepath##*.} = 'xml' ]; then 
 	echo "$myname warning: $filepath does not end in 'xml'; ignoring it"
     else
-	xsltproc --stringparam filename "Stripped/$base.cloned.decomposed.stripped.xml" \
+	echo $filepath
+	xsltproc --stringparam filename "Cloned/$base.cloned.xml" \
 	    copy.xsl \
 	    $filepath  \
 	    > Final/$base.xml
 #	/opt/local/java/bin/java -jar /opt/local/saxon/saxon8.jar \
 #	    -o Final/$base.xml \
 #	    $filepath \
-#	    copy.xsl "filename=Stripped/$base.cloned.decomposed.stripped.xml"
+#	    copy.xsl "filename=Stripped/$base.cloned.xml"
     fi
     done
 
