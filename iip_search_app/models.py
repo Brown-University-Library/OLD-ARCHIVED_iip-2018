@@ -17,7 +17,7 @@ class ProcessorUtils( object ):
         """ Settings. """
         self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
         self.SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )
-        self.DISPLAY_STATUSES_BACKUP_DIR = unicode( os.environ.get(u'IIP_SEARCH__DISPLAY_STATUSES_DIR') )
+        self.DISPLAY_STATUSES_BACKUP_DIR = unicode( os.environ.get(u'IIP_SEARCH__DISPLAY_STATUSES_BACKUP_DIR') )
 
     def call_svn_update( self ):
         """ Runs svn update.
@@ -172,6 +172,7 @@ class Processor( object ):
         return_dict = {
             u'stderr': var_stderr, u'stdout': var_stdout,
             u'submitted_file_id': file_id, u'submitted_vc_url': file_url, u'submitted_destination_path': xml_destination_path }
+        log.info( u'in models.Processor.grab_latest_file(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
         return return_dict
 
     def _setup_grab_files( self, file_id ):
@@ -233,6 +234,7 @@ class Processor( object ):
             u'filepath': filepath,
             u'xml': xml
             }
+        log.info( u'in models.Processor.grab_original_xml(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
         return return_dict
 
     ##
@@ -249,10 +251,12 @@ class Processor( object ):
         self._close_munger_stdstuff( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath )
         munged_xml = self._get_munged_xml( file_name )
         self._delete_munger_detritus( file_name, file_name_root, current_working_directory )
-        return {
+        return_dict = {
             u'source_xml': source_xml,
             u'munged_xml': munged_xml
             }
+        log.info( u'in models.Processor.run_munger(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
+        return return_dict
 
     def _run_munger_asserts( self, source_xml ):
         """ Takes source_xml.
@@ -376,7 +380,9 @@ class Processor( object ):
             Called by process_file(). """
         assert type(self.SOLR_DOC_STYLESHEET_PATH) == unicode, type(self.SOLR_DOC_STYLESHEET_PATH)
         assert type(self.TRANSFORMER_URL) == unicode, type(self.TRANSFORMER_URL)
-        assert type(munged_xml) == unicode, type(xml_munged)
+        assert type(munged_xml) == unicode, type(munged_xml)
+        log.info( u'in models.Processor.make_initial_solr_doc(); self.SOLR_DOC_STYLESHEET_PATH, ```%s```' % self.SOLR_DOC_STYLESHEET_PATH )
+        log.info( u'in models.Processor.make_initial_solr_doc(); self.TRANSFORMER_URL, ```%s```' % self.TRANSFORMER_URL )
         iip_solrdoc_string = 'init'
         ## get stylesheet
         f = open( self.SOLR_DOC_STYLESHEET_PATH )
@@ -392,12 +398,13 @@ class Processor( object ):
         headers = { u'content-type': u'text/xml; charset=utf-8' }
         r = requests.post( url, data=payload, headers=headers )
         transformed_xml = r.content.decode(u'utf-8')
-        # print u'- transformed_xml, ```%s```' % transformed_xml
-        return {
+        return_dict = {
             u'initial_munged_xml': munged_xml,
             u'stylesheet_xml': stylesheet_ustring,
             u'transformed_xml': transformed_xml
             }
+        log.info( u'in models.Processor.make_initial_solr_doc(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
+        return return_dict
 
     ##
 
