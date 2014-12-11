@@ -544,7 +544,7 @@
       <xsl:attribute name="name">transcription_search</xsl:attribute>
       <xsl:choose>
         <xsl:when test="string-length(tei:text/tei:body/tei:div[@subtype='simpleTranscription']) != 0">
-          <xsl:apply-templates select="normalize-space(tei:text/tei:body/tei:div[@subtype='simpleTranscription'])" mode="search"/>
+          <xsl:apply-templates select="tei:text/tei:body/tei:div[@subtype='simpleTranscription']" mode="search"/>
         </xsl:when>
         <xsl:when test="tei:text/tei:body/tei:div[@subtype='transcription']">
           <xsl:apply-templates select="tei:text/tei:body/tei:div[@subtype='transcription']" mode="search"/>
