@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import logging, pprint
+import json, logging, pprint
 import redis, rq, solr
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
@@ -415,6 +415,24 @@ def process_single( request, inscription_id ):
     else:
         q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
         return HttpResponse( u'Started processing inscription-id.' )
+
+def show_recent_errors( request ):
+    """ Displays last x entries in the failed queue. """
+    log.info( u'in iip_search_app.views.show_recent_errors(); starting' )
+    TARGET_QUEUE = u'iip'
+    queue_name = u'failed'
+    q = rq.Queue( queue_name, connection=redis.Redis() )
+    recent_jobs = sorted( q.jobs[-25:], reverse=True )
+    dict_list = []
+    for job in recent_jobs:
+        job_d = {
+            u'description': job.description,
+            u'datetime': unicode( job.created_at ),
+            u'traceback': job.exc_info,
+            }
+        dict_list.append( job_d )
+    output = json.dumps( dict_list, sort_keys=True, indent=2 )
+    return HttpResponse( output, content_type = u'application/javascript; charset=utf-8' )
 
 
 ## view_xml ##
