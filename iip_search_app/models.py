@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import datetime, glob, logging, os, pprint, random, subprocess, time
+import datetime, glob, json, logging, os, pprint, random, subprocess, time
 import envoy, redis, requests, rq
 from lxml import etree
 
@@ -511,6 +511,62 @@ class OrphanKiller( object ):
         return
 
     ## end class OrphanKiller()
+
+
+class OneOff( object ):
+    """ Container for one-off tasks that might again be useful in the future.
+        Non-django, plain-python model.
+        No dango dependencies, including settings. """
+
+    def __init__( self, log ):
+        self.log = log
+
+    def transfer_display_status( self ):
+        """ Transfers display status from dev solr instance to production solr instance.
+            Run directly. """
+        ( old_solr_root_url, new_solr_root_url ) = ( unicode(os.environ.get(u'IIP_SEARCH__DEV_SOLR_URL')), unicode(os.environ.get(u'IIP_SEARCH__PRODUCTION_SOLR_URL'))  )
+        old_solr_dct = self.grab_old_dict( old_solr_root_url )
+        for ( inscription_id, display_status ) in sorted( old_solr_dct.items() ):
+            if self.check_initial_status( new_solr_root_url, inscription_id, display_status ) == u'different':
+                self.update_new_solr( new_solr_root_url, inscription_id, display_status )
+        return
+
+    def grab_old_dict( self, old_solr_root_url ):
+        """ Grabs all ids & display-statuses and converts them to a dict.
+            Called by transfer_display_status() """
+        url = u'%s/select?q=*:*&rows=6000&fl=inscription_id,display_status&wt=json&indent=true' % old_solr_root_url
+        r = requests.get( url )
+        dct = r.json()
+        lst = dct[u'response'][u'docs']
+        assert sorted( lst[0].keys() ) == [u'display_status', u'inscription_id']
+        new_dct = {}
+        for dct in lst:
+            new_dct[ dct[u'inscription_id'] ] = dct[u'display_status']
+        return new_dct
+
+    def check_initial_status( self, new_solr_root_url, inscription_id, target_display_status ):
+        """ Checks production status before update.
+            Called by transfer_display_status() """
+        url = u'%s/select?q=inscription_id:%s&fl=inscription_id,display_status&wt=json&indent=true' % ( new_solr_root_url, inscription_id )
+        r = requests.get( url )
+        dct = r.json()
+        data = dct[u'response'][u'docs'][0]
+        self.log( u'in OneOff.log_before_status(); initial data, `%s`' % data )
+        if data[u'display_status'] == target_display_status:
+            return_val = u'same'
+        else:
+            return_val = u'different'
+        return return_val
+
+    def update_new_solr( self, new_solr_root_url, inscription_id, display_status ):
+        """ Peforms the update if necessary.
+            Called by transfer_display_status() """
+        url = u'%s/update?commit=true'
+        payload = [ { u'inscription_id': inscription_id, u'display_status': {u'set': display_status} } ]
+        headers = { u'content-type': u'application/json; charset=utf-8' }
+        r = requests.post( url, data=json.dumps(payload), headers=headers )
+        self.log( u'in OneOff.update_new_solr(); inscription_id, %s; solr-post-status-code, %s' % (inscription_id, r.status_code) )
+        return
 
 
 
