@@ -518,17 +518,23 @@ class OneOff( object ):
         Non-django, plain-python model.
         No dango dependencies, including settings. """
 
-    def __init__( self, log ):
-        self.log = log
+    def __init__( self ):
+        self.log = logging.getLogger(__name__)
+
 
     def transfer_display_status( self ):
         """ Transfers display status from dev solr instance to production solr instance.
             Run directly. """
         ( old_solr_root_url, new_solr_root_url ) = ( unicode(os.environ.get(u'IIP_SEARCH__DEV_SOLR_URL')), unicode(os.environ.get(u'IIP_SEARCH__PRODUCTION_SOLR_URL'))  )
         old_solr_dct = self.grab_old_dict( old_solr_root_url )
-        for ( inscription_id, display_status ) in sorted( old_solr_dct.items() ):
+        self.log.debug( u'source-data: `%s`' % pprint.pformat(old_solr_dct) )
+        for i, ( inscription_id, display_status ) in enumerate( sorted(old_solr_dct.items()) ):
+            print u'inscription_id, `%s`' % inscription_id
             if self.check_initial_status( new_solr_root_url, inscription_id, display_status ) == u'different':
+                print u'updating!'
                 self.update_new_solr( new_solr_root_url, inscription_id, display_status )
+            if i > 6:
+                break
         return
 
     def grab_old_dict( self, old_solr_root_url ):
@@ -551,7 +557,7 @@ class OneOff( object ):
         r = requests.get( url )
         dct = r.json()
         data = dct[u'response'][u'docs'][0]
-        self.log( u'in OneOff.log_before_status(); initial data, `%s`' % data )
+        self.log.debug( u'in OneOff.log_before_status(); initial data, `%s`' % data )
         if data[u'display_status'] == target_display_status:
             return_val = u'same'
         else:
@@ -561,11 +567,11 @@ class OneOff( object ):
     def update_new_solr( self, new_solr_root_url, inscription_id, display_status ):
         """ Peforms the update if necessary.
             Called by transfer_display_status() """
-        url = u'%s/update?commit=true'
+        url = u'%s/update?commit=true' % new_solr_root_url
         payload = [ { u'inscription_id': inscription_id, u'display_status': {u'set': display_status} } ]
         headers = { u'content-type': u'application/json; charset=utf-8' }
         r = requests.post( url, data=json.dumps(payload), headers=headers )
-        self.log( u'in OneOff.update_new_solr(); inscription_id, %s; solr-post-status-code, %s' % (inscription_id, r.status_code) )
+        self.log.debug( u'in OneOff.update_new_solr(); inscription_id, %s; solr-post-status-code, %s; updated_status, %s' % (inscription_id, r.status_code, display_status) )
         return
 
 
