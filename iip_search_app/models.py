@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import datetime, glob, json, logging, os, pprint, random, subprocess, time
+import datetime, glob,back json, logging, os, pprint, random, subprocess, time
 import envoy, redis, requests, rq
 from lxml import etree
 
@@ -18,6 +18,13 @@ class ProcessorUtils( object ):
         self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
         self.SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )
         self.DISPLAY_STATUSES_BACKUP_DIR = unicode( os.environ.get(u'IIP_SEARCH__DISPLAY_STATUSES_BACKUP_DIR') )
+        self.DISPLAY_STATUSES_BACKUP_TIMEFRAME_IN_DAYS = int( os.environ.get(u'IIP_SEARCH__DISPLAY_STATUSES_BACKUP_TIMEFRAME_IN_DAYS') )
+
+    # def __init__( self ):
+    #     """ Settings. """
+    #     self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
+    #     self.SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )
+    #     self.DISPLAY_STATUSES_BACKUP_DIR = unicode( os.environ.get(u'IIP_SEARCH__DISPLAY_STATUSES_BACKUP_DIR') )
 
     def call_svn_update( self ):
         """ Runs svn update.
@@ -66,12 +73,24 @@ class ProcessorUtils( object ):
             Called by self.backup_display_statuses() """
         now = time.time()
         seconds_in_day = 60*60*24
-        thirty_days = seconds_in_day*30
+        timeframe_days = seconds_in_day * self.DISPLAY_STATUSES_BACKUP_TIMEFRAME_IN_DAYS
         for backup_filename in os.listdir( self.DISPLAY_STATUSES_BACKUP_DIR ):
             backup_filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, backup_filename )
-            if os.stat( backup_filepath ).st_mtime < now - thirty_days:
+            if os.stat( backup_filepath ).st_mtime < now - timeframe_days:
                 os.remove( backup_filepath )
         return
+
+    # def delete_old_backups( self ):
+    #     """ Deletes old backup display status files.
+    #         Called by self.backup_display_statuses() """
+    #     now = time.time()
+    #     seconds_in_day = 60*60*24
+    #     thirty_days = seconds_in_day*30
+    #     for backup_filename in os.listdir( self.DISPLAY_STATUSES_BACKUP_DIR ):
+    #         backup_filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, backup_filename )
+    #         if os.stat( backup_filepath ).st_mtime < now - thirty_days:
+    #             os.remove( backup_filepath )
+    #     return
 
     def validate_inscription_id( self, inscription_id ):
         """ Ensures inscription_id is valid.
