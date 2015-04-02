@@ -223,15 +223,21 @@
     <xsl:variable name="locus" select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:placeName/tei:geogFeat[@type='locus']"/>
     <xsl:element name="field">
       <xsl:attribute name="name">place_found</xsl:attribute>
+      <xsl:text>[</xsl:text>
       <xsl:choose>
         
         <xsl:when test="$region!='' and $settlement!=''">
           <xsl:value-of select="$settlement"/><xsl:text>, </xsl:text><xsl:value-of select="$region"/><xsl:text>. </xsl:text>
-          <xsl:if test="$locus"><xsl:value-of select="$locus"/><xsl:text> in </xsl:text></xsl:if>
-          <xsl:if test="$site"><xsl:value-of select="$site"/><xsl:text>. </xsl:text></xsl:if>
+          <xsl:if test="$locus!=''"><xsl:value-of select="$locus"/><xsl:text> in </xsl:text></xsl:if>
+          <xsl:if test="$site!=''"><xsl:value-of select="$site"/><xsl:text>. </xsl:text></xsl:if>
+          <xsl:text>]
+</xsl:text>
           <xsl:if test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p">
-            <xsl:text>&#10;</xsl:text>
-            <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p"/>
+            <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p"/><xsl:text> 
+</xsl:text>
+          </xsl:if>
+          <xsl:if test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:note">
+            <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:note"/>
           </xsl:if>
         </xsl:when>
 
@@ -239,21 +245,35 @@
           <xsl:value-of select="$region"/>
           <xsl:if test="$settlement"><xsl:text> (</xsl:text><xsl:value-of select="$settlement"/><xsl:text>)</xsl:text></xsl:if><xsl:text>. &#10;</xsl:text>
           
-          <xsl:if test="$locus"><xsl:value-of select="$locus"/><xsl:text> in </xsl:text></xsl:if>
-          <xsl:if test="$site"><xsl:value-of select="$site"/><xsl:text>. </xsl:text></xsl:if>
+          <xsl:if test="$locus!=''"><xsl:value-of select="$locus"/><xsl:text> in </xsl:text></xsl:if>
+          <xsl:if test="$site!=''"><xsl:value-of select="$site"/><xsl:text>. </xsl:text></xsl:if>
+          <xsl:text>]
+</xsl:text>
           <xsl:if test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p">
             <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p"/>
+            <xsl:text> 
+</xsl:text>
+          </xsl:if>
+          <xsl:if test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:note">
+            <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:note"/>
           </xsl:if>
         </xsl:when>
         
         <xsl:otherwise>
           <xsl:choose>
-            <xsl:when test="$locus or $site or tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p">
-              <xsl:if test="$locus"><xsl:value-of select="$locus"/></xsl:if>
-              <xsl:if test="$locus and $site"><xsl:text> in </xsl:text></xsl:if>
-              <xsl:if test="$site"><xsl:value-of select="$site"/><xsl:text>. </xsl:text></xsl:if>
+            <xsl:when test="$locus or $site or tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p or tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:note">
+              <xsl:if test="$locus!=''"><xsl:value-of select="$locus"/></xsl:if>
+              <xsl:if test="$locus!='' and $site!=''"><xsl:text> in </xsl:text></xsl:if>
+              <xsl:if test="$site!=''"><xsl:value-of select="$site"/><xsl:text>. </xsl:text></xsl:if>
+              <xsl:text>]
+</xsl:text>
               <xsl:if test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p">
                 <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:p"/>
+                <xsl:text> 
+</xsl:text>
+              </xsl:if>
+              <xsl:if test="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:note">
+                <xsl:value-of select="tei:teiHeader/tei:fileDesc/tei:sourceDesc/tei:msDesc/tei:history/tei:origin/tei:note"/>
               </xsl:if>
             </xsl:when>
             <xsl:otherwise><xsl:text>[No Location]</xsl:text></xsl:otherwise>
