@@ -9,6 +9,8 @@ from iip_search_app import common, models, settings_app
 from iip_search_app.forms import SearchForm
 from iip_search_app.utils import ajax_snippet
 
+import os
+
 
 log = logging.getLogger(__name__)
 q = rq.Queue( u'iip', connection=redis.Redis() )
@@ -293,7 +295,8 @@ def _z_prepare_viewinscr_plain_get_response( q, z_bibids, specific_sources, curr
         'session_authz_info': request.session['authz_info'],
         'admin_links': common.make_admin_links( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id ),
         'view_xml_url': view_xml_url,
-        'current_url': current_url
+        'current_url': current_url,
+        'images': get_images(inscrid)
         }
     # log.debug( u'in _prepare_viewinscr_plain_get_response(); context, %s' % pprint.pformat(context) )
     return_response = render( request, u'iip_search_templates/viewinscr_zotero.html', context )
@@ -456,3 +459,18 @@ def view_xml( request, inscription_id ):
         xml_utf8 = f.read()
         xml = xml_utf8.decode(u'utf-8')
     return HttpResponse( xml, mimetype=u'text/xml' )
+
+def get_images(inscription_id):
+    img_path = "iip_search_app/static/iip_search_app/inscription_images/%s.jpg"
+    url = "/static/iip_search_app/inscription_images/%s.jpg"
+    if os.path.isfile(img_path % inscription_id):
+        return [url % inscription_id]
+    elif os.path.isfile(img_path % (inscription_id+"a")):
+        l = [url % (inscription_id+"a")]
+        if os.path.isfile(img_path % (inscription_id+"b")):
+            l += [url % (inscription_id+"b")]
+
+        return l
+    else:
+        return None
+

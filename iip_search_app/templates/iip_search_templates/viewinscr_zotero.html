@@ -7,6 +7,7 @@
 
   {% for i in inscription %}
 
+
     {% autoescape off %}
     <!--    <div class="resultTitle">
             <p style="float:left"><span class="short_header">{{i.inscription_id|upper}} - {{i.short_description}}</span></p>
@@ -47,6 +48,14 @@
         <p>{%if i.transcription%}{{i.transcription}}{%else%}No transcription{%endif%}</p>
         <h4>Translation:</h4>
         <p>{%if i.translation%}{{i.translation}}{%else%}No translation{%endif%}</p>
+        {% if images %}
+        <h4>Images:</h4>
+          {% for im in images %}
+            <a href="{{im}}" class="highslide " onclick="return hs.expand(this)">
+              <img width="200" src="{{im}}" alt="Highslide JS" title="Click to enlarge">
+            </a>
+          {% endfor %}
+        {% endif %}
       </div>
 
       <div class="insMetadata">
@@ -104,6 +113,7 @@
       $(document).ready(render_bibliography);
     </script>
     {%endif%}
+
 
   {%endfor%}  {% comment %} end of '''for i in inscription''' {% endcomment %}
 
