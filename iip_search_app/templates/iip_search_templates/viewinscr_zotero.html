@@ -48,9 +48,9 @@
         <p>{%if i.transcription%}{{i.transcription}}{%else%}No transcription{%endif%}</p>
         <h4>Translation:</h4>
         <p>{%if i.translation%}{{i.translation}}{%else%}No translation{%endif%}</p>
-        {% if images %}
+        {% if i.imageSource and biblioFull %}
         <h4>Images:</h4>
-          {% for im in images %}
+          {% for im in i.imageSource %}
             <a href="{{im}}" class="highslide " onclick="return hs.expand(this)">
               <img width="200" src="{{im}}" alt="Highslide JS" title="Click to enlarge">
             </a>
@@ -76,11 +76,6 @@
         {%if biblDiplomatic %}<p><strong>Source of Diplomatic:&nbsp;</strong><span id="diplomatic" class="biblToRetrieve">{{biblDiplomatic}}</span>{% endif %}
         {%if biblTranscription %}<p><strong>Source of Transcription:&nbsp;</strong><span id="transcription" class="biblToRetrieve">{{biblTranscription}}</span>{% endif %}
         {%if biblTranslation %}<p><strong>Source of Translation:&nbsp;</strong><span id="translation" class="biblToRetrieve">{{biblTranslation}}</span>{% endif %}
-
-        {% if i.imageSource %}
-          <p><strong>Image Source:</strong>&nbsp;{{i.imageSource.0}}</p>
-        {% endif %}
-
         
           <p style="{% if not biblioFull %}display: none;{% endif %}"><strong>Bibliography:</strong>&nbsp;&nbsp;
           <ol style="{% if not biblioFull %}display: none;{% endif %}">
