@@ -9,8 +9,6 @@ from iip_search_app import common, models, settings_app
 from iip_search_app.forms import SearchForm
 from iip_search_app.utils import ajax_snippet
 
-import os
-
 
 log = logging.getLogger(__name__)
 q = rq.Queue( u'iip', connection=redis.Redis() )
