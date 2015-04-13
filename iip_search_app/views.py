@@ -293,7 +293,7 @@ def _z_prepare_viewinscr_plain_get_response( q, z_bibids, specific_sources, curr
         'session_authz_info': request.session['authz_info'],
         'admin_links': common.make_admin_links( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id ),
         'view_xml_url': view_xml_url,
-        'current_url': current_url
+        'current_url': current_url,
         }
     # log.debug( u'in _prepare_viewinscr_plain_get_response(); context, %s' % pprint.pformat(context) )
     return_response = render( request, u'iip_search_templates/viewinscr_zotero.html', context )
