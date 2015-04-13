@@ -460,17 +460,3 @@ def view_xml( request, inscription_id ):
         xml = xml_utf8.decode(u'utf-8')
     return HttpResponse( xml, mimetype=u'text/xml' )
 
-def get_images(inscription_id):
-    img_path = "iip_search_app/static/iip_search_app/inscription_images/%s.jpg"
-    url = "/static/iip_search_app/inscription_images/%s.jpg"
-    if os.path.isfile(img_path % inscription_id):
-        return [url % inscription_id]
-    elif os.path.isfile(img_path % (inscription_id+"a")):
-        l = [url % (inscription_id+"a")]
-        if os.path.isfile(img_path % (inscription_id+"b")):
-            l += [url % (inscription_id+"b")]
-
-        return l
-    else:
-        return None
-
