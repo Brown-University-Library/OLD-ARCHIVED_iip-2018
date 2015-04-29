@@ -35,7 +35,7 @@ def iip_results_z( request ):
     log.info( u'in iip_results_z(); id, %s; starting' % log_id )
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
-    if request.method == u'POST' or (request.method == u'GET' and request.GET.get(u'qstring', None)):  # form has been submitted by user
+    if request.method == u'POST' or (request.method == u'GET' and request.GET.get(u'q', None)):  # form has been submitted by user
         return render( request, u'iip_search_templates/base_zotero.html', _get_POST_context(request, log_id) )
     elif request.is_ajax():  # user has requested another page, a facet, etc.
         return HttpResponse( _get_ajax_unistring(request) )
@@ -50,7 +50,7 @@ def _get_POST_context( request, log_id ):
 
     qstring_provided = None
     if request.method == u'GET':
-        qstring_provided = request.GET.get("qstring", None)
+        qstring_provided = request.GET.get("q", None)
 
     if form.is_valid() or qstring_provided:
         initial_qstring = ""
