@@ -15,6 +15,8 @@ urlpatterns = patterns('',
     url( r'^search/$',  'iip_search_app.views.iip_results_z', name=u'search_url' ),
     url( r'^search_zotero/$',  'iip_search_app.views.iip_results_z', name=u'z_search_url'),
 
+    url( r'^api/$', 'iip_search_app.views.api_wrapper', name=u"api_wrapper"),
+
     # url( r'^viewinscr/(?P<inscrid>.*)/$', 'iip_search_app.views.viewinscr', name=u'inscription_url' ),
     url( r'^viewinscr_zotero/(?P<inscrid>.*)/$', 'iip_search_app.views.viewinscr_zotero', name='inscription_url_zotero'),
 

@@ -299,6 +299,10 @@ def _z_prepare_viewinscr_plain_get_response( q, z_bibids, specific_sources, curr
     return_response = render( request, u'iip_search_templates/viewinscr_zotero.html', context )
     return return_response
 
+## api ##
+
+def api_wrapper( request ):
+    return HttpResponse( str(dict(request.GET)), content_type="application/json" )
 
 ## login ##
 
