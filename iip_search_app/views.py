@@ -305,6 +305,7 @@ def api_wrapper( request ):
     old_params = dict(request.GET)
     params = dict([(x.replace('.', '_'), old_params[x] if len(old_params[x]) > 1 else old_params[x][0]) for x in old_params])
     params['wt'] = 'json'
+    if(params['q']): params['q'] += " AND display_status:approved"
     s = solr.SolrConnection( settings_app.SOLR_URL )
 
     r = s.raw_query(**params)
