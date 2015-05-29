@@ -302,7 +302,14 @@ def _z_prepare_viewinscr_plain_get_response( q, z_bibids, specific_sources, curr
 ## api ##
 
 def api_wrapper( request ):
-    return HttpResponse( str(dict(request.GET)), content_type="application/json" )
+    old_params = dict(request.GET)
+    params = dict([(x.replace('.', '_'), old_params[x] if len(old_params[x]) > 1 else old_params[x][0]) for x in old_params])
+    params['wt'] = 'json'
+    s = solr.SolrConnection( settings_app.SOLR_URL )
+
+    r = s.raw_query(**params)
+
+    return HttpResponse( str(r), content_type="application/json" )
 
 ## login ##
 
