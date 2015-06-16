@@ -299,6 +299,18 @@ def _z_prepare_viewinscr_plain_get_response( q, z_bibids, specific_sources, curr
     return_response = render( request, u'iip_search_templates/viewinscr_zotero.html', context )
     return return_response
 
+## api ##
+
+def api_wrapper( request ):
+    old_params = dict(request.GET)
+    params = dict([(x.replace('.', '_'), old_params[x] if len(old_params[x]) > 1 else old_params[x][0]) for x in old_params])
+    params['wt'] = 'json'
+    if(params['q']): params['q'] += " AND display_status:approved"
+    s = solr.SolrConnection( settings_app.SOLR_URL )
+
+    r = s.raw_query(**params)
+
+    return HttpResponse( str(r), content_type="application/json" )
 
 ## login ##
 
