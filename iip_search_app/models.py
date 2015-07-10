@@ -20,12 +20,6 @@ class ProcessorUtils( object ):
         self.DISPLAY_STATUSES_BACKUP_DIR = unicode( os.environ.get(u'IIP_SEARCH__DISPLAY_STATUSES_BACKUP_DIR') )
         self.DISPLAY_STATUSES_BACKUP_TIMEFRAME_IN_DAYS = int( os.environ.get(u'IIP_SEARCH__DISPLAY_STATUSES_BACKUP_TIMEFRAME_IN_DAYS') )
 
-    # def __init__( self ):
-    #     """ Settings. """
-    #     self.XML_DIR_PATH = unicode( os.environ.get(u'IIP_SEARCH__XML_DIR_PATH') )
-    #     self.SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )
-    #     self.DISPLAY_STATUSES_BACKUP_DIR = unicode( os.environ.get(u'IIP_SEARCH__DISPLAY_STATUSES_BACKUP_DIR') )
-
     def call_svn_update( self ):
         """ Runs svn update.
                 Returns list of filenames.
@@ -79,18 +73,6 @@ class ProcessorUtils( object ):
             if os.stat( backup_filepath ).st_mtime < now - timeframe_days:
                 os.remove( backup_filepath )
         return
-
-    # def delete_old_backups( self ):
-    #     """ Deletes old backup display status files.
-    #         Called by self.backup_display_statuses() """
-    #     now = time.time()
-    #     seconds_in_day = 60*60*24
-    #     thirty_days = seconds_in_day*30
-    #     for backup_filename in os.listdir( self.DISPLAY_STATUSES_BACKUP_DIR ):
-    #         backup_filepath = u'%s/%s' % ( self.DISPLAY_STATUSES_BACKUP_DIR, backup_filename )
-    #         if os.stat( backup_filepath ).st_mtime < now - thirty_days:
-    #             os.remove( backup_filepath )
-    #     return
 
     def validate_inscription_id( self, inscription_id ):
         """ Ensures inscription_id is valid.
@@ -259,23 +241,35 @@ class Processor( object ):
     ##
 
     def run_munger( self, source_xml ):
-        """ Takes source xml unicode string.
-                Applies perl munger.
-                Returns processed xml unicode string.
+        """ TEMPORARILY BYPASSES MUNGER.
             Called by process_file(). """
         self._run_munger_asserts( source_xml )  # validates input-data type
-        ( file_name, file_name_root ) = self._save_source_xml( source_xml )  # saves source-xml to to-be-munged directory
-        ( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath ) = self._setup_munger_stdstuff()
-        current_working_directory = self._call_munger( f_stdout, f_stderr )
-        self._close_munger_stdstuff( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath )
-        munged_xml = self._get_munged_xml( file_name )
-        self._delete_munger_detritus( file_name, file_name_root, current_working_directory )
+        munged_xml = source_xml
         return_dict = {
             u'source_xml': source_xml,
             u'munged_xml': munged_xml
             }
         log.info( u'in models.Processor.run_munger(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
         return return_dict
+
+    # def run_munger( self, source_xml ):
+    #     """ Takes source xml unicode string.
+    #             Applies perl munger.
+    #             Returns processed xml unicode string.
+    #         Called by process_file(). """
+    #     self._run_munger_asserts( source_xml )  # validates input-data type
+    #     ( file_name, file_name_root ) = self._save_source_xml( source_xml )  # saves source-xml to to-be-munged directory
+    #     ( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath ) = self._setup_munger_stdstuff()
+    #     current_working_directory = self._call_munger( f_stdout, f_stderr )
+    #     self._close_munger_stdstuff( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath )
+    #     munged_xml = self._get_munged_xml( file_name )
+    #     self._delete_munger_detritus( file_name, file_name_root, current_working_directory )
+    #     return_dict = {
+    #         u'source_xml': source_xml,
+    #         u'munged_xml': munged_xml
+    #         }
+    #     log.info( u'in models.Processor.run_munger(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
+    #     return return_dict
 
     def _run_munger_asserts( self, source_xml ):
         """ Takes source_xml.
@@ -285,6 +279,7 @@ class Processor( object ):
         assert type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY)
         assert type(self.MUNGER_SCRIPT_XML_DIRECTORY) == unicode, type(self.MUNGER_SCRIPT_XML_DIRECTORY)
         assert type(self.TEMPFILES_DIR_PATH) == unicode, type(self.TEMPFILES_DIR_PATH)
+        log.info( u'in models.Processor._run_munger_asserts(); source_xml & paths all unicode' )
         return
 
     def _save_source_xml( self, source_xml ):
@@ -319,7 +314,7 @@ class Processor( object ):
                 Sets cwd and calls perl script.
                 Returns current_working_directory.
             Called by run_munger(). """
-        time.sleep( .1 )
+        time.sleep( .2 )
         ## setup call
         current_working_directory = os.getcwd()
         log.info( u'in iip_search_app.models.Processor._call_munger(); initial current_working_directory, `%s`' % current_working_directory )
