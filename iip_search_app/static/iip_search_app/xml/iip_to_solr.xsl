@@ -377,7 +377,7 @@
         <xsl:text>bibl=</xsl:text>
         <xsl:value-of select="tei:ptr/@target"/>
         <xsl:text>|nType=</xsl:text>
-        <xsl:value-of select="tei:biblScope/@type"/>
+        <xsl:value-of select="tei:biblScope/@unit"/>
         <xsl:text>|n=</xsl:text>
         <xsl:value-of select="tei:biblScope"/>
       </xsl:element>
