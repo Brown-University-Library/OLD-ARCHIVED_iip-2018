@@ -603,6 +603,7 @@ def run_call_svn_update():
         Called by views.process(u'new') """
     log.info( u'in (queue-called) iip_search_app.models.run_call_svn_update(); starting at `%s`' % unicode(datetime.datetime.now()) )
     utils = ProcessorUtils()
+    utils.backup_display_statuses()
     result_dict = utils.call_svn_update()
     log.info( u'in (queue-called) run_call_svn_update(); result_dict is, ```%s```' % pprint.pformat(result_dict) )
     for file_id in result_dict[u'file_ids']:
