@@ -412,7 +412,7 @@ def process_all( request ):
         log.info( u'in iip_search_app.views.process_all(); not authorized, returning Forbidden' )
         return HttpResponseForbidden( '403 / Forbidden' )
     request.session[u'process_all_initiated'] = True
-    return HttpResponse( u'Please confirm: in url change `all` to `confirm_all`.' )
+    return HttpResponse( u'Please confirm: in url change `all` to `confirm_all`. This will not change proofreading status.' )
 
 def process_confirm_all( request ):
     """ Triggers processing of all inscriptions. """
@@ -433,7 +433,7 @@ def process_single( request, inscription_id ):
         log.info( u'in iip_search_app.views.process_single(); not authorized, returning Forbidden' )
         return HttpResponseForbidden( '403 / Forbidden' )
     if inscription_id == u'INSCRIPTION_ID':
-        return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`.' )
+        return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`. This will not change proofreading status.' )
     else:
         q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
         return HttpResponse( u'Started processing inscription-id.' )
