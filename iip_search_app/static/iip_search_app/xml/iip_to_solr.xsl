@@ -428,7 +428,7 @@
             <xsl:text>bibl=</xsl:text>
             <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=$trimmed_id]/tei:ptr/@target"/>
             <xsl:text>|nType=</xsl:text>
-            <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=$trimmed_id]/tei:biblScope/@type"/>
+            <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=$trimmed_id]/tei:biblScope/@unit"/>
             <xsl:text>|n=</xsl:text>
             <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=$trimmed_id]/tei:biblScope"/>
           </xsl:when>
@@ -438,7 +438,7 @@
             <xsl:text>bibl=</xsl:text>
             <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=$id]/tei:ptr/@target"/>
             <xsl:text>|nType=</xsl:text>
-            <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=$id]/tei:biblScope/@type"/>
+            <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=$id]/tei:biblScope/@unit"/>
             <xsl:text>|n=</xsl:text>
             <xsl:value-of select="$bibl_list/tei:bibl[@xml:id=$id]/tei:biblScope"/>
           </xsl:otherwise>
