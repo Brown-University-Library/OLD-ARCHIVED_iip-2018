@@ -634,7 +634,11 @@
     
   <xsl:template match="tei:note"> </xsl:template>
 
-  <xsl:template match="tei:lb"><![CDATA[<br/>]]></xsl:template>
+  <xsl:template match="tei:lb">
+    <xsl:choose>
+      <xsl:when test="@break='no'"><![CDATA[-<br/>]]></xsl:when>
+      <xsl:otherwise><![CDATA[<br/>]]></xsl:otherwise>
+    </xsl:choose></xsl:template>
 
   <xsl:template match="tei:span">
     <xsl:choose>
