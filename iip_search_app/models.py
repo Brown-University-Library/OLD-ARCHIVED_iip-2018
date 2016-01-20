@@ -117,6 +117,7 @@ class Processor( object ):
         self.MUNGER_SCRIPT_MUNGED_XML_DIRECTORY = unicode( os.environ.get(u'IIP_SEARCH__MUNGER_SCRIPT_MUNGED_XML_DIRECTORY') )
         self.SOLR_DOC_STYLESHEET_PATH = unicode( os.environ.get(u'IIP_SEARCH__SOLR_DOC_STYLESHEET_PATH') )
         self.TRANSFORMER_URL = unicode( os.environ.get(u'IIP_SEARCH__TRANSFORMER_URL') )
+        self.TRANSFORMER_AUTH_KEY = unicode( os.environ.get(u'IIP_SEARCH__TRANSFORMER_AUTH_KEY') )
         self.SOLR_URL = unicode( os.environ.get(u'IIP_SEARCH__SOLR_URL') )
 
     def process_file( self, file_id, grab_latest_file, display_status ):
@@ -387,6 +388,39 @@ class Processor( object ):
 
     ##
 
+    # def make_initial_solr_doc( self, munged_xml ):
+    #     """ Takes munged xml unicode string.
+    #             Applies xsl transformation to create a solr doc.
+    #             Returns processed xml in dict.
+    #         Called by process_file(). """
+    #     assert type(self.SOLR_DOC_STYLESHEET_PATH) == unicode, type(self.SOLR_DOC_STYLESHEET_PATH)
+    #     assert type(self.TRANSFORMER_URL) == unicode, type(self.TRANSFORMER_URL)
+    #     assert type(munged_xml) == unicode, type(munged_xml)
+    #     log.info( u'in models.Processor.make_initial_solr_doc(); self.SOLR_DOC_STYLESHEET_PATH, ```%s```' % self.SOLR_DOC_STYLESHEET_PATH )
+    #     log.info( u'in models.Processor.make_initial_solr_doc(); self.TRANSFORMER_URL, ```%s```' % self.TRANSFORMER_URL )
+    #     iip_solrdoc_string = 'init'
+    #     ## get stylesheet
+    #     f = open( self.SOLR_DOC_STYLESHEET_PATH )
+    #     stylesheet_string = f.read()
+    #     f.close()
+    #     assert type(stylesheet_string) == str, type(stylesheet_string)
+    #     stylesheet_ustring = stylesheet_string.decode(u'utf-8')
+    #     ## hit the post xslt transformer
+    #     url = self.TRANSFORMER_URL
+    #     payload = {
+    #         u'source_string': munged_xml,
+    #         u'stylesheet_string': stylesheet_ustring }
+    #     headers = { u'content-type': u'text/xml; charset=utf-8' }
+    #     r = requests.post( url, data=payload, headers=headers )
+    #     transformed_xml = r.content.decode(u'utf-8')
+    #     return_dict = {
+    #         u'initial_munged_xml': munged_xml,
+    #         u'stylesheet_xml': stylesheet_ustring,
+    #         u'transformed_xml': transformed_xml
+    #         }
+    #     log.info( u'in models.Processor.make_initial_solr_doc(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
+    #     return return_dict
+
     def make_initial_solr_doc( self, munged_xml ):
         """ Takes munged xml unicode string.
                 Applies xsl transformation to create a solr doc.
@@ -407,10 +441,10 @@ class Processor( object ):
         ## hit the post xslt transformer
         url = self.TRANSFORMER_URL
         payload = {
-            u'source_string': munged_xml,
-            u'stylesheet_string': stylesheet_ustring }
-        headers = { u'content-type': u'text/xml; charset=utf-8' }
-        r = requests.post( url, data=payload, headers=headers )
+            u'xml': munged_xml,
+            u'xsl': stylesheet_ustring,
+            u'auth_key': self.TRANSFORMER_AUTH_KEY }
+        r = requests.post( url, data=payload )
         transformed_xml = r.content.decode(u'utf-8')
         return_dict = {
             u'initial_munged_xml': munged_xml,
