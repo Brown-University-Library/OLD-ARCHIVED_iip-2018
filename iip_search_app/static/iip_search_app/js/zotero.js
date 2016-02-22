@@ -68,7 +68,7 @@ function render_bibliography() {
 					new_html = bibliographies[b]['full'] + "<br/>";
 				}
 				catch(err) {
-					new_html = b + " (Bibliography entry not found in Zotero!)";
+					new_html = b + " (Citation not found in Zotero!)";
 					bspan.innerHTML = new_html;
 					pages.each(function() {
 						var entry = $(this).text().split("|");
@@ -120,7 +120,7 @@ function render_bibliography() {
 						} else {
 							txt += "Inscription " + b[2];
 						}
-						this.innerHTML = txt + " (Bibliography Not Found)";
+						this.innerHTML = txt + " (Citation Not Found)";
 					}
 				}
 				this.attributes.class.value = "";
