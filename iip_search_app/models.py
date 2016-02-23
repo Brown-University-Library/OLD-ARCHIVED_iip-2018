@@ -622,7 +622,20 @@ class OneOff( object ):
         self.log.debug( u'in OneOff.update_new_solr(); inscription_id, %s; solr-post-status-code, %s; updated_status, %s' % (inscription_id, r.status_code, display_status) )
         return
 
+    def post_xml_add_docs_to_solr( self, solr_root_url, xml_filepath ):
+        """ Posts an <add><doc>...</doc><doc>...</doc></add> file to solr.
+            One-off call """
+        url = u'%s/update?commit=true' % solr_root_url
+        with open( xml_filepath ) as f:
+            utf8_xml = f.read()
+        xml = utf8_xml.decode( 'utf-8' )
+        headers = { 'content-type': 'text/xml; charset=utf-8' }
+        r = requests.post(
+            url.encode(u'utf-8'), headers=headers, data=xml.encode('utf-8') )
+        print '- solr post response, `%s`' % r.content
+        return
 
+    # end class OneOff
 
 
 ## queue runners ##
