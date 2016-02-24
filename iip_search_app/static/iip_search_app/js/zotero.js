@@ -68,7 +68,17 @@ function render_bibliography() {
 					new_html = bibliographies[b]['full'] + "<br/>";
 				}
 				catch(err) {
-					new_html = "Bibliography Not Found";
+					new_html = b + " (Citation not found in Zotero!)";
+					bspan.innerHTML = new_html;
+					pages.each(function() {
+						var entry = $(this).text().split("|");
+						if (entry[0] == "page") {
+							$(this).text("Page " + entry[1]);
+						} else {
+							$(this).text("Inscription " + entry[1]);
+						}
+					})
+					return;
 				}
 				this.attributes.class.value = "";
 
@@ -104,7 +114,13 @@ function render_bibliography() {
 					if(b[0] == "ms") {
 						this.innerHTML = "Supplied by Michael Satlow"
 					} else {
-						this.innerHTML = "Bibliography Not Found";
+						var txt = b[0] + " ";
+						if (b[1] == 'page') {
+							txt += "Page " + b[2];
+						} else {
+							txt += "Inscription " + b[2];
+						}
+						this.innerHTML = txt + " (Citation Not Found)";
 					}
 				}
 				this.attributes.class.value = "";
