@@ -174,7 +174,7 @@ class Processor( object ):
         return_dict = {
             u'stderr': var_stderr, u'stdout': var_stdout,
             u'submitted_file_id': file_id, u'submitted_vc_url': file_url, u'submitted_destination_path': xml_destination_path }
-        log.info( u'in models.Processor.grab_latest_file(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
+        log.debug( u'in models.Processor.grab_latest_file(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
         return return_dict
 
     def _setup_grab_files( self, file_id ):
@@ -236,7 +236,7 @@ class Processor( object ):
             u'filepath': filepath,
             u'xml': xml
             }
-        log.info( u'in models.Processor.grab_original_xml(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
+        log.debug( u'in models.Processor.grab_original_xml(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
         return return_dict
 
     ##
@@ -250,7 +250,7 @@ class Processor( object ):
             u'source_xml': source_xml,
             u'munged_xml': munged_xml
             }
-        log.info( u'in models.Processor.run_munger(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
+        log.debug( u'in models.Processor.run_munger(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
         return return_dict
 
     # def run_munger( self, source_xml ):
@@ -337,9 +337,9 @@ class Processor( object ):
         f_stdout = open( temp_stdout_filepath, u'r' )
         f_stderr = open( temp_stderr_filepath, u'r' )
         var_stdout = f_stdout.readlines()
-        log.info( u'in iip_search_app.models.Processor._close_munger_stdstuff(); var_stdout just before deletion, `%s`' % var_stdout )
+        log.debug( u'in iip_search_app.models.Processor._close_munger_stdstuff(); var_stdout just before deletion, `%s`' % var_stdout )
         var_stderr = f_stderr.readlines()
-        log.info( u'in iip_search_app.models.Processor._close_munger_stdstuff(); var_stderr just before deletion, `%s`' % var_stderr )
+        log.debug( u'in iip_search_app.models.Processor._close_munger_stdstuff(); var_stderr just before deletion, `%s`' % var_stderr )
         f_stdout.close()
         f_stderr.close()
         os.remove( temp_stdout_filepath )
@@ -376,13 +376,13 @@ class Processor( object ):
         for entry in files_to_delete:
             log.info( u'in iip_search_app.models.Processor._delete_munger_detritus(); file in process, `%s`' % entry )
             if os.path.exists( entry ):
-                log.info( u'in iip_search_app.models.Processor._delete_munger_detritus(); file exists' )
+                log.debug( u'in iip_search_app.models.Processor._delete_munger_detritus(); file exists' )
                 os.remove( entry )
-                log.info( u'in iip_search_app.models.Processor._delete_munger_detritus(); file removed' )
+                log.debug( u'in iip_search_app.models.Processor._delete_munger_detritus(); file removed' )
                 assert os.path.exists(entry) == False, os.path.exists(entry)
-                log.info( u'in iip_search_app.models.Processor._delete_munger_detritus(); removal confirmed' )
+                log.debug( u'in iip_search_app.models.Processor._delete_munger_detritus(); removal confirmed' )
             else:
-               log.info( u'in iip_search_app.models.Processor._delete_munger_detritus(); file does not exist' )
+               log.debug( u'in iip_search_app.models.Processor._delete_munger_detritus(); file does not exist' )
         os.chdir( current_working_directory )    # otherwise may affect other scripts
         return
 
@@ -451,7 +451,7 @@ class Processor( object ):
             u'stylesheet_xml': stylesheet_ustring,
             u'transformed_xml': transformed_xml
             }
-        log.info( u'in models.Processor.make_initial_solr_doc(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
+        log.debug( u'in models.Processor.make_initial_solr_doc(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
         return return_dict
 
     ##
@@ -652,7 +652,7 @@ def run_call_svn_update():
     utils = ProcessorUtils()
     utils.backup_display_statuses()
     result_dict = utils.call_svn_update()
-    log.info( u'in (queue-called) run_call_svn_update(); result_dict is, ```%s```' % pprint.pformat(result_dict) )
+    log.debug( u'in (queue-called) run_call_svn_update(); result_dict is, ```%s```' % pprint.pformat(result_dict) )
     for file_id in result_dict[u'file_ids']:
         job = q.enqueue_call (
             func=u'iip_search_app.models.run_process_file',
@@ -719,7 +719,7 @@ def run_process_file( file_id, grab_latest_file, display_status ):
         return
     processor = Processor()
     process_dict = processor.process_file( file_id, grab_latest_file, display_status )
-    log.info( u'in (queue-runner) iip_search_app.models.run_process_file(); process_dict is, ```%s```' % pprint.pformat(process_dict) )
+    log.debug( u'in (queue-runner) iip_search_app.models.run_process_file(); process_dict is, ```%s```' % pprint.pformat(process_dict) )
     return
 
 def run_delete_solr_entry( inscription_id ):
