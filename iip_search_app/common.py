@@ -46,7 +46,7 @@ def facetResults( facet ):
     """ Returns dict of { facet_value_a: count_of_facet_value_a_entries }. """
     try:
         s = solr.SolrConnection( settings_app.SOLR_URL )
-        q = s.select( u'*:*', **{u'facet':u'true',u'facet.field':facet} )
+        q = s.select( u'*:*', **{u'facet':u'true',u'facet.field':facet,u'rows':u'0','facet.limit':u'-1'} )
         facet_count_dict =q.facet_counts[u'facet_fields'][facet]
         return facet_count_dict
     except Exception as e:
