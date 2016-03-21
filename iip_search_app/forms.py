@@ -93,60 +93,14 @@ class SearchForm( forms.Form ):
         self.languages = make_vocab_list(self.languages_dict, sorted( common.facetResults('language').keys()))
         self.fields['language'] = forms.MultipleChoiceField(required=False, choices=self.languages, widget=forms.CheckboxSelectMultiple)
 
-    # vocab_request = requests.get("http://cds.library.brown.edu/projects/iip/include_taxonomies.xml")
-    # vocab = ET.fromstring(vocab_request.content)
-
-    # Turns out XPath is only supported in Python 2.7+, and we have to use 2.6...
-    # types = [(element.attrib['id'], element.find('catDesc').text) for element in vocab.findall(".//taxonomy[@id='IIP-genre']/category")]
-    # physical_types = [(element.attrib['id'], element.find('catDesc').text) for element in vocab.findall(".//taxonomy[@id='IIP-form']/category")]
-    # religions = [(element.attrib['id'], element.find('catDesc').text) for element in vocab.findall(".//taxonomy[@id='IIP-religion']/category")]
-
-    # Find all the taxonomy elements
-    # taxonomies = vocab.findall('{http://www.tei-c.org/ns/1.0}taxonomy')
-
-    # Filter out the three we need
-    # type_tax = [tax for tax in taxonomies if tax.attrib.values()[0] == 'IIP-genre'][0]
-    # phys_types_tax = [tax for tax in taxonomies if tax.attrib.values()[0] == 'IIP-form'][0]
-    # religions_tax = [tax for tax in taxonomies if tax.attrib.values()[0] == 'IIP-religion'][0]
-
-    # Get the xml:id and text of the catDesc element of each category element
-    # types_dict = dict([(element.attrib.values()[0], element.find('{http://www.tei-c.org/ns/1.0}catDesc').text) for element in type_tax.findall('{http://www.tei-c.org/ns/1.0}category')])
-    # physical_types_dict = dict([(element.attrib.values()[0], element.find('{http://www.tei-c.org/ns/1.0}catDesc').text) for element in phys_types_tax.findall('{http://www.tei-c.org/ns/1.0}category')])
-    # religions = [(element.attrib.values()[0], element.find('{http://www.tei-c.org/ns/1.0}catDesc').text) for element in religions_tax.findall('{http://www.tei-c.org/ns/1.0}category')]
-
-    # places = [(item, item) for item in sorted( common.facetResults('placeMenu').keys()) if item]
-    # types =  make_vocab_list(types_dict, sorted( common.facetResults('type').keys()))
-    # physical_types =  make_vocab_list(physical_types_dict, sorted( common.facetResults('physical_type').keys()))
-
-    # languages_dict = {
-    #     "he":"Hebrew",
-    #     "la": "Latin",
-    #     "grc": "Greek",
-    #     "arc": "Aramaic",
-    #     "x-unknown":"Unknown"
-    # }
-
-    # languages = make_vocab_list(languages_dict, sorted( common.facetResults('language').keys()))
-    # religions = [(u'"%s"'% item,  u"%s" % item.replace('-',' ')) for item in sorted( common.facetResults('religion').keys()) if item]
+    text = forms.CharField(required=False)
+    metadata = forms.CharField(required=False)
+    figure = forms.CharField(required=False)
     #
     DISPLAY_STATUSES = [
     ('approved', 'Approved'),  # ( 'value', 'label' )
     ('to_approve', 'To Approve'),
     ('to_correct', 'To Correct') ]
-    # display_statuses =  [(item, item) for item in sorted( facetResults('display_status').keys() ) if item]
-    #
-    text = forms.CharField(required=False)
-    metadata = forms.CharField(required=False)
-    figure = forms.CharField(required=False)
-
-    # place = forms.MultipleChoiceField(required=False, choices=places, widget=forms.SelectMultiple(attrs={'size':'10'}))
-    # place = forms.MultipleChoiceField(required=False, choices=(('real_a', 'show_a'),('real_b', 'show_b')), widget=forms.SelectMultiple(attrs={'size':'10'}))
-    # type = forms.MultipleChoiceField(required=False, choices=types, widget=forms.SelectMultiple(attrs={'size':'7'}))
-
-    # physical_type = forms.MultipleChoiceField(required=False, choices=physical_types, widget=forms.SelectMultiple(attrs={'size':'7'}))
-    # language = forms.MultipleChoiceField(required=False, choices=languages, widget=forms.CheckboxSelectMultiple)
-    # religion = forms.MultipleChoiceField(required=False, choices=religions, widget=forms.CheckboxSelectMultiple)
-    #
     display_status = forms.MultipleChoiceField(required=False, choices=DISPLAY_STATUSES, widget=forms.CheckboxSelectMultiple)
     #
     notBefore = forms.CharField(required=False, max_length=5)
