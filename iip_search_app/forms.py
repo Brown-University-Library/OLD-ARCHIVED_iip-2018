@@ -60,7 +60,7 @@ class SearchForm( forms.Form ):
         # url = 'http://127.0.0.1/test/dev/django_choices.json'
         # r = requests.get( url )
         # log.debug( 'r.content, ```%s```' % r.content )
-        # self.places = json.loads( r.content )
+        # self.choice_places = json.loads( r.content )
         #
         self.choice_places = [(item, item) for item in sorted( common.facetResults('placeMenu').keys()) if item]
         self.fields['place'] = forms.MultipleChoiceField(required=False, choices=self.choice_places, widget=forms.SelectMultiple(attrs={'size':'10'}))
@@ -107,6 +107,12 @@ class SearchForm( forms.Form ):
     notAfter = forms.CharField(required=False, max_length=5)
     afterDateEra = forms.ChoiceField(required=False, choices=(('bce','BCE'),('ce','CE')), widget=forms.RadioSelect)
     beforeDateEra = forms.ChoiceField(required=False, choices=(('bce','BCE'),('ce','CE')), widget=forms.RadioSelect)
+
+    # url = 'http://127.0.0.1/test/dev/django_choices.json'
+    # r = requests.get( url )
+    # log.debug( 'r.content, ```%s```' % r.content )
+    # places = json.loads( r.content )
+    # place = forms.MultipleChoiceField(required=False, choices=places, widget=forms.SelectMultiple(attrs={'size':'10'}))
 
     def generateSolrQuery(self):
         search_fields = ('text','metadata','figure','region','city','place','type','physical_type','language','religion','notBefore','notAfter', 'display_status')
