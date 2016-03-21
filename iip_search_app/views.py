@@ -6,7 +6,8 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response, render
 from iip_search_app import common, models, settings_app
-from iip_search_app.forms import SearchForm
+# from iip_search_app.forms import SearchForm
+from iip_search_app import forms
 from iip_search_app.utils import ajax_snippet
 
 
@@ -45,8 +46,10 @@ def iip_results_z( request ):
 def _get_POST_context( request, log_id ):
     """ Returns correct context for POST.
         Called by iip_results() """
+    log.debug( '_get_POST_context() starting' )
     request.encoding = u'utf-8'
-    form = SearchForm( request.POST ) # form bound to the POST data
+    # form = SearchForm( request.POST ) # form bound to the POST data
+    form = forms.SearchForm( request.POST )  # form bound to the POST data
 
     qstring_provided = None
     if request.method == u'GET':
@@ -83,9 +86,15 @@ def _get_ajax_unistring( request ):
 def _get_GET_context( request, log_id ):
     """ Returns correct context for GET.
         Called by iip_results() """
+    log.debug( '_get_GET_context() starting' )
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
-    form = SearchForm()  # an unbound form
+    # form = SearchForm()  # an unbound form
+    form = forms.SearchForm()  # an unbound form
+    log.debug( 'form, `%s`' % repr(form) )
+    # place_field_object = form.fields['place']
+    # place_field_object.choices = [(item, item) for item in sorted( common.facetResults('placeMenu').keys()) if item]
+    # form.fields['place'] = place_field_object
     context = {
         u'form': form,
         u'session_authz_info': request.session[u'authz_info'],
