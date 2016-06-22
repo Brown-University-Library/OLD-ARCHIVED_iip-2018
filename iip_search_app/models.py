@@ -681,7 +681,8 @@ def run_process_single_file( inscription_id ):
     log.info( u'in iip_search_app.models.run_process_single_file(); starting at `%s`; inscription_id, `%s`' % (unicode(datetime.datetime.now()), inscription_id) )
     utils = ProcessorUtils()
     if utils.validate_inscription_id( inscription_id ) == False:
-        log.debug( u'inscription_id, `{}` validity-check is `False`'.format(inscription_id) )
+        # log.debug( u'inscription_id, `{}` validity-check is `False`'.format(inscription_id) )
+        log.debug( u'validity-check for inscription_id, `%s` is False' % inscription_id )
         current_display_status = 'to_approve'
     else:
         utils.backup_display_statuses()
