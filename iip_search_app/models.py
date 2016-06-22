@@ -681,14 +681,31 @@ def run_process_single_file( inscription_id ):
     log.info( u'in iip_search_app.models.run_process_single_file(); starting at `%s`; inscription_id, `%s`' % (unicode(datetime.datetime.now()), inscription_id) )
     utils = ProcessorUtils()
     if utils.validate_inscription_id( inscription_id ) == False:
-        return
-    utils.backup_display_statuses()
-    current_display_status = utils.grab_current_display_status( inscription_id )
+        log.debug( u'inscription_id, `{}` validity-check is `False`'.format(inscription_id) )
+        current_display_status = 'to_approve'
+    else:
+        utils.backup_display_statuses()
+        current_display_status = utils.grab_current_display_status( inscription_id )
     q.enqueue_call(
         func = u'iip_search_app.models.run_process_file',
         kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
         )
     return
+
+# def run_process_single_file( inscription_id ):
+#     """ Triggers processing of single inscription.
+#         Called by views.process( u'INSCRIPTION_ID') """
+#     log.info( u'in iip_search_app.models.run_process_single_file(); starting at `%s`; inscription_id, `%s`' % (unicode(datetime.datetime.now()), inscription_id) )
+#     utils = ProcessorUtils()
+#     if utils.validate_inscription_id( inscription_id ) == False:
+#         return
+#     utils.backup_display_statuses()
+#     current_display_status = utils.grab_current_display_status( inscription_id )
+#     q.enqueue_call(
+#         func = u'iip_search_app.models.run_process_file',
+#         kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
+#         )
+#     return
 
 def run_process_all_files():
     """ Triggers processing of all inscriptions.
