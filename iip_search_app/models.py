@@ -552,7 +552,7 @@ class OrphanKiller( object ):
             Called by (queue-runner) models.run_delete_solr_entry(). """
         self.log.info( u'in models.OrphanKiller.delete_orphan(); inscription_id, `%s`' % inscription_id )
         s = solr.Solr( self.SOLR_URL )
-        response = s.delete( inscription_id=inscription_id )
+        response = s.delete( inscription_id )
         s.commit()
         s.close()
         self.log.debug( u'in models.OrphanKiller.delete_orphan(); deletion-post complete; response is: %s' % response )
