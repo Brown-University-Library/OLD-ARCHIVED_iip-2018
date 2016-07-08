@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime, glob, json, logging, os, pprint, random, subprocess, time
-import envoy, redis, requests, rq
+import envoy, redis, requests, rq, solr
 from lxml import etree
 
 
