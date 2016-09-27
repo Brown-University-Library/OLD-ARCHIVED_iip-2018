@@ -35,8 +35,8 @@ function render_bibliography() {
 		var new_id = b[0].trim();
 		if(id_list.indexOf(new_id) == -1) {
 			id_list.push(new_id);
-		};
-	};
+		}
+	}
 	retrieve_bib(id_list, function() {
 		if(this.status == 200) {
 			var data = this.responseXML;
@@ -51,10 +51,10 @@ function render_bibliography() {
 				}
 				var entryjson = JSON.parse(contents[1].textContent);
 				bibliographies[entryjson.archiveLocation] = {};
-				bibliographies[entryjson.archiveLocation]['parsed'] = entryjson;
-				bibliographies[entryjson.archiveLocation]['full'] = contents[0].textContent;
-				bibliographies[entryjson.archiveLocation]['url'] = entries[i].getElementsByTagName("id")[0].textContent;
-			};
+				bibliographies[entryjson.archiveLocation].parsed = entryjson;
+				bibliographies[entryjson.archiveLocation].full = contents[0].textContent;
+				bibliographies[entryjson.archiveLocation].url = entries[i].getElementsByTagName("id")[0].textContent;
+			}
 
 			$("li.biblToRetrieve").each(function() {
 				
@@ -65,7 +65,7 @@ function render_bibliography() {
 				var new_html;
 
 				try {
-					new_html = bibliographies[b]['full'] + "<br/>";
+					new_html = bibliographies[b].full + "<br/>";
 				}
 				catch(err) {
 					new_html = b + " (Citation not found in Zotero!)";
@@ -77,12 +77,12 @@ function render_bibliography() {
 						} else {
 							$(this).text("Inscription " + entry[1]);
 						}
-					})
+					});
 					return;
 				}
 				this.attributes.class.value = "";
 
-				if(pages.length != 0) new_html += "(";
+				if(pages.length !== 0) new_html += "(";
 				var semicolon = "; ";
 				for (var i = 0; i < pages.length; i++) {
 					if(i == pages.length - 1) {
@@ -94,10 +94,10 @@ function render_bibliography() {
 					} else {
 						new_html += entry[1] + semicolon;
 					}
-				};
-				if(pages.length != 0) new_html += ")<br/>";
+				}
+				if(pages.length !=+ 0) new_html += ")<br/>";
 				$(this).find("ul")[0].innerHTML = "";
-				if(bibliographies[b]['url']) new_html += "<a href='" + bibliographies[b]['url'] + "'>Link to Full Entry</a>"
+				if(bibliographies[b].url) new_html += "<a href='" + bibliographies[b].url + "'>Link to Full Entry</a>";
 
 				bspan.innerHTML = new_html;
 				
@@ -105,14 +105,14 @@ function render_bibliography() {
 			$("span.biblToRetrieve").each(function() {
 				var b = this.innerHTML.split("|");
 				try {
-					var entry = bibliographies[b[0]]['parsed'];
+					var entry = bibliographies[b[0]].parsed;
 					var colon = ": ";
 					if(b[2] === "") colon = "";
-					this.innerHTML = entry.creators[0]['lastName'] + ". " + entry.title + ", " + entry.date + colon + b[2] + " (<a href='" + bibliographies[b[0]]['url'] + "'>Full</a>)";
+					this.innerHTML = entry.creators[0].lastName + ". " + entry.title + ", " + entry.date + colon + b[2] + " (<a href='" + bibliographies[b[0]].url + "'>Full</a>)";
 				}
 				catch(err) {
 					if(b[0] == "ms") {
-						this.innerHTML = "Supplied by Michael Satlow"
+						this.innerHTML = "Supplied by Michael Satlow";
 					} else {
 						var txt = b[0] + " ";
 						if (b[1] == 'page') {
@@ -124,7 +124,7 @@ function render_bibliography() {
 					}
 				}
 				this.attributes.class.value = "";
-			})
+			});
 		}
 	});
 }
@@ -134,7 +134,7 @@ $(document).ready(function(){
         $(this).click(function(event){
                 event.preventDefault();
                 resultsPage = $(this).html();
-                $.get('../search/', {'qstring':qstring,'resultsPage':resultsPage}, function(data){$('#paginated_results').replaceWith(data)});
+                $.get('../search/', {'qstring':qstring,'resultsPage':resultsPage}, function(data){$('#paginated_results').replaceWith(data);});
                 $(this).css('color', '#000000').css('font-decoration', 'none');
         });
     });
@@ -154,7 +154,9 @@ $(document).ready(function(){
         $(this).click(function(event){
                 event.preventDefault();
                 qstring = qstring+" AND "+$(this).attr('href') +':"'+$(this).html() + '"';
-                $.get('../search/', {'qstring':qstring,'resultsPage':1}, function(data){$('#paginated_results').replaceWith(data)});
+                $.get('../search/', {'qstring':qstring,'resultsPage':1}, function(data){
+                	$('#paginated_results').replaceWith(data);
+                });
         });
     });
     
