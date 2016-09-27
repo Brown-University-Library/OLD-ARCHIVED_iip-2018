@@ -1,12 +1,12 @@
 {% extends "iip_search_templates/search_zotero.html" %}
 {% load iipCustomFilters %}
 {% block queryCapture %}
-	<script type="text/javascript">
 	{% autoescape off %}
+    <script type="text/javascript">
         var qstring = '{{ qstring }}';
         var resultsPage = '{{ resultsPage }}';
-    {% endautoescape %}
     </script>
+    {% endautoescape %}
 {% endblock %}
 
 
@@ -18,7 +18,7 @@
     <span class="search_results_header">Your search for {{dispQstring}} yielded {{pages.count}} results</span>
     <div id="page_list">
     {% for pg in pages.page_range %}
-        <a href="/iip/search_zotero/" {%ifequal pg resultsPage%}style="font-size: 1.3em"{%endifequal%}>{{pg}}</a>&nbsp;
+        <a href="/iip/search" {%ifequal pg resultsPage%}style="font-size: 1.3em"{%endifequal%}>{{pg}}</a>&nbsp;
     {% endfor %}
     </div>
 
@@ -47,7 +47,7 @@
 
 <div id="narrow_results">
     <!-- <h4><a href="../search">New search</a></h4> -->
-    <h4><a href="{% url z_search_url %}">New search</a></h4>
+    <h4><a href="{% url search_url %}">New search</a></h4>
 	<h4>Narrow results</h4><span style="font-size: 0.9em"><a href="showHideAll" class="showHideFacets">show/hide</a></span>
 		<ul class="narrow_results_list">
             {% for field,items in facets.items %}

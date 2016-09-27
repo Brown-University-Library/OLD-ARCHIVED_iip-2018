@@ -134,7 +134,7 @@ $(document).ready(function(){
         $(this).click(function(event){
                 event.preventDefault();
                 resultsPage = $(this).html();
-                $.get('../search_zotero/', {'qstring':qstring,'resultsPage':resultsPage}, function(data){$('#paginated_results').replaceWith(data)});
+                $.get('../search/', {'qstring':qstring,'resultsPage':resultsPage}, function(data){$('#paginated_results').replaceWith(data)});
                 $(this).css('color', '#000000').css('font-decoration', 'none');
         });
     });
@@ -154,7 +154,7 @@ $(document).ready(function(){
         $(this).click(function(event){
                 event.preventDefault();
                 qstring = qstring+" AND "+$(this).attr('href') +':"'+$(this).html() + '"';
-                $.get('../search_zotero/', {'qstring':qstring,'resultsPage':1}, function(data){$('#paginated_results').replaceWith(data)});
+                $.get('../search/', {'qstring':qstring,'resultsPage':1}, function(data){$('#paginated_results').replaceWith(data)});
         });
     });
     
@@ -164,7 +164,7 @@ $(document).ready(function(){
                 if(p.is(':hidden')){
                     $(this).find('td:eq(0)').addClass('loadingImg');
                     $.get(
-                        "../viewinscr_zotero/"+$(this).attr('id')+"/", 
+                        "../viewinscr/"+$(this).attr('id')+"/",
                         {'qstring':qstring,'resultsPage':resultsPage}, 
                         function(data){
                         p.find('td:eq(1)').html(data);
