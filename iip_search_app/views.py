@@ -17,26 +17,23 @@ q = rq.Queue( u'iip', connection=redis.Redis() )
 
 ## search and results ##
 
-def iip_results( request ):
-    """ Handles /search/ GET, POST, and ajax-GET. """
-    log_id = common.get_log_identifier( request.session )
-    log.info( u'in iip_results(); id, %s; starting' % log_id )
-    if not u'authz_info' in request.session:
-        request.session[u'authz_info'] = { u'authorized': False }
-    if request.method == u'POST':  # form has been submitted by user
-        return render( request, u'iip_search_templates/base_extend.html', _get_POST_context(request, log_id) )
-    elif request.is_ajax():  # user has requested another page, a facet, etc.
-        return HttpResponse( _get_ajax_unistring(request) )
-    else:  # regular GET
-        return render( request, u'iip_search_templates/search_form.html', _get_GET_context(request, log_id) )
-
 def iip_results_z( request ):
     """ Handles /search_zotero/ GET, POST, and ajax-GET. """
     log_id = common.get_log_identifier( request.session )
     log.info( u'in iip_results_z(); id, %s; starting' % log_id )
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
-    if request.method == u'POST' or (request.method == u'GET' and request.GET.get(u'q', None)):  # form has been submitted by user
+    if request.method == u'POST': # form has been submitted by user
+        request.encoding = u'utf-8'
+        form = forms.SearchForm(request.POST)
+        if not form.is_valid():
+            return HttpResponseRedirect( u'%s://%s%s?q=*:*' % (request.META[u'wsgi.url_scheme'], request.get_host(), reverse(u'results_url')) )
+        qstring = form.generateSolrQuery()
+        # e.g. http://library.brown.edu/cds/projects/iip/results?q=*:*
+        redirect_url = u'%s://%s%s?q=%s' % (request.META[u'wsgi.url_scheme'], request.get_host(), reverse(u'results_url'), qstring)
+
+        return HttpResponseRedirect( redirect_url )
+    if request.method == u'GET' and request.GET.get(u'q', None):
         return render( request, u'iip_search_templates/base_zotero.html', _get_POST_context(request, log_id) )
     elif request.is_ajax():  # user has requested another page, a facet, etc.
         return HttpResponse( _get_ajax_unistring(request) )
@@ -48,7 +45,7 @@ def _get_POST_context( request, log_id ):
         Called by iip_results() """
     log.debug( '_get_POST_context() starting' )
     request.encoding = u'utf-8'
-    # form = SearchForm( request.POST ) # form bound to the POST data
+
     form = forms.SearchForm( request.POST )  # form bound to the POST data
 
     qstring_provided = None
