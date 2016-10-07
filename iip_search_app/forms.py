@@ -42,7 +42,7 @@ def make_vocab_list(vocab_dict, solr_facet):
                 outlist.append((item, vocab_dict[item]))
             else:
                 outlist.append((item, item))
-    return outlist
+    return sorted(outlist, key=lambda x: x[1].lower())
 
 
 

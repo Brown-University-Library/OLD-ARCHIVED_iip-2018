@@ -53,7 +53,7 @@
             {% for field,items in facets.items %}
            <li class="facetHeaderText facetMenuClosed">{{field|underscoreToSpace|upper}}</li>
            <ul>
-                {% for f,v in items.items %}
+                {% for f,v in items.items|vocabSort %}
                  {% if f and v %}
                     <li><a class="facetLink" href="{{field}}">{{f}}</a>&nbsp;({{v}})</li>
                  {% endif %}
