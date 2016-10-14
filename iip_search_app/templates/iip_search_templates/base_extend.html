@@ -1,12 +1,12 @@
 {% extends "iip_search_templates/search.html" %}
 {% load iipCustomFilters %}
 {% block queryCapture %}
-	<script type="text/javascript">
 	{% autoescape off %}
+    <script type="text/javascript">
         var qstring = '{{ qstring }}';
         var resultsPage = '{{ resultsPage }}';
-    {% endautoescape %}
     </script>
+    {% endautoescape %}
 {% endblock %}
 
 
