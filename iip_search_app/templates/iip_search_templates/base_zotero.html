@@ -28,16 +28,18 @@
 	<tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %} short_result" id="{{inscription.inscription_id}}">
 	    <td class="openImg"></td>
 		<td class="resultTitle descColumn">
-            <span class="short_header">{{inscription.inscription_id|upper}} - {{inscription.short_description}}</span>
+            <span class="short_header">
+                <a href="../viewinscr/{{inscription.inscription_id}}">{{inscription.inscription_id|upper}}</a> - {{inscription.short_description}}
+            </span>
         </td>
-        <td class="resultTitle textColumn">
+        <td class="resultTitle textColumn transcription">
             <span class="short_header">{{inscription.transcription|truncatewords_html:25}}</span>
         </td>
-        <td class="resultTitle textColumn">
+        <td class="resultTitle textColumn translation">
             <span class="short_header">{{inscription.translation|truncatewords_html:25}}</span>
         </td>
 	</tr>
-	<tr class="viewinscr {% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %} short_result"><td class="closeImg"></td><td colspan="3"></td></tr>
+<!-- 	<tr class="viewinscr {% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %} short_result"><td class="closeImg"></td><td colspan="3"></td></tr> -->
 {% endfor %}
 </table>
 </div>
@@ -65,4 +67,5 @@
 {% endblock %}
 </div>
 <div style="clear: both"></div>
+<script type="text/javascript" src="{{ STATIC_URL }}iip_search_app/js/result_display.js"></script>
 {% endblock %}
