@@ -16,7 +16,8 @@ class CommonTest( TestCase ):
     def test_facetResults( self ):
         """ Checks type of data returned from query. """
         facet_count_dict = common.facetResults( facet=u'placeMenu' )
-        for place in [  u'Galilee', u'Judaea', u'Lower Galilee' ]:
+        log.debug( u'facet_count_dict, ```%s```' % pprint.pformat(facet_count_dict) )
+        for place in [  u'Galilee', u'Jordan', u'Judaea' ]:
             self.assertEqual(
                 True,
                 place in facet_count_dict.keys()
