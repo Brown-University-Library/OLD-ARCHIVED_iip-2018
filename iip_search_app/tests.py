@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import json, pprint
+import json, logging, pprint
 import requests, solr
 from iip_search_app import common, models, settings_app
 from django.test import TestCase
 from models import Processor, ProcessorUtils
+
+
+log = logging.getLogger(__name__)
 
 
 class CommonTest( TestCase ):
@@ -297,7 +300,8 @@ class ProcessorTest( TestCase ):
 
     def test_make_initial_solr_doc( self ):
         """ Tests for well-formed xml and type of returned string.
-            TODO: update to check for _valid_ xml once I have access to a schema. """
+            TODO: update to check for _valid_ xml once I have access to a schema.
+            Note: if test fails, could be due to wireless ip changing, causing authNZ to fail. """
         p = Processor()
         grab_dict = p.grab_original_xml( file_id=u'beth0282' )
         munger_dict = p.run_munger( source_xml=grab_dict[u'xml'] )
