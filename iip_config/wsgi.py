@@ -18,7 +18,7 @@ ACTIVATE_FILE = os.path.abspath( u'%s/../../env_iip/bin/activate_this.py' % curr
 PROJECT_DIR = os.path.abspath( u'%s/../../iip' % current_directory )
 PROJECT_ENCLOSING_DIR = os.path.abspath( u'%s/../..' % current_directory )
 SETTINGS_MODULE = u'iip_config.settings'
-SITE_PACKAGES_DIR = os.path.abspath( u'%s/../../env_iip/lib/python2.7/site-packages' % current_directory )
+SITE_PACKAGES_DIR = os.path.abspath( u'%s/../../env_iip/lib/python2.6/site-packages' % current_directory )
 
 ## virtualenv
 execfile( ACTIVATE_FILE, dict(__file__=ACTIVATE_FILE) )
