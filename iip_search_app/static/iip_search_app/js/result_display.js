@@ -40,19 +40,19 @@ function longDisplay(domTarget) {
             if (transcription.text().trim()) {
                 $(domTarget).find(".transcription").html(transcription);
             } else {
-                $(domTarget).find(".transcription").html("<tei-div>[no transcription]</tei-div>");
+                $(domTarget).find(".transcription").html("[no transcription]");
             }
 
             if(diplomatic.text().trim()) {
                 $(domTarget).find(".diplomatic").html(diplomatic);
             } else {
-                $(domTarget).find(".diplomatic").html("<tei-div>[no diplomatic]</tei-div>");
+                $(domTarget).find(".diplomatic").html("[no diplomatic]");
             }
 
             if (translation.text().trim()) {
                 $(domTarget).find(".translation").html(translation);
             } else {
-                $(domTarget).find(".translation").html("<tei-div>[no translation]</tei-div>");
+                $(domTarget).find(".translation").html("[no translation]");
             }
         });
     }, 'xml');
