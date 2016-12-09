@@ -105,7 +105,7 @@ Unicode: U+301B, UTF-8: E3 80 9B*/
         content: "]";
     }
 
-    tei-lb::after {
+    tei-lb::before {
         content: "\a";
         white-space: pre;
     }
