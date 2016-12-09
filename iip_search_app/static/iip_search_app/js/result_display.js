@@ -6,11 +6,10 @@ var regex25Words = /((?:\s*[^\s]+){0,25})/; //should use \b but JS doesn't like 
 
 var Conv = new CETEI();
 
-function display(domTarget) {
+function shortDisplay(domTarget) {
     $.get(xmlURL + domTarget.id + '/', function(data) {
         Conv.domToHTML5(data,function(parsed, self) {
             var transcription = $(parsed).find("tei-div[subtype=transcription]");
-            console.log(parsed);
             var diplomatic = $(parsed).find("tei-div[subtype=diplomatic]");
             if (transcription.text().trim()) {
                 $(domTarget).find(".transcription").append(transcription);
@@ -31,8 +30,40 @@ function display(domTarget) {
     }, 'xml');   
 }
 
+function longDisplay(domTarget) {
+    $.get(xmlURL + domTarget.id + '/', function(data) {
+        Conv.domToHTML5(data,function(parsed, self) {
+            var transcription = $(parsed).find("tei-div[subtype=transcription]");
+            var diplomatic = $(parsed).find("tei-div[subtype=diplomatic]");
+            var translation = $(parsed).find("tei-div[type=translation]");
+
+            if (transcription.text().trim()) {
+                $(domTarget).find(".transcription").html(transcription);
+            } else {
+                $(domTarget).find(".transcription").html("<tei-div>[no transcription]</tei-div>");
+            }
+
+            if(diplomatic.text().trim()) {
+                $(domTarget).find(".diplomatic").html(diplomatic);
+            } else {
+                $(domTarget).find(".diplomatic").html("<tei-div>[no diplomatic]</tei-div>");
+            }
+
+            if (translation.text().trim()) {
+                $(domTarget).find(".translation").html(translation);
+            } else {
+                $(domTarget).find(".translation").html("<tei-div>[no translation]</tei-div>");
+            }
+        });
+    }, 'xml');
+}
+
 $("#search_results tr[id]").each( function() {
-    display(this);
+    shortDisplay(this);
+});
+
+$("#single_inscription .insText").each(function() {
+    longDisplay(this);
 });
 
 })();
