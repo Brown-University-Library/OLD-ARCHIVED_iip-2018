@@ -390,6 +390,28 @@ display: inline;
 	font-size: 1.1em;
 	}
 
+#single_inscription tei-div {
+    display: block;
+    margin-left: 3em;
+    counter-reset: lines;
+    counter-increment: lines;
+}
+
+#single_inscription tei-div:hover tei-lb::after, #single_inscription tei-div:hover::before {
+    display: block;
+    float: left;
+    opacity: 0.5;
+    content: counter(lines);
+    margin-left: -3em;
+}
+
+#single_inscription tei-div tei-lb:nth-of-type(5n-1)::after {
+    display: block;
+    float: left;
+    content: counter(lines);
+    margin-left: -3em;
+}
+
 .resultTitle {
 	font-weight:bold;
 	font-size: 1.1em;
