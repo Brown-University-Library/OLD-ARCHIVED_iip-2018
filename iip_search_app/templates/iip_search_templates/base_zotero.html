@@ -26,20 +26,18 @@
 
 {% for inscription in iipResult.object_list %}
 	<tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %} short_result" id="{{inscription.inscription_id}}">
-	    <td class="openImg"></td>
 		<td class="resultTitle descColumn">
             <span class="short_header">
-                <a href="../viewinscr/{{inscription.inscription_id}}">{{inscription.inscription_id|upper}}</a> - {{inscription.short_description}}
+                <a href="../viewinscr/{{inscription.inscription_id}}" target="_blank">{{inscription.inscription_id|upper}}</a> - {{inscription.short_description}}
             </span>
         </td>
         <td class="resultTitle textColumn transcription">
-            <span class="short_header">{{inscription.transcription|truncatewords_html:25}}</span>
+            <span class="short_header">Transcription</span>
         </td>
         <td class="resultTitle textColumn translation">
-            <span class="short_header">{{inscription.translation|truncatewords_html:25}}</span>
+            <span class="short_header">Translation</span>
         </td>
 	</tr>
-<!-- 	<tr class="viewinscr {% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %} short_result"><td class="closeImg"></td><td colspan="3"></td></tr> -->
 {% endfor %}
 </table>
 </div>

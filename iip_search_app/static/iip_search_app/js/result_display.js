@@ -13,18 +13,19 @@ function display(domTarget) {
             console.log(parsed);
             var diplomatic = $(parsed).find("tei-div[subtype=diplomatic]");
             if (transcription.text().trim()) {
-                $(domTarget).find(".transcription").html(transcription);
+                $(domTarget).find(".transcription").append(transcription);
             } else if(diplomatic.text().trim()) {
-                $(domTarget).find(".transcription").html(diplomatic);
+                $(domTarget).find(".transcription .short_header").text("Diplomatic");
+                $(domTarget).find(".transcription").append(diplomatic);
             } else {
-                $(domTarget).find(".transcription").html("[no transcription]");
+                $(domTarget).find(".transcription").append("<tei-div>[no transcription]</tei-div>");
             }
 
             var translation = $(parsed).find("tei-div[type=translation]");
             if (translation.text().trim()) {
-                $(domTarget).find(".translation").html(translation);
+                $(domTarget).find(".translation").append(translation);
             } else {
-                $(domTarget).find(".translation").html("[no translation]");
+                $(domTarget).find(".translation").append("<tei-div>[no translation]</tei-div>");
             }
         });
     }, 'xml');   
