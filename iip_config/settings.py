@@ -125,7 +125,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'iip_config.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'iip_config.wsgi.application'
+WSGI_APPLICATION = 'iip_config.passenger_wsgi.application'
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 site_templates = u'%s/../templates' % current_directory
