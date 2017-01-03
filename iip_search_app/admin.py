@@ -19,8 +19,10 @@ from .forms_admin import AdminStaticPageForm
 
 
 class StaticPageAdmin(admin.ModelAdmin):
-    list_display = [ 'title', 'content' ]
+    list_display = [ 'title' ]
     form = AdminStaticPageForm
+    ordering = [ 'title' ]
+    prepopulated_fields = {"slug": ("title",)}
 
 
 
