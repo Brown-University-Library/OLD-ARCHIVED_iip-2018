@@ -147,8 +147,21 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
+    'crispy_forms',
+    'markdown_deux',
+    'pagedown',
     'iip_search_app',
 )
+
+MARKDOWN_DEUX_STYLES = {
+    "default": {
+        "extras": {
+            "code-friendly": None,
+            "footnotes": None,
+        },
+        "safe_mode": "escape",
+    },
+}
 
 LOGGING = {
     'version': 1,
