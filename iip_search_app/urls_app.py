@@ -30,6 +30,12 @@ urlpatterns = patterns('',
 
     url( r'^search_zotero/$', redirect_to, {'url': 'search/'}),
 
+
+
+    url( r'^bibliography/$',  'iip_search_app.views.bibliography', name='bibliography_url' ),
+
+
+
     url( r'^$', redirect_to, {'url': 'search/'} ),
 
     )

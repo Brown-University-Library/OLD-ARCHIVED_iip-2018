@@ -2,11 +2,11 @@
 
 import json, logging, pprint
 import redis, rq, solr
+from .models import StaticPage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response, render
 from iip_search_app import common, models, settings_app
-# from iip_search_app.forms import SearchForm
 from iip_search_app import forms
 from iip_search_app.utils import ajax_snippet
 
@@ -474,3 +474,13 @@ def view_xml( request, inscription_id ):
         xml_utf8 = f.read()
         xml = xml_utf8.decode(u'utf-8')
     return HttpResponse( xml, mimetype=u'text/xml' )
+
+
+## static pages ##
+
+def bibliography( request ):
+    """ Displays bibliography page. """
+    bib_page = StaticPage.objects.get( slug='bibliography' )
+    return render( request, u'iip_search_templates/static.html', {'html_content': bib_page.content} )
+    # return HttpResponse( 'hi' )
+
