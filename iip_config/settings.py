@@ -159,7 +159,7 @@ MARKDOWN_DEUX_STYLES = {
             "code-friendly": None,
             "footnotes": None,
         },
-        "safe_mode": "escape",
+        "safe_mode": False,
     },
 }
 
