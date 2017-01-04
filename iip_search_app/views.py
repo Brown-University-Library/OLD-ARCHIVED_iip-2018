@@ -482,5 +482,11 @@ def bibliography( request ):
     """ Displays bibliography page. """
     bib_page = StaticPage.objects.get( slug='bibliography' )
     return render( request, u'iip_search_templates/static.html', {'html_content': bib_page.content} )
-    # return HttpResponse( 'hi' )
+
+
+def info( request, info_id ):
+    """ Displays requested static page. """
+    from django.shortcuts import get_object_or_404
+    info_page = get_object_or_404( StaticPage, slug=info_id )
+    return render( request, u'iip_search_templates/static.html', {'html_content': info_page.content} )
 
