@@ -305,6 +305,7 @@ class ProcessorTest( TestCase ):
             Note: if test fails, could be due to wireless ip changing, causing authNZ to fail. """
         p = Processor()
         grab_dict = p.grab_original_xml( file_id=u'beth0282' )
+        log.debug( 'grab_dict, ```%s```' % pprint.pformat(grab_dict) )
         munger_dict = p.run_munger( source_xml=grab_dict[u'xml'] )
         initial_doc_dict = p.make_initial_solr_doc( munger_dict[u'munged_xml'] )
         ## type check
