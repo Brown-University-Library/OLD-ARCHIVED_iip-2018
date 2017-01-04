@@ -1,5 +1,16 @@
 {% extends "iip_search_templates/search.html" %}
+
 {% load markdown_deux_tags %}
+
+{% block page_css %}
+<style type="text/css">
+    #html_content img {
+        float: right;
+        border: 1px dotted black;
+        margin: 0px 0px 15px 20px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 
@@ -38,9 +49,9 @@
 </div>
 {% endautoescape %}
 
-{% block facets %}
+    {% block facets %}
 
-{% endblock %}
+    {% endblock %}
 </div>
 <div style="clear: both"></div>
 {% endblock %}
