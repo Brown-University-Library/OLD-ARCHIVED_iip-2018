@@ -488,5 +488,9 @@ def info( request, info_id ):
     """ Displays requested static page. """
     from django.shortcuts import get_object_or_404
     info_page = get_object_or_404( StaticPage, slug=info_id )
-    return render( request, u'iip_search_templates/static.html', {'html_content': info_page.content} )
+    context_dct = {
+        'html_content': info_page.content,
+        'title_header': info_page.title_header
+        }
+    return render( request, u'iip_search_templates/static.html', context_dct )
 
