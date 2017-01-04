@@ -490,7 +490,8 @@ def info( request, info_id ):
     info_page = get_object_or_404( StaticPage, slug=info_id )
     context_dct = {
         'html_content': info_page.content,
-        'title_header': info_page.title_header
+        'title_header': info_page.title_header,
+        'title': info_page.title
         }
     return render( request, u'iip_search_templates/static.html', context_dct )
 

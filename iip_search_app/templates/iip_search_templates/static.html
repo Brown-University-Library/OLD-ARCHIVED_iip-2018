@@ -11,12 +11,19 @@
         border: 1px dotted black;
         margin: 0px 0px 15px 20px;
     }
+    #static_title {
+      font-size: 1.6em;
+      font-weight: bold;
+      margin-top: 1.5em;
+      color: #476757;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 
 <div id="html_content">
+<div id="static_title">{{ title }}</div>
 {{ html_content|markdown }}
 </div>
 
