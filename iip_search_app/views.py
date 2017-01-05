@@ -497,9 +497,7 @@ def edit_info( request ):
     """ If logged in, takes user to static-pages admin. """
     if 'authz_info' not in request.session.keys() or 'authorized' not in request.session[u'authz_info'].keys() or request.session[u'authz_info'][u'authorized'] == False:
         return HttpResponseForbidden( '403 / Forbidden' )
-    # if request.session[u'authz_info'][u'authorized'] == False:
-    #     return HttpResponseForbidden( '403 / Forbidden' )
     user = authenticate( username=settings_app.DB_USER, password=settings_app.DB_USER_PASSWORD )
     django_login( request, user )
-    url = reverse('admin:iip_search_app_staticpage_changelist' )
-    return HttpResponseRedirect( url )  ## TODO: add shib logout (via redirecting to shib-logout url, then redirecting to the above admin url)
+    url = reverse( 'admin:iip_search_app_staticpage_changelist' )
+    return HttpResponseRedirect( url )
