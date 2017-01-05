@@ -5,7 +5,7 @@ import redis, rq, solr
 from .models import StaticPage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
-from django.shortcuts import render_to_response, render
+from django.shortcuts import get_object_or_404, render, render_to_response
 from iip_search_app import common, models, settings_app
 from iip_search_app import forms
 from iip_search_app.utils import ajax_snippet
@@ -478,15 +478,8 @@ def view_xml( request, inscription_id ):
 
 ## static pages ##
 
-def bibliography( request ):
-    """ Displays bibliography page. """
-    bib_page = StaticPage.objects.get( slug='bibliography' )
-    return render( request, u'iip_search_templates/static.html', {'html_content': bib_page.content} )
-
-
 def info( request, info_id ):
     """ Displays requested static page. """
-    from django.shortcuts import get_object_or_404
     info_page = get_object_or_404( StaticPage, slug=info_id )
     context_dct = {
         'html_content': info_page.content,
@@ -494,4 +487,17 @@ def info( request, info_id ):
         'title': info_page.title
         }
     return render( request, u'iip_search_templates/static.html', context_dct )
+
+def edit_info( request ):
+    """ If logged in, takes user to static-pages admin. """
+    return HttpResponse( 'coming' )
+    log.info( u'in iip_search_app.views.process_single(); starting; inscription_id, `%s`' % inscription_id )
+    if request.session[u'authz_info'][u'authorized'] == False:
+        log.info( u'in iip_search_app.views.process_single(); not authorized, returning Forbidden' )
+        return HttpResponseForbidden( '403 / Forbidden' )
+    if inscription_id == u'INSCRIPTION_ID':
+        return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`. This will not change proofreading status.' )
+    else:
+        q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
+        return HttpResponse( u'Started processing inscription-id.' )
 
