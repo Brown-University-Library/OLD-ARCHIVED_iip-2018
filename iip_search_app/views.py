@@ -10,6 +10,10 @@ from iip_search_app import common, models, settings_app
 from iip_search_app import forms
 from iip_search_app.utils import ajax_snippet
 
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as django_login
+from django.contrib.auth import logout as django_logout
+
 
 log = logging.getLogger(__name__)
 q = rq.Queue( u'iip', connection=redis.Redis() )
@@ -383,6 +387,7 @@ def logout( request ):
     """ Removes session-based authentication. """
     log.info( u'in logout(); starting' )
     request.session[u'authz_info'] = { u'authorized': False }
+    django_logout( request )
     if u'next' in request.GET:
         redirect_url = request.GET[u'next']
     else:
@@ -490,14 +495,11 @@ def info( request, info_id ):
 
 def edit_info( request ):
     """ If logged in, takes user to static-pages admin. """
-    return HttpResponse( 'coming' )
-    log.info( u'in iip_search_app.views.process_single(); starting; inscription_id, `%s`' % inscription_id )
-    if request.session[u'authz_info'][u'authorized'] == False:
-        log.info( u'in iip_search_app.views.process_single(); not authorized, returning Forbidden' )
+    if 'authz_info' not in request.session.keys() or 'authorized' not in request.session[u'authz_info'].keys() or request.session[u'authz_info'][u'authorized'] == False:
         return HttpResponseForbidden( '403 / Forbidden' )
-    if inscription_id == u'INSCRIPTION_ID':
-        return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`. This will not change proofreading status.' )
-    else:
-        q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
-        return HttpResponse( u'Started processing inscription-id.' )
-
+    # if request.session[u'authz_info'][u'authorized'] == False:
+    #     return HttpResponseForbidden( '403 / Forbidden' )
+    user = authenticate( username=settings_app.DB_USER, password=settings_app.DB_USER_PASSWORD )
+    django_login( request, user )
+    url = reverse('admin:iip_search_app_staticpage_changelist' )
+    return HttpResponseRedirect( url )  ## TODO: add shib logout (via redirecting to shib-logout url, then redirecting to the above admin url)
