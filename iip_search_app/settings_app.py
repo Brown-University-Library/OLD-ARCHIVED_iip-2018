@@ -16,6 +16,8 @@ TEST_INSCRIPTION_ID = unicode( os.environ.get(u'IIP_SEARCH__TEST_INSCRIPTION_ID'
 
 DEV_AUTH_HACK = unicode( os.environ.get(u'IIP_SEARCH__DEV_AUTH_HACK') )  # 'enabled' or 'disabled' (only enabled for local non-shib development)
 LEGIT_ADMINS = json.loads( unicode(os.environ.get(u'IIP_SEARCH__LEGIT_ADMINS')) )  # json shib-eppn list
+DB_USER = unicode( os.environ.get('IIP_SEARCH__DB_USER') )
+DB_USER_PASSWORD = unicode( os.environ.get('IIP_SEARCH__DB_USER_PASSWORD') )
 
 
 ## misc ##
