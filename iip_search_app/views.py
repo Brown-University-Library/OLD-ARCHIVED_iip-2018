@@ -28,6 +28,7 @@ def iip_results_z( request ):
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
     if request.method == u'POST': # form has been submitted by user
+        log.debug( 'POST, search-form was submitted by user' )
         request.encoding = u'utf-8'
         form = forms.SearchForm(request.POST)
         if not form.is_valid():
@@ -38,8 +39,10 @@ def iip_results_z( request ):
 
         return HttpResponseRedirect( redirect_url )
     if request.method == u'GET' and request.GET.get(u'q', None):
+        log.debug( 'GET, show search-form' )
         return render( request, u'iip_search_templates/base_zotero.html', _get_POST_context(request, log_id) )
     elif request.is_ajax():  # user has requested another page, a facet, etc.
+        log.debug( 'request.is_axax() is True' )
         return HttpResponse( _get_ajax_unistring(request) )
     else:  # regular GET
         return render( request, u'iip_search_templates/search_form_zotero.html', _get_GET_context(request, log_id) )
