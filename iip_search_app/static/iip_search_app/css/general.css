@@ -409,6 +409,10 @@ tei-lb {
     margin-left: -3em;
 }
 
+#single_inscription .translation tei-div:hover::before {
+    content: "";
+}
+
 #single_inscription tei-div tei-lb:nth-of-type(5n-1)::after {
     display: block;
     float: left;
