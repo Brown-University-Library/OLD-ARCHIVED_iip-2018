@@ -397,6 +397,10 @@ display: inline;
     counter-increment: lines;
 }
 
+tei-lb {
+    counter-increment: lines 1;
+}
+
 #single_inscription tei-div:hover tei-lb::after, #single_inscription tei-div:hover::before {
     display: block;
     float: left;
