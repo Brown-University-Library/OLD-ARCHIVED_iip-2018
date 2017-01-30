@@ -2,13 +2,17 @@
 
 import json, logging, pprint
 import redis, rq, solr
+from .models import StaticPage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
-from django.shortcuts import render_to_response, render
+from django.shortcuts import get_object_or_404, render, render_to_response
 from iip_search_app import common, models, settings_app
-# from iip_search_app.forms import SearchForm
 from iip_search_app import forms
 from iip_search_app.utils import ajax_snippet
+
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as django_login
+from django.contrib.auth import logout as django_logout
 
 
 log = logging.getLogger(__name__)
@@ -24,6 +28,7 @@ def iip_results_z( request ):
     if not u'authz_info' in request.session:
         request.session[u'authz_info'] = { u'authorized': False }
     if request.method == u'POST': # form has been submitted by user
+        log.debug( 'POST, search-form was submitted by user' )
         request.encoding = u'utf-8'
         form = forms.SearchForm(request.POST)
         if not form.is_valid():
@@ -34,8 +39,10 @@ def iip_results_z( request ):
 
         return HttpResponseRedirect( redirect_url )
     if request.method == u'GET' and request.GET.get(u'q', None):
+        log.debug( 'GET, show search-form' )
         return render( request, u'iip_search_templates/base_zotero.html', _get_POST_context(request, log_id) )
     elif request.is_ajax():  # user has requested another page, a facet, etc.
+        log.debug( 'request.is_axax() is True' )
         return HttpResponse( _get_ajax_unistring(request) )
     else:  # regular GET
         return render( request, u'iip_search_templates/search_form_zotero.html', _get_GET_context(request, log_id) )
@@ -385,6 +392,7 @@ def logout( request ):
     """ Removes session-based authentication. """
     log.info( u'in logout(); starting' )
     request.session[u'authz_info'] = { u'authorized': False }
+    django_logout( request )
     if u'next' in request.GET:
         redirect_url = request.GET[u'next']
     else:
@@ -476,3 +484,25 @@ def view_xml( request, inscription_id ):
         xml_utf8 = f.read()
         xml = xml_utf8.decode(u'utf-8')
     return HttpResponse( xml, mimetype=u'text/xml' )
+
+
+## static pages ##
+
+def info( request, info_id ):
+    """ Displays requested static page. """
+    info_page = get_object_or_404( StaticPage, slug=info_id )
+    context_dct = {
+        'html_content': info_page.content,
+        'title_header': info_page.title_header,
+        'title': info_page.title
+        }
+    return render( request, u'iip_search_templates/static.html', context_dct )
+
+def edit_info( request ):
+    """ If logged in, takes user to static-pages admin. """
+    if 'authz_info' not in request.session.keys() or 'authorized' not in request.session[u'authz_info'].keys() or request.session[u'authz_info'][u'authorized'] == False:
+        return HttpResponseForbidden( '403 / Forbidden' )
+    user = authenticate( username=settings_app.DB_USER, password=settings_app.DB_USER_PASSWORD )
+    django_login( request, user )
+    url = reverse( 'admin:iip_search_app_staticpage_changelist' )
+    return HttpResponseRedirect( url )

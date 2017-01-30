@@ -30,6 +30,13 @@ urlpatterns = patterns('',
 
     url( r'^search_zotero/$', redirect_to, {'url': 'search/'}),
 
+
+
+    url( r'^info/(?P<info_id>.*)/$', 'iip_search_app.views.info', name=u'info_url' ),
+    url( r'^edit_info/$', 'iip_search_app.views.edit_info', name=u'edit_info_url' ),
+
+
+
     url( r'^$', redirect_to, {'url': 'search/'} ),
 
     )

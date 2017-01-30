@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import json, pprint
+import json, logging, pprint
 import requests, solr
 from iip_search_app import common, models, settings_app
 from django.test import TestCase
 from models import Processor, ProcessorUtils
+
+
+log = logging.getLogger(__name__)
 
 
 class CommonTest( TestCase ):
@@ -13,7 +16,8 @@ class CommonTest( TestCase ):
     def test_facetResults( self ):
         """ Checks type of data returned from query. """
         facet_count_dict = common.facetResults( facet=u'placeMenu' )
-        for place in [  u'Galilee', u'Judaea', u'Lower Galilee' ]:
+        log.debug( u'facet_count_dict, ```%s```' % pprint.pformat(facet_count_dict) )
+        for place in [  u'Galilee', u'Jordan', u'Judaea' ]:
             self.assertEqual(
                 True,
                 place in facet_count_dict.keys()
@@ -297,9 +301,11 @@ class ProcessorTest( TestCase ):
 
     def test_make_initial_solr_doc( self ):
         """ Tests for well-formed xml and type of returned string.
-            TODO: update to check for _valid_ xml once I have access to a schema. """
+            TODO: update to check for _valid_ xml once I have access to a schema.
+            Note: if test fails, could be due to wireless ip changing, causing authNZ to fail. """
         p = Processor()
         grab_dict = p.grab_original_xml( file_id=u'beth0282' )
+        log.debug( 'grab_dict, ```%s```' % pprint.pformat(grab_dict) )
         munger_dict = p.run_munger( source_xml=grab_dict[u'xml'] )
         initial_doc_dict = p.make_initial_solr_doc( munger_dict[u'munged_xml'] )
         ## type check

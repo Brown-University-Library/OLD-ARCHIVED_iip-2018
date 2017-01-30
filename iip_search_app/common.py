@@ -122,6 +122,8 @@ def make_admin_links( session_authz_dict, url_host, log_id ):
               u'url': u'%s://%s%s' % (settings_app.URL_SCHEME, url_host, reverse(u'process_all_url')) },
             { u'text': u'delete orphans',
               u'url': u'%s://%s%s' % (settings_app.URL_SCHEME, url_host, reverse(u'process_orphans_url')) },
+            { u'text': u'edit static pages',
+              u'url': u'%s://%s%s' % (settings_app.URL_SCHEME, url_host, reverse(u'edit_info_url')) },
             ]
     else:
         admin_links = [

@@ -125,7 +125,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'iip_config.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'iip_config.wsgi.application'
+WSGI_APPLICATION = 'iip_config.passenger_wsgi.application'
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 site_templates = u'%s/../templates' % current_directory
@@ -144,11 +144,24 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
+    'crispy_forms',
+    'markdown_deux',
+    'pagedown',
     'iip_search_app',
 )
+
+MARKDOWN_DEUX_STYLES = {
+    "default": {
+        "extras": {
+            "code-friendly": None,
+            "footnotes": None,
+        },
+        "safe_mode": False,
+    },
+}
 
 LOGGING = {
     'version': 1,
