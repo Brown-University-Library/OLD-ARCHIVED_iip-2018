@@ -18,7 +18,7 @@
     <span class="search_results_header">Your search for {{dispQstring}} yielded {{pages.count}} results</span>
     <div id="page_list">
     {% for pg in pages.page_range %}
-        <a href="/iip/search" {%ifequal pg resultsPage%}style="font-size: 1.3em"{%endifequal%}>{{pg}}</a>&nbsp;
+        <a href="./?q={{ initial_qstring }}&resultsPage={{pg}}" {%ifequal pg resultsPage%}style="font-size: 1.3em"{%endifequal%}>{{pg}}</a>&nbsp;
     {% endfor %}
     </div>
 
@@ -55,7 +55,7 @@
            <ul>
                 {% for f,v in items.items|vocabSort %}
                  {% if f and v %}
-                    <li><a class="facetLink" href="{{field}}">{{f}}</a>&nbsp;({{v}})</li>
+                    <li><a class="facetLink" href="{{field}}" id="{{f}}">{{f|tax}}</a>&nbsp;({{v}})</li>
                  {% endif %}
                 {%endfor%}
             </ul>

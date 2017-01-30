@@ -27,7 +27,7 @@ function shortDisplay(domTarget) {
                 $(domTarget).find(".translation").append("<tei-div>[no translation]</tei-div>");
             }
         });
-    }, 'xml');   
+    }, 'xml');
 }
 
 function longDisplay(domTarget) {
