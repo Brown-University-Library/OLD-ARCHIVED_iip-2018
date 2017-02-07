@@ -19,8 +19,7 @@ urlpatterns = patterns('',
 
     url( r'^view_xml/(?P<inscription_id>.*)/$', 'iip_search_app.views.view_xml', name=u'xml_url' ),
 
-    # url( r'^process/(?P<inscription_id>.*)/$', 'iip_search_app.views.process', name=u'process_url' ),
-    url( r'^process/new/$', 'iip_search_app.views.process_new', name=u'process_new_url' ),
+    # url( r'^process/new/$', 'iip_search_app.views.process_new', name=u'process_new_url' ),
     url( r'^process/delete_orphans/$', 'iip_search_app.views.process_orphans', name=u'process_orphans_url' ),
     url( r'^process/all/$', 'iip_search_app.views.process_all', name=u'process_all_url' ),
     url( r'^process/confirm_all/$', 'iip_search_app.views.process_confirm_all', name=u'process_confirm_all_url' ),

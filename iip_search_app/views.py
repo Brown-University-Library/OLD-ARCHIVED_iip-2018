@@ -401,14 +401,14 @@ def logout( request ):
 
 ## process ##  request.session['authz_info'] = { 'authorized': True, 'firstname': request.META['Shibboleth-givenName'] }
 
-def process_new( request ):
-    """ Triggers svn-update and processing of all new records. """
-    log.info( u'in iip_search_app.views.process_new(); starting' )
-    if request.session[u'authz_info'][u'authorized'] == False:
-        log.info( u'in iip_search_app.views.process_new(); not authorized, returning Forbidden' )
-        return HttpResponseForbidden( '403 / Forbidden' )
-    q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
-    return HttpResponse( u'Started processing updated inscriptions.' )
+# def process_new( request ):
+#     """ Triggers svn-update and processing of all new records. """
+#     log.info( u'in iip_search_app.views.process_new(); starting' )
+#     if request.session[u'authz_info'][u'authorized'] == False:
+#         log.info( u'in iip_search_app.views.process_new(); not authorized, returning Forbidden' )
+#         return HttpResponseForbidden( '403 / Forbidden' )
+#     q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
+#     return HttpResponse( u'Started processing updated inscriptions.' )
 
 def process_orphans( request ):
     """ Triggers deletion of solr-inscription-ids that do not have corresponding repository ids. """
