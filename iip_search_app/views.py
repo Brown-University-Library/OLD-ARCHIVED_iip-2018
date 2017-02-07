@@ -411,13 +411,17 @@ def logout( request ):
 #     return HttpResponse( u'Started processing updated inscriptions.' )
 
 def process_orphans( request ):
-    """ Triggers deletion of solr-inscription-ids that do not have corresponding repository ids. """
-    log.info( u'in iip_search_app.views.process_orphans(); starting' )
-    if request.session[u'authz_info'][u'authorized'] == False:
-        log.info( u'in iip_search_app.views.process_orphans(); not authorized, returning Forbidden' )
-        return HttpResponseForbidden( '403 / Forbidden' )
-    q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
-    return HttpResponse( u'Started processing solr orphan deletion.' )
+    """ Returns confirmation-required response. """
+    return HttpResponse( u'"delete orphans" functionality is under re-construction.' )
+
+# def process_orphans( request ):
+#     """ Triggers deletion of solr-inscription-ids that do not have corresponding repository ids. """
+#     log.info( u'in iip_search_app.views.process_orphans(); starting' )
+#     if request.session[u'authz_info'][u'authorized'] == False:
+#         log.info( u'in iip_search_app.views.process_orphans(); not authorized, returning Forbidden' )
+#         return HttpResponseForbidden( '403 / Forbidden' )
+#     q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
+#     return HttpResponse( u'Started processing solr orphan deletion.' )
 
 def process_all( request ):
     """ Returns confirmation-required response. """
