@@ -422,23 +422,28 @@ def process_orphans( request ):
 def process_all( request ):
     """ Returns confirmation-required response. """
     log.info( u'in iip_search_app.views.process_all(); starting' )
-    if request.session[u'authz_info'][u'authorized'] == False:
-        log.info( u'in iip_search_app.views.process_all(); not authorized, returning Forbidden' )
-        return HttpResponseForbidden( '403 / Forbidden' )
-    request.session[u'process_all_initiated'] = True
-    return HttpResponse( u'Please confirm: in url change `all` to `confirm_all`. This will not change proofreading status.' )
+    return HttpResponse( u'"process all" functionality is under re-construction.' )
 
-def process_confirm_all( request ):
-    """ Triggers processing of all inscriptions. """
-    if request.session[u'authz_info'][u'authorized'] == False:
-        log.info( u'in iip_search_app.views.process_confirm_all(); not authorized, returning Forbidden' )
-        return HttpResponseForbidden( '403 / Forbidden' )
-    if request.session.get( u'process_all_initiated', False ) == True:  # if it doesn't exist, create and set to False
-        request.session[u'process_all_initiated'] = False
-        q.enqueue_call( func=u'iip_search_app.models.run_process_all_files', kwargs = {} )
-        return HttpResponse( u'Started processing all inscriptions; all should be complete within an hour.' )
-    else:
-        return HttpResponse( u'Initial url must be `all`, not `confirm_all`.' )
+# def process_all( request ):
+#     """ Returns confirmation-required response. """
+#     log.info( u'in iip_search_app.views.process_all(); starting' )
+#     if request.session[u'authz_info'][u'authorized'] == False:
+#         log.info( u'in iip_search_app.views.process_all(); not authorized, returning Forbidden' )
+#         return HttpResponseForbidden( '403 / Forbidden' )
+#     request.session[u'process_all_initiated'] = True
+#     return HttpResponse( u'Please confirm: in url change `all` to `confirm_all`. This will not change proofreading status.' )
+
+# def process_confirm_all( request ):
+#     """ Triggers processing of all inscriptions. """
+#     if request.session[u'authz_info'][u'authorized'] == False:
+#         log.info( u'in iip_search_app.views.process_confirm_all(); not authorized, returning Forbidden' )
+#         return HttpResponseForbidden( '403 / Forbidden' )
+#     if request.session.get( u'process_all_initiated', False ) == True:  # if it doesn't exist, create and set to False
+#         request.session[u'process_all_initiated'] = False
+#         q.enqueue_call( func=u'iip_search_app.models.run_process_all_files', kwargs = {} )
+#         return HttpResponse( u'Started processing all inscriptions; all should be complete within an hour.' )
+#     else:
+#         return HttpResponse( u'Initial url must be `all`, not `confirm_all`.' )
 
 # def process_single( request, inscription_id ):
 #     """ Triggers, after instruction, processing of given iscription. """
