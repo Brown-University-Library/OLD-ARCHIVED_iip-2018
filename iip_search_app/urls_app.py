@@ -23,7 +23,7 @@ urlpatterns = patterns('',
     url( r'^process/delete_orphans/$', 'iip_search_app.views.process_orphans', name=u'process_orphans_url' ),
     url( r'^process/all/$', 'iip_search_app.views.process_all', name=u'process_all_url' ),
     url( r'^process/confirm_all/$', 'iip_search_app.views.process_confirm_all', name=u'process_confirm_all_url' ),
-    url( r'^process/(?P<inscription_id>.*)/$', 'iip_search_app.views.process_single', name=u'process_single_url' ),
+    # url( r'^process/(?P<inscription_id>.*)/$', 'iip_search_app.views.process_single', name=u'process_single_url' ),
 
     url( r'^recent_errors/$', 'iip_search_app.views.show_recent_errors', name=u'show_recent_errors_url' ),
 

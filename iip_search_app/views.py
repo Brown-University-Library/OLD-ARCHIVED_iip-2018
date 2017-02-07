@@ -440,17 +440,17 @@ def process_confirm_all( request ):
     else:
         return HttpResponse( u'Initial url must be `all`, not `confirm_all`.' )
 
-def process_single( request, inscription_id ):
-    """ Triggers, after instruction, processing of given iscription. """
-    log.info( u'in iip_search_app.views.process_single(); starting; inscription_id, `%s`' % inscription_id )
-    if request.session[u'authz_info'][u'authorized'] == False:
-        log.info( u'in iip_search_app.views.process_single(); not authorized, returning Forbidden' )
-        return HttpResponseForbidden( '403 / Forbidden' )
-    if inscription_id == u'INSCRIPTION_ID':
-        return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`. This will not change proofreading status.' )
-    else:
-        q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
-        return HttpResponse( u'Started processing inscription-id.' )
+# def process_single( request, inscription_id ):
+#     """ Triggers, after instruction, processing of given iscription. """
+#     log.info( u'in iip_search_app.views.process_single(); starting; inscription_id, `%s`' % inscription_id )
+#     if request.session[u'authz_info'][u'authorized'] == False:
+#         log.info( u'in iip_search_app.views.process_single(); not authorized, returning Forbidden' )
+#         return HttpResponseForbidden( '403 / Forbidden' )
+#     if inscription_id == u'INSCRIPTION_ID':
+#         return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`. This will not change proofreading status.' )
+#     else:
+#         q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
+#         return HttpResponse( u'Started processing inscription-id.' )
 
 def show_recent_errors( request ):
     """ Displays last x entries in the failed queue. """
