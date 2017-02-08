@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import json, logging, pprint
+import json, logging, os, pprint
 import redis, rq, solr
 from .models import StaticPage
 from django.core.urlresolvers import reverse
@@ -483,14 +483,19 @@ def show_recent_errors( request ):
 ## view_xml ##
 
 def view_xml( request, inscription_id ):
-    """ Returns inscription xml. """
-    log.info( u'in view_xml(); starting' )
-    file_path = u'%s/%s.xml' % ( settings_app.XML_DIR_PATH, inscription_id )
-    log.debug( u'in view_xml(); id, %s; file_path' % file_path )
-    with open( file_path ) as f:
-        xml_utf8 = f.read()
-        xml = xml_utf8.decode(u'utf-8')
-    return HttpResponse( xml, mimetype=u'text/xml' )
+    """ Redirects to web-accessible inscription-xml. """
+    url = u'%s/%s.xml' % ( unicode(os.environ['IIP_SEARCH__XML_DIR_URL']), inscription_id )
+    return HttpResponseRedirect( url )
+
+# def view_xml( request, inscription_id ):
+#     """ Returns inscription xml. """
+#     log.info( u'in view_xml(); starting' )
+#     file_path = u'%s/%s.xml' % ( settings_app.XML_DIR_PATH, inscription_id )
+#     log.debug( u'in view_xml(); id, %s; file_path' % file_path )
+#     with open( file_path ) as f:
+#         xml_utf8 = f.read()
+#         xml = xml_utf8.decode(u'utf-8')
+#     return HttpResponse( xml, mimetype=u'text/xml' )
 
 
 ## static pages ##
