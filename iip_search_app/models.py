@@ -605,74 +605,74 @@ class OneOff( object ):
 
 ## queue runners ##
 
-q = rq.Queue( u'iip', connection=redis.Redis() )
+# q = rq.Queue( u'iip', connection=redis.Redis() )
 
 ## triggered via views.py
 
-def run_call_svn_update():
-    """ Initiates svn update.
-            Spawns a call to Processor.process_file() for each result found.
-        Called by views.process(u'new') """
-    log.info( u'in (queue-called) iip_search_app.models.run_call_svn_update(); starting at `%s`' % unicode(datetime.datetime.now()) )
-    utils = ProcessorUtils()
-    utils.backup_display_statuses()
-    result_dict = utils.call_svn_update()
-    log.debug( u'in (queue-called) run_call_svn_update(); result_dict is, ```%s```' % pprint.pformat(result_dict) )
-    for file_id in result_dict[u'file_ids']:
-        job = q.enqueue_call (
-            func=u'iip_search_app.models.run_process_file',
-            kwargs = { u'file_id': file_id, u'grab_latest_file': True, u'display_status': u'to_approve' }
-            )
-    return
+# def run_call_svn_update():
+#     """ Initiates svn update.
+#             Spawns a call to Processor.process_file() for each result found.
+#         Called by views.process(u'new') """
+#     log.info( u'in (queue-called) iip_search_app.models.run_call_svn_update(); starting at `%s`' % unicode(datetime.datetime.now()) )
+#     utils = ProcessorUtils()
+#     utils.backup_display_statuses()
+#     result_dict = utils.call_svn_update()
+#     log.debug( u'in (queue-called) run_call_svn_update(); result_dict is, ```%s```' % pprint.pformat(result_dict) )
+#     for file_id in result_dict[u'file_ids']:
+#         job = q.enqueue_call (
+#             func=u'iip_search_app.models.run_process_file',
+#             kwargs = { u'file_id': file_id, u'grab_latest_file': True, u'display_status': u'to_approve' }
+#             )
+#     return
 
-def run_delete_orphans():
-    """ Initiates deletion of orphaned solr entries.
-        Called by views.process( u'delete_orphans' ) """
-    ( killer, utils ) = ( OrphanKiller(log), ProcessorUtils() )
-    utils.backup_display_statuses()
-    utils.call_svn_update()  # output not important; just need to ensure the xml-dir is fresh
-    directory_inscription_ids = killer.build_directory_inscription_ids()
-    solr_inscription_ids = killer.build_solr_inscription_ids()
-    orphan_list = killer.build_orphan_list( directory_inscription_ids, solr_inscription_ids )
-    for inscription_id in orphan_list:
-        job = q.enqueue_call (
-            func=u'iip_search_app.models.run_delete_solr_entry',
-            kwargs = { u'inscription_id': inscription_id } )
-    return
+# def run_delete_orphans():
+#     """ Initiates deletion of orphaned solr entries.
+#         Called by views.process( u'delete_orphans' ) """
+#     ( killer, utils ) = ( OrphanKiller(log), ProcessorUtils() )
+#     utils.backup_display_statuses()
+#     utils.call_svn_update()  # output not important; just need to ensure the xml-dir is fresh
+#     directory_inscription_ids = killer.build_directory_inscription_ids()
+#     solr_inscription_ids = killer.build_solr_inscription_ids()
+#     orphan_list = killer.build_orphan_list( directory_inscription_ids, solr_inscription_ids )
+#     for inscription_id in orphan_list:
+#         job = q.enqueue_call (
+#             func=u'iip_search_app.models.run_delete_solr_entry',
+#             kwargs = { u'inscription_id': inscription_id } )
+#     return
 
-def run_process_single_file( inscription_id ):
-    """ Triggers processing of single inscription.
-        Called by views.process( u'INSCRIPTION_ID') """
-    log.info( u'in iip_search_app.models.run_process_single_file(); starting at `%s`; inscription_id, `%s`' % (unicode(datetime.datetime.now()), inscription_id) )
-    utils = ProcessorUtils()
-    if utils.validate_inscription_id( inscription_id ) == False:
-        # log.debug( u'inscription_id, `{}` validity-check is `False`'.format(inscription_id) )
-        log.debug( u'validity-check for inscription_id, `%s` is False' % inscription_id )
-        current_display_status = 'to_approve'
-    else:
-        utils.backup_display_statuses()
-        current_display_status = utils.grab_current_display_status( inscription_id )
-    q.enqueue_call(
-        func = u'iip_search_app.models.run_process_file',
-        kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
-        )
-    return
+# def run_process_single_file( inscription_id ):
+#     """ Triggers processing of single inscription.
+#         Called by views.process( u'INSCRIPTION_ID') """
+#     log.info( u'in iip_search_app.models.run_process_single_file(); starting at `%s`; inscription_id, `%s`' % (unicode(datetime.datetime.now()), inscription_id) )
+#     utils = ProcessorUtils()
+#     if utils.validate_inscription_id( inscription_id ) == False:
+#         # log.debug( u'inscription_id, `{}` validity-check is `False`'.format(inscription_id) )
+#         log.debug( u'validity-check for inscription_id, `%s` is False' % inscription_id )
+#         current_display_status = 'to_approve'
+#     else:
+#         utils.backup_display_statuses()
+#         current_display_status = utils.grab_current_display_status( inscription_id )
+#     q.enqueue_call(
+#         func = u'iip_search_app.models.run_process_file',
+#         kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
+#         )
+#     return
 
-def run_process_all_files():
-    """ Triggers processing of all inscriptions.
-        Note: initially had this function grab display_status then call `run_process_file` directly,
-              but x-thousand display-status url-calls from single job timed out.
-        Called by views.process( u'all') """
-    log.info( u'in iip_search_app.models.run_process_all_files(); starting at `%s`' % unicode(datetime.datetime.now()) )
-    ( killer, utils ) = ( OrphanKiller(log), ProcessorUtils() )
-    utils.backup_display_statuses()
-    utils.call_svn_update()  # run svn update to get most recent info
-    directory_inscription_ids = killer.build_directory_inscription_ids()  # get list of directory-inscription-ids
-    for inscription_id in directory_inscription_ids:
-        q.enqueue_call(
-            func = u'iip_search_app.models.run_grab_status_then_process_file',
-            kwargs = { u'inscription_id': inscription_id } )
-    return
+# def run_process_all_files():
+#     """ Triggers processing of all inscriptions.
+#         Note: initially had this function grab display_status then call `run_process_file` directly,
+#               but x-thousand display-status url-calls from single job timed out.
+#         Called by views.process( u'all') """
+#     log.info( u'in iip_search_app.models.run_process_all_files(); starting at `%s`' % unicode(datetime.datetime.now()) )
+#     ( killer, utils ) = ( OrphanKiller(log), ProcessorUtils() )
+#     utils.backup_display_statuses()
+#     utils.call_svn_update()  # run svn update to get most recent info
+#     directory_inscription_ids = killer.build_directory_inscription_ids()  # get list of directory-inscription-ids
+#     for inscription_id in directory_inscription_ids:
+#         q.enqueue_call(
+#             func = u'iip_search_app.models.run_grab_status_then_process_file',
+#             kwargs = { u'inscription_id': inscription_id } )
+#     return
 
 ## triggered by one of above queue-runners
 
