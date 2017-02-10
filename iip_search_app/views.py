@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import json, logging, pprint
+import json, logging, os, pprint
 import redis, rq, solr
 from .models import StaticPage
 from django.core.urlresolvers import reverse
@@ -403,56 +403,65 @@ def logout( request ):
 
 ## process ##  request.session['authz_info'] = { 'authorized': True, 'firstname': request.META['Shibboleth-givenName'] }
 
-def process_new( request ):
-    """ Triggers svn-update and processing of all new records. """
-    log.info( u'in iip_search_app.views.process_new(); starting' )
-    if request.session[u'authz_info'][u'authorized'] == False:
-        log.info( u'in iip_search_app.views.process_new(); not authorized, returning Forbidden' )
-        return HttpResponseForbidden( '403 / Forbidden' )
-    q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
-    return HttpResponse( u'Started processing updated inscriptions.' )
+# def process_new( request ):
+#     """ Triggers svn-update and processing of all new records. """
+#     log.info( u'in iip_search_app.views.process_new(); starting' )
+#     if request.session[u'authz_info'][u'authorized'] == False:
+#         log.info( u'in iip_search_app.views.process_new(); not authorized, returning Forbidden' )
+#         return HttpResponseForbidden( '403 / Forbidden' )
+#     q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
+#     return HttpResponse( u'Started processing updated inscriptions.' )
 
 def process_orphans( request ):
-    """ Triggers deletion of solr-inscription-ids that do not have corresponding repository ids. """
-    log.info( u'in iip_search_app.views.process_orphans(); starting' )
-    if request.session[u'authz_info'][u'authorized'] == False:
-        log.info( u'in iip_search_app.views.process_orphans(); not authorized, returning Forbidden' )
-        return HttpResponseForbidden( '403 / Forbidden' )
-    q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
-    return HttpResponse( u'Started processing solr orphan deletion.' )
+    """ Returns confirmation-required response. """
+    return HttpResponse( u'"delete orphans" functionality is under re-construction.' )
+
+# def process_orphans( request ):
+#     """ Triggers deletion of solr-inscription-ids that do not have corresponding repository ids. """
+#     log.info( u'in iip_search_app.views.process_orphans(); starting' )
+#     if request.session[u'authz_info'][u'authorized'] == False:
+#         log.info( u'in iip_search_app.views.process_orphans(); not authorized, returning Forbidden' )
+#         return HttpResponseForbidden( '403 / Forbidden' )
+#     q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
+#     return HttpResponse( u'Started processing solr orphan deletion.' )
 
 def process_all( request ):
     """ Returns confirmation-required response. """
     log.info( u'in iip_search_app.views.process_all(); starting' )
-    if request.session[u'authz_info'][u'authorized'] == False:
-        log.info( u'in iip_search_app.views.process_all(); not authorized, returning Forbidden' )
-        return HttpResponseForbidden( '403 / Forbidden' )
-    request.session[u'process_all_initiated'] = True
-    return HttpResponse( u'Please confirm: in url change `all` to `confirm_all`. This will not change proofreading status.' )
+    return HttpResponse( u'"process all" functionality is under re-construction.' )
 
-def process_confirm_all( request ):
-    """ Triggers processing of all inscriptions. """
-    if request.session[u'authz_info'][u'authorized'] == False:
-        log.info( u'in iip_search_app.views.process_confirm_all(); not authorized, returning Forbidden' )
-        return HttpResponseForbidden( '403 / Forbidden' )
-    if request.session.get( u'process_all_initiated', False ) == True:  # if it doesn't exist, create and set to False
-        request.session[u'process_all_initiated'] = False
-        q.enqueue_call( func=u'iip_search_app.models.run_process_all_files', kwargs = {} )
-        return HttpResponse( u'Started processing all inscriptions; all should be complete within an hour.' )
-    else:
-        return HttpResponse( u'Initial url must be `all`, not `confirm_all`.' )
+# def process_all( request ):
+#     """ Returns confirmation-required response. """
+#     log.info( u'in iip_search_app.views.process_all(); starting' )
+#     if request.session[u'authz_info'][u'authorized'] == False:
+#         log.info( u'in iip_search_app.views.process_all(); not authorized, returning Forbidden' )
+#         return HttpResponseForbidden( '403 / Forbidden' )
+#     request.session[u'process_all_initiated'] = True
+#     return HttpResponse( u'Please confirm: in url change `all` to `confirm_all`. This will not change proofreading status.' )
 
-def process_single( request, inscription_id ):
-    """ Triggers, after instruction, processing of given iscription. """
-    log.info( u'in iip_search_app.views.process_single(); starting; inscription_id, `%s`' % inscription_id )
-    if request.session[u'authz_info'][u'authorized'] == False:
-        log.info( u'in iip_search_app.views.process_single(); not authorized, returning Forbidden' )
-        return HttpResponseForbidden( '403 / Forbidden' )
-    if inscription_id == u'INSCRIPTION_ID':
-        return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`. This will not change proofreading status.' )
-    else:
-        q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
-        return HttpResponse( u'Started processing inscription-id.' )
+# def process_confirm_all( request ):
+#     """ Triggers processing of all inscriptions. """
+#     if request.session[u'authz_info'][u'authorized'] == False:
+#         log.info( u'in iip_search_app.views.process_confirm_all(); not authorized, returning Forbidden' )
+#         return HttpResponseForbidden( '403 / Forbidden' )
+#     if request.session.get( u'process_all_initiated', False ) == True:  # if it doesn't exist, create and set to False
+#         request.session[u'process_all_initiated'] = False
+#         q.enqueue_call( func=u'iip_search_app.models.run_process_all_files', kwargs = {} )
+#         return HttpResponse( u'Started processing all inscriptions; all should be complete within an hour.' )
+#     else:
+#         return HttpResponse( u'Initial url must be `all`, not `confirm_all`.' )
+
+# def process_single( request, inscription_id ):
+#     """ Triggers, after instruction, processing of given iscription. """
+#     log.info( u'in iip_search_app.views.process_single(); starting; inscription_id, `%s`' % inscription_id )
+#     if request.session[u'authz_info'][u'authorized'] == False:
+#         log.info( u'in iip_search_app.views.process_single(); not authorized, returning Forbidden' )
+#         return HttpResponseForbidden( '403 / Forbidden' )
+#     if inscription_id == u'INSCRIPTION_ID':
+#         return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`. This will not change proofreading status.' )
+#     else:
+#         q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
+#         return HttpResponse( u'Started processing inscription-id.' )
 
 def show_recent_errors( request ):
     """ Displays last x entries in the failed queue. """
@@ -476,14 +485,19 @@ def show_recent_errors( request ):
 ## view_xml ##
 
 def view_xml( request, inscription_id ):
-    """ Returns inscription xml. """
-    log.info( u'in view_xml(); starting' )
-    file_path = u'%s/%s.xml' % ( settings_app.XML_DIR_PATH, inscription_id )
-    log.debug( u'in view_xml(); id, %s; file_path' % file_path )
-    with open( file_path ) as f:
-        xml_utf8 = f.read()
-        xml = xml_utf8.decode(u'utf-8')
-    return HttpResponse( xml, mimetype=u'text/xml' )
+    """ Redirects to web-accessible inscription-xml. """
+    url = u'%s/%s.xml' % ( unicode(os.environ['IIP_SEARCH__XML_DIR_URL']), inscription_id )
+    return HttpResponseRedirect( url )
+
+# def view_xml( request, inscription_id ):
+#     """ Returns inscription xml. """
+#     log.info( u'in view_xml(); starting' )
+#     file_path = u'%s/%s.xml' % ( settings_app.XML_DIR_PATH, inscription_id )
+#     log.debug( u'in view_xml(); id, %s; file_path' % file_path )
+#     with open( file_path ) as f:
+#         xml_utf8 = f.read()
+#         xml = xml_utf8.decode(u'utf-8')
+#     return HttpResponse( xml, mimetype=u'text/xml' )
 
 
 ## static pages ##
