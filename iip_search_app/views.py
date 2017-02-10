@@ -55,9 +55,11 @@ def _get_POST_context( request, log_id ):
 
     form = forms.SearchForm( request.POST )  # form bound to the POST data
 
+    resultsPage = 1
     qstring_provided = None
     if request.method == u'GET':
         qstring_provided = request.GET.get("q", None)
+        resultsPage = int(request.GET.get('resultsPage', resultsPage))
 
     if form.is_valid() or qstring_provided:
         initial_qstring = ""
@@ -66,12 +68,12 @@ def _get_POST_context( request, log_id ):
         else:
             initial_qstring = form.generateSolrQuery()
 
-        resultsPage = 1
         updated_qstring = common.updateQstring(
             initial_qstring=initial_qstring, session_authz_dict=request.session['authz_info'], log_id=common.get_log_identifier(request.session) )['modified_qstring']
         context = common.paginateRequest( qstring=updated_qstring, resultsPage=resultsPage, log_id=common.get_log_identifier(request.session) )
         context[u'session_authz_info'] = request.session[u'authz_info']
         context[u'admin_links'] = common.make_admin_links( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id )
+        context[u'initial_qstring'] = initial_qstring
         return context
 
 def _get_ajax_unistring( request ):
@@ -84,7 +86,7 @@ def _get_ajax_unistring( request ):
     resultsPage = int( request.GET[u'resultsPage'] )
     context = common.paginateRequest(
         qstring=updated_qstring, resultsPage=resultsPage, log_id=log_id )
-    return_str = ajax_snippet.render_block_to_string(u'iip_search_templates/base_extend.html', u'content', context)
+    return_str = ajax_snippet.render_block_to_string(u'iip_search_templates/base_zotero.html', u'content', context)
     return unicode( return_str )
 
 def _get_GET_context( request, log_id ):

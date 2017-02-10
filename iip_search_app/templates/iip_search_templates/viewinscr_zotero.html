@@ -40,13 +40,13 @@
 
     <div id="details">
 
-      <div class="insText">
+      <div class="insText" id="{{ i.inscription_id }}">
         <h4>Diplomatic:</h4>
-        <p>{%if i.diplomatic%}{{i.diplomatic}}{%else%}No diplomatic{%endif%}</p>
+        <p class="diplomatic">{%if i.diplomatic%}{{i.diplomatic}}{%else%}No diplomatic{%endif%}</p>
         <h4>Transcription:</h4>
-        <p>{%if i.transcription%}{{i.transcription}}{%else%}No transcription{%endif%}</p>
+        <p class="transcription">{%if i.transcription%}{{i.transcription}}{%else%}No transcription{%endif%}</p>
         <h4>Translation:</h4>
-        <p>{%if i.translation%}{{i.translation}}{%else%}No translation{%endif%}</p>
+        <p class="translation">{%if i.translation%}{{i.translation}}{%else%}No translation{%endif%}</p>
         {% if i.imageSource and biblioFull %}
         <h4>Images:</h4>
           {% for im in i.imageSource %}

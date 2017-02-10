@@ -18,7 +18,7 @@
     <span class="search_results_header">Your search for {{dispQstring}} yielded {{pages.count}} results</span>
     <div id="page_list">
     {% for pg in pages.page_range %}
-        <a href="/iip/search" {%ifequal pg resultsPage%}style="font-size: 1.3em"{%endifequal%}>{{pg}}</a>&nbsp;
+        <a href="./?q={{ initial_qstring }}&resultsPage={{pg}}" {%ifequal pg resultsPage%}style="font-size: 1.3em"{%endifequal%}>{{pg}}</a>&nbsp;
     {% endfor %}
     </div>
 
@@ -26,18 +26,18 @@
 
 {% for inscription in iipResult.object_list %}
 	<tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %} short_result" id="{{inscription.inscription_id}}">
-	    <td class="openImg"></td>
 		<td class="resultTitle descColumn">
-            <span class="short_header">{{inscription.inscription_id|upper}} - {{inscription.short_description}}</span>
+            <span class="short_header">
+                <a href="../viewinscr/{{inscription.inscription_id}}" target="_blank">{{inscription.inscription_id|upper}}</a> - {{inscription.short_description}}
+            </span>
         </td>
-        <td class="resultTitle textColumn">
-            <span class="short_header">{{inscription.transcription|truncatewords_html:25}}</span>
+        <td class="resultTitle textColumn transcription">
+            <span class="short_header">Transcription</span>
         </td>
-        <td class="resultTitle textColumn">
-            <span class="short_header">{{inscription.translation|truncatewords_html:25}}</span>
+        <td class="resultTitle textColumn translation">
+            <span class="short_header">Translation</span>
         </td>
 	</tr>
-	<tr class="viewinscr {% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %} short_result"><td class="closeImg"></td><td colspan="3"></td></tr>
 {% endfor %}
 </table>
 </div>
@@ -55,7 +55,7 @@
            <ul>
                 {% for f,v in items.items|vocabSort %}
                  {% if f and v %}
-                    <li><a class="facetLink" href="{{field}}">{{f}}</a>&nbsp;({{v}})</li>
+                    <li><a class="facetLink" href="{{field}}" id="{{f}}">{{f|tax}}</a>&nbsp;({{v}})</li>
                  {% endif %}
                 {%endfor%}
             </ul>

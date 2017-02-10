@@ -6,18 +6,6 @@ var collection = "U2J49649";
 
 function retrieve_bib (id_list, callback) {
 	var tags = id_list.join(" || ");
-	// $.ajax({
-	// 	url: "https://api.zotero.org/users/" + user + "/collections/" + collection + "/items", 
-	// 	data: {
-	// 		"tag" : tags,
-	// 		"format" : "atom",
-	// 		"content" : "bib,json"
-	// 	}, 
-	// 	success: callback,
-	// 	headers: {
-	// 		"Zotero-API-Version" : "2",
-	// 		"X-Requested-With" : "",
-	// 	}});
 	var req = new XMLHttpRequest();
 	req.open("GET", "https://api.zotero.org/users/" + user + "/collections/" + collection + "/items?tag=" + tags + "&format=atom&content=bib,json", true);
 	req.setRequestHeader("Zotero-API-Version", "2");
@@ -130,15 +118,13 @@ function render_bibliography() {
 }
 
 $(document).ready(function(){
-    $('#page_list a').livequery(function(){
+    $('.facetHeaderText').livequery(function(){
         $(this).click(function(event){
-                event.preventDefault();
-                resultsPage = $(this).html();
-                $.get('../search/', {'qstring':qstring,'resultsPage':resultsPage}, function(data){$('#paginated_results').replaceWith(data);});
-                $(this).css('color', '#000000').css('font-decoration', 'none');
-        });
+            $(this).toggleClass('facetMenuOpened');
+            $(this).next('ul').toggle('30');
+            });
     });
-    
+
     $('#narrow_results a.showHideFacets').livequery(function(){
         $(this).click(function(event){
          event.preventDefault();
@@ -149,47 +135,25 @@ $(document).ready(function(){
         });            
     });
 
-    
+
     $('.facetLink').livequery(function(){
         $(this).click(function(event){
                 event.preventDefault();
-                qstring = qstring+" AND "+$(this).attr('href') +':"'+$(this).html() + '"';
-                $.get('../search/', {'qstring':qstring,'resultsPage':1}, function(data){
-                	$('#paginated_results').replaceWith(data);
-                });
-        });
-    });
-    
-    $('tr.short_result').livequery(function(){
-        $(this).click(function(event){
-                var p = $(this).next('tr.viewinscr');
-                if(p.is(':hidden')){
-                    $(this).find('td:eq(0)').addClass('loadingImg');
-                    $.get(
-                        "../viewinscr/"+$(this).attr('id')+"/",
-                        {'qstring':qstring,'resultsPage':resultsPage}, 
-                        function(data){
-                        p.find('td:eq(1)').html(data);
-                        p.show();
-                        p.prev('tr.short_result').hide();
-                        render_bibliography();
-                        }
-                     );
+                var isDisplayStatus = /display_status:.*/;
+                //split the qstring into clauses
+                var split_qstring = qstring.split(/\s+(?:AND|OR)\s+/);
+                var newQStringParts = [];
+
+                for (var i = 0; i < split_qstring.length; i++) {
+                    if (!isDisplayStatus.test(split_qstring[i])) {
+                        newQStringParts.push(split_qstring[i]);
+                    }
                 }
-               $(this).find('td:eq(0)').removeClass('loadingImg');
-                p.click(function(){
-                        $(this).prev('tr.short_result').show();
-                        $(this).hide();
-                    });
+                newQStringParts.push($(this).attr('href') +':"'+$(this).attr('id') + '"');
+                
+                //Load the new results page
+                window.location.search = "?q="+newQStringParts.join(" AND ") + "&resultsPage=1";
         });
     });
-    
-    $('.facetHeaderText').livequery(function(){
-        $(this).click(function(event){
-            $(this).toggleClass('facetMenuOpened');
-            $(this).next('ul').toggle('30');
-            });
-    });
-    
 });
 
