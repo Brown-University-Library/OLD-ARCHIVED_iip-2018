@@ -270,25 +270,6 @@ class Processor( object ):
         log.debug( u'in models.Processor.run_munger(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
         return return_dict
 
-    # def run_munger( self, source_xml ):
-    #     """ Takes source xml unicode string.
-    #             Applies perl munger.
-    #             Returns processed xml unicode string.
-    #         Called by process_file(). """
-    #     self._run_munger_asserts( source_xml )  # validates input-data type
-    #     ( file_name, file_name_root ) = self._save_source_xml( source_xml )  # saves source-xml to to-be-munged directory
-    #     ( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath ) = self._setup_munger_stdstuff()
-    #     current_working_directory = self._call_munger( f_stdout, f_stderr )
-    #     self._close_munger_stdstuff( f_stdout, f_stderr, temp_stdout_filepath, temp_stderr_filepath )
-    #     munged_xml = self._get_munged_xml( file_name )
-    #     self._delete_munger_detritus( file_name, file_name_root, current_working_directory )
-    #     return_dict = {
-    #         u'source_xml': source_xml,
-    #         u'munged_xml': munged_xml
-    #         }
-    #     log.info( u'in models.Processor.run_munger(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
-    #     return return_dict
-
     def _run_munger_asserts( self, source_xml ):
         """ Takes source_xml.
                 Runs type asserts.
@@ -404,39 +385,6 @@ class Processor( object ):
         return
 
     ##
-
-    # def make_initial_solr_doc( self, munged_xml ):
-    #     """ Takes munged xml unicode string.
-    #             Applies xsl transformation to create a solr doc.
-    #             Returns processed xml in dict.
-    #         Called by process_file(). """
-    #     assert type(self.SOLR_DOC_STYLESHEET_PATH) == unicode, type(self.SOLR_DOC_STYLESHEET_PATH)
-    #     assert type(self.TRANSFORMER_URL) == unicode, type(self.TRANSFORMER_URL)
-    #     assert type(munged_xml) == unicode, type(munged_xml)
-    #     log.info( u'in models.Processor.make_initial_solr_doc(); self.SOLR_DOC_STYLESHEET_PATH, ```%s```' % self.SOLR_DOC_STYLESHEET_PATH )
-    #     log.info( u'in models.Processor.make_initial_solr_doc(); self.TRANSFORMER_URL, ```%s```' % self.TRANSFORMER_URL )
-    #     iip_solrdoc_string = 'init'
-    #     ## get stylesheet
-    #     f = open( self.SOLR_DOC_STYLESHEET_PATH )
-    #     stylesheet_string = f.read()
-    #     f.close()
-    #     assert type(stylesheet_string) == str, type(stylesheet_string)
-    #     stylesheet_ustring = stylesheet_string.decode(u'utf-8')
-    #     ## hit the post xslt transformer
-    #     url = self.TRANSFORMER_URL
-    #     payload = {
-    #         u'source_string': munged_xml,
-    #         u'stylesheet_string': stylesheet_ustring }
-    #     headers = { u'content-type': u'text/xml; charset=utf-8' }
-    #     r = requests.post( url, data=payload, headers=headers )
-    #     transformed_xml = r.content.decode(u'utf-8')
-    #     return_dict = {
-    #         u'initial_munged_xml': munged_xml,
-    #         u'stylesheet_xml': stylesheet_ustring,
-    #         u'transformed_xml': transformed_xml
-    #         }
-    #     log.info( u'in models.Processor.make_initial_solr_doc(); return_dict, ```%s```' % unicode(pprint.pformat(return_dict)) )
-    #     return return_dict
 
     def make_initial_solr_doc( self, munged_xml ):
         """ Takes munged xml unicode string.
@@ -709,21 +657,6 @@ def run_process_single_file( inscription_id ):
         kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
         )
     return
-
-# def run_process_single_file( inscription_id ):
-#     """ Triggers processing of single inscription.
-#         Called by views.process( u'INSCRIPTION_ID') """
-#     log.info( u'in iip_search_app.models.run_process_single_file(); starting at `%s`; inscription_id, `%s`' % (unicode(datetime.datetime.now()), inscription_id) )
-#     utils = ProcessorUtils()
-#     if utils.validate_inscription_id( inscription_id ) == False:
-#         return
-#     utils.backup_display_statuses()
-#     current_display_status = utils.grab_current_display_status( inscription_id )
-#     q.enqueue_call(
-#         func = u'iip_search_app.models.run_process_file',
-#         kwargs = { u'file_id': inscription_id, u'grab_latest_file': True, u'display_status': current_display_status }
-#         )
-#     return
 
 def run_process_all_files():
     """ Triggers processing of all inscriptions.
