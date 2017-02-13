@@ -1,13 +1,12 @@
 (function(){
 
-var xmlURL = "/view_xml/";
-
 var regex25Words = /((?:\s*[^\s]+){0,25})/; //should use \b but JS doesn't like \b and non-ascii chars
 
 var Conv = new CETEI();
 
 function shortDisplay(domTarget) {
-    $.get(xmlURL + domTarget.id + '/', function(data) {
+    var xmlURL = $(".xml_url", domTarget).attr('href');
+    $.get(xmlURL, function(data) {
         Conv.domToHTML5(data,function(parsed, self) {
             var transcription = $(parsed).find("tei-div[subtype=transcription]");
             var diplomatic = $(parsed).find("tei-div[subtype=diplomatic]");
@@ -31,7 +30,8 @@ function shortDisplay(domTarget) {
 }
 
 function longDisplay(domTarget) {
-    $.get(xmlURL + domTarget.id + '/', function(data) {
+    var xmlURL = $("#viewXml a").attr('href');
+    $.get(xmlURL, function(data) {
         Conv.domToHTML5(data,function(parsed, self) {
             var transcription = $(parsed).find("tei-div[subtype=transcription]");
             var diplomatic = $(parsed).find("tei-div[subtype=diplomatic]");

@@ -30,6 +30,7 @@
             <span class="short_header">
                 <a href="../viewinscr/{{inscription.inscription_id}}" target="_blank">{{inscription.inscription_id|upper}}</a> - {{inscription.short_description}}
             </span>
+            <br/><a class="xml_url" href="{% url xml_url inscription.inscription_id %}">[xml]</a>
         </td>
         <td class="resultTitle textColumn transcription">
             <span class="short_header">Transcription</span>

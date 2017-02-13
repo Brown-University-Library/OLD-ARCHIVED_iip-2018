@@ -480,6 +480,10 @@ padding-top: 5px;
     color:#5E4F5F;
 }
 
+.xml_url {
+    color: gray;
+    font-size: 0.8em;
+}
 
 ul.bibliography {
     padding-left: 20px;
