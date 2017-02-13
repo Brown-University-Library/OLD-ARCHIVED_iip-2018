@@ -1,7 +1,5 @@
 (function(){
 
-var regex25Words = /((?:\s*[^\s]+){0,25})/; //should use \b but JS doesn't like \b and non-ascii chars
-
 var Conv = new CETEI();
 
 function shortDisplay(domTarget) {
