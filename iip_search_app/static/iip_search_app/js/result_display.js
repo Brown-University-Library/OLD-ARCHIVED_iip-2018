@@ -7,6 +7,9 @@ var Conv = new CETEI();
 function shortDisplay(domTarget) {
     var xmlURL = $(".xml_url", domTarget).attr('href');
     $.get(xmlURL, function(data) {
+        if (typeof data == 'string') {
+            data = (new DOMParser()).parseFromString(data, 'application/xml');
+        }
         Conv.domToHTML5(data,function(parsed, self) {
             var transcription = $(parsed).find("tei-div[subtype=transcription]");
             var diplomatic = $(parsed).find("tei-div[subtype=diplomatic]");
@@ -32,6 +35,9 @@ function shortDisplay(domTarget) {
 function longDisplay(domTarget) {
     var xmlURL = $("#viewXml a").attr('href');
     $.get(xmlURL, function(data) {
+        if (typeof data == 'string') {
+            data = (new DOMParser()).parseFromString(data, 'application/xml');
+        }
         Conv.domToHTML5(data,function(parsed, self) {
             var transcription = $(parsed).find("tei-div[subtype=transcription]");
             var diplomatic = $(parsed).find("tei-div[subtype=diplomatic]");
