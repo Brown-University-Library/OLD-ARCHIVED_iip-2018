@@ -9,11 +9,8 @@ tei-expan > tei-ex[cert='low']::after {
     content: "?)";
 }
 
-tei-expan::before {
-    content: "(";
-}
-tei-expan::after {
-    content: ")";
+.transcription tei-am {
+    display: none;
 }
 
 tei-add::before {
@@ -39,10 +36,6 @@ tei-add[place='below']::after {
 
 tei-add[place='above']::before {
     content: "\\";
-}
-
-.transcription tei-am {
-    display: none;
 }
 
 .transcription tei-choice > tei-sic {
