@@ -185,10 +185,29 @@ tei-surplus::after {
 }
 
 tei-gap[reason='ellipsis'] {
-    /*TODO*/
+    /*?*/
 }
 
+/* Hebrew */
 [lang='heb'] {
     unicode-bidi: bidi-override;
     direction: rtl;
+}
+
+/* Aramaic */
+[lang='arc'] {
+    unicode-bidi: bidi-override;
+    direction: rtl;
+}
+
+/* Latin */
+[lang='lat'] {
+    unicode-bidi: bidi-override;
+    direction: ltr;
+}
+
+/* Greek */
+[lang='grc'] {
+    unicode-bidi: bidi-override;
+    direction: ltr;
 }
