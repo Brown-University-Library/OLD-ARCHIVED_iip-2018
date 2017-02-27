@@ -18,7 +18,7 @@ tei-add::before {
 }
 tei-add::after {
     content: ">";
-}    
+}
 
 tei-add[place='above']::before {
     content: "\\";
@@ -103,7 +103,7 @@ tei-lb::before {
     white-space: pre;
 }
 tei-lb[break='no']::before {
-    content: "-";
+    content: "-\a";
     white-space: pre;
 }
 
