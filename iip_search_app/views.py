@@ -2,6 +2,8 @@
 
 import json, logging, os, pprint
 import redis, rq, solr
+import requests
+
 from .models import StaticPage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
@@ -487,17 +489,28 @@ def show_recent_errors( request ):
 def view_xml( request, inscription_id ):
     """ Redirects to web-accessible inscription-xml. """
     url = u'%s/%s.xml' % ( unicode(os.environ['IIP_SEARCH__XML_DIR_URL']), inscription_id )
-    return HttpResponseRedirect( url )
 
-# def view_xml( request, inscription_id ):
-#     """ Returns inscription xml. """
-#     log.info( u'in view_xml(); starting' )
-#     file_path = u'%s/%s.xml' % ( settings_app.XML_DIR_PATH, inscription_id )
-#     log.debug( u'in view_xml(); id, %s; file_path' % file_path )
-#     with open( file_path ) as f:
-#         xml_utf8 = f.read()
-#         xml = xml_utf8.decode(u'utf-8')
-#     return HttpResponse( xml, mimetype=u'text/xml' )
+    hdrs = {}
+    if "HTTP_IF_NONE_MATCH" in request.META: hdrs['If-None-Match'] = request.META["HTTP_IF_NONE_MATCH"] 
+    if "HTTP_IF_MODIFIED_SINCE" in request.META: hdrs['If-Modified-Since'] = request.META["HTTP_IF_MODIFIED_SINCE"] 
+    
+    r = requests.get(url, headers=hdrs)
+    response = HttpResponse()
+    response.status_code = r.status_code
+
+    if r.status_code == requests.codes.ok:
+        response.content = r.content
+        response["Content-Type"] = "text/xml"
+    
+    # propagate cache information
+    if 'ETag' in r.headers: response['ETag'] = r.headers['ETag']
+    if 'Expires' in r.headers: response['Expires'] = r.headers['Expires']
+    if 'Last-Modified' in r.headers: response['Last-Modified'] = r.headers['Last-Modified']
+    if 'Cache-Control' in r.headers: response['Cache-Control'] = r.headers['Cache-Control']
+    if 'Age' in r.headers: response['Age'] = r.headers['Age']
+    if 'Source-Age' in r.headers: response['Source-Age'] = r.headers['Source-Age']
+
+    return response
 
 
 ## static pages ##
