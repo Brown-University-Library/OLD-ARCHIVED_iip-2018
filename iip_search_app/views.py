@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import json, logging, os, pprint
-import redis, rq, solr
-import requests
-
+import redis, requests, rq, solr
 from .models import StaticPage
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as django_login
+from django.contrib.auth import logout as django_logout
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, render_to_response
 from iip_search_app import common, models, settings_app
 from iip_search_app import forms
+from iip_search_app.libs.view_xml_helper import XmlPrepper
 from iip_search_app.utils import ajax_snippet
-
-from django.contrib.auth import authenticate
-from django.contrib.auth import login as django_login
-from django.contrib.auth import logout as django_logout
 
 
 log = logging.getLogger(__name__)
@@ -486,31 +484,44 @@ def show_recent_errors( request ):
 
 ## view_xml ##
 
+# def view_xml( request, inscription_id ):
+#     """ Redirects to web-accessible inscription-xml. """
+#     url = u'%s/%s.xml' % ( unicode(os.environ['IIP_SEARCH__XML_DIR_URL']), inscription_id )
+
+#     hdrs = {}
+#     if "HTTP_IF_NONE_MATCH" in request.META: hdrs['If-None-Match'] = request.META["HTTP_IF_NONE_MATCH"]
+#     if "HTTP_IF_MODIFIED_SINCE" in request.META: hdrs['If-Modified-Since'] = request.META["HTTP_IF_MODIFIED_SINCE"]
+
+#     r = requests.get(url, headers=hdrs)
+#     response = HttpResponse()
+#     response.status_code = r.status_code
+
+#     if r.status_code == requests.codes.ok:
+#         response.content = r.content
+#         response["Content-Type"] = "text/xml"
+
+#     # propagate cache information
+#     if 'ETag' in r.headers: response['ETag'] = r.headers['ETag']
+#     if 'Expires' in r.headers: response['Expires'] = r.headers['Expires']
+#     if 'Last-Modified' in r.headers: response['Last-Modified'] = r.headers['Last-Modified']
+#     if 'Cache-Control' in r.headers: response['Cache-Control'] = r.headers['Cache-Control']
+#     if 'Age' in r.headers: response['Age'] = r.headers['Age']
+#     if 'Source-Age' in r.headers: response['Source-Age'] = r.headers['Source-Age']
+
+#     return response
+
+
 def view_xml( request, inscription_id ):
-    """ Redirects to web-accessible inscription-xml. """
-    url = u'%s/%s.xml' % ( unicode(os.environ['IIP_SEARCH__XML_DIR_URL']), inscription_id )
-
-    hdrs = {}
-    if "HTTP_IF_NONE_MATCH" in request.META: hdrs['If-None-Match'] = request.META["HTTP_IF_NONE_MATCH"] 
-    if "HTTP_IF_MODIFIED_SINCE" in request.META: hdrs['If-Modified-Since'] = request.META["HTTP_IF_MODIFIED_SINCE"] 
-    
-    r = requests.get(url, headers=hdrs)
+    """ Returns inscription-xml from github lookup. """
+    xml_prepper = XmlPrepper()
+    ## lookup xml
+    xml_url = '%s/%s.xml' % ( unicode(os.environ['IIP_SEARCH__XML_DIR_URL']), inscription_id )
+    lookup_headers = xml_prepper.prep_lookup_headers( request.META )
+    lookup_response = requests.get( xml_url, headers=lookup_headers )  # eventually maybe offload this to helper class for a try/except to handle github's periodic downtime
+    ## prep response
     response = HttpResponse()
-    response.status_code = r.status_code
-
-    if r.status_code == requests.codes.ok:
-        response.content = r.content
-        response["Content-Type"] = "text/xml"
-    
-    # propagate cache information
-    if 'ETag' in r.headers: response['ETag'] = r.headers['ETag']
-    if 'Expires' in r.headers: response['Expires'] = r.headers['Expires']
-    if 'Last-Modified' in r.headers: response['Last-Modified'] = r.headers['Last-Modified']
-    if 'Cache-Control' in r.headers: response['Cache-Control'] = r.headers['Cache-Control']
-    if 'Age' in r.headers: response['Age'] = r.headers['Age']
-    if 'Source-Age' in r.headers: response['Source-Age'] = r.headers['Source-Age']
-
-    return response
+    enhanced_response = xml_prepper.enhance_response( response, lookup_response )
+    return enhanced_response
 
 
 ## static pages ##
