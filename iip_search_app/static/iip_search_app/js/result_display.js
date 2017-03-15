@@ -2,6 +2,10 @@
 
 var Conv = new CETEI();
 
+Conv.addBehaviors({'handlers':{
+    'graphic': function(e) {}
+}});
+
 function shortDisplay(domTarget) {
     var xmlURL = $(".xml_url", domTarget).attr('href');
     $.get(xmlURL, function(data) {
