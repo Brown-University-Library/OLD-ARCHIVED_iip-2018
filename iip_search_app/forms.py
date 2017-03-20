@@ -125,7 +125,7 @@ class SearchForm( forms.Form ):
                         else:
                             vlist += " OR " if not ((f == u'religion') or (f == u'language')) else " AND "
                         vlist += u"%s" % c
-                    v = u"(%s)" % vlist
+                    v = u"%s" % vlist
                 else:
                     if re.search('\s', unicode(v)):
                         v = u"\"%s\"" % v
@@ -135,5 +135,5 @@ class SearchForm( forms.Form ):
                         first = False
                     else:
                         if(v != ''): response += " AND "
-                    if(v != ''): response += u"%s:%s" % (f,v)
+                    if(v != ''): response += u"(%s:%s)" % (f,v)
         return response
