@@ -393,6 +393,9 @@ display: inline;
 #single_inscription tei-div {
     display: block;
     margin-left: 3em;
+}
+
+#single_inscription tei-p {   
     counter-reset: lines;
     counter-increment: lines;
 }
@@ -401,7 +404,7 @@ tei-lb {
     counter-increment: lines 1;
 }
 
-#single_inscription tei-div:hover tei-lb::after, #single_inscription tei-div:hover::before {
+#single_inscription tei-div:hover tei-lb::after, #single_inscription tei-div:hover tei-p::before {
     display: block;
     float: left;
     opacity: 0.5;
@@ -409,15 +412,24 @@ tei-lb {
     margin-left: -3em;
 }
 
-#single_inscription .translation tei-div:hover::before {
+#single_inscription .translation tei-div:hover tei-p::before {
     content: "";
 }
 
-#single_inscription tei-div tei-lb:nth-of-type(5n-1)::after {
+#single_inscription tei-p tei-lb:nth-of-type(5n-1)::after {
     display: block;
     float: left;
     content: counter(lines);
     margin-left: -3em;
+}
+
+tei-div[type=textpart]::before {
+    display: block;
+    margin-left: -1em;
+    margin-top: 4px;
+    font-style: italic;
+    opacity: 0.7;
+    content: "Part " attr(n);
 }
 
 .resultTitle {
