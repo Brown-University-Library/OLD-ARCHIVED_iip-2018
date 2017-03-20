@@ -3,8 +3,8 @@
 {% block queryCapture %}
 	{% autoescape off %}
     <script type="text/javascript">
-        var qstring = '{{ qstring }}';
-        var resultsPage = '{{ resultsPage }}';
+        var qstring = '{{ qstring|escapejs }}';
+        var resultsPage = '{{ resultsPage|escapejs }}';
     </script>
     {% endautoescape %}
 {% endblock %}
@@ -18,7 +18,7 @@
     <span class="search_results_header">Your search for {{dispQstring}} yielded {{pages.count}} results</span>
     <div id="page_list">
     {% for pg in pages.page_range %}
-        <a href="./?q={{ initial_qstring }}&resultsPage={{pg}}" {%ifequal pg resultsPage%}style="font-size: 1.3em"{%endifequal%}>{{pg}}</a>&nbsp;
+        <a href='./?q={{ initial_qstring|urlencode }}&resultsPage={{pg}}' {%ifequal pg resultsPage%}style="font-size: 1.3em"{%endifequal%}>{{pg}}</a>&nbsp;
     {% endfor %}
     </div>
 
