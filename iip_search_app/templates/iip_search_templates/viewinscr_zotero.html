@@ -8,12 +8,6 @@
   {% for i in inscription %}
 
     {% autoescape off %}
-    <!--    <div class="resultTitle">
-            <p style="float:left"><span class="short_header">{{i.inscription_id|upper}} - {{i.short_description}}</span></p>
-            <p style="float:right"><a href="/iip/viewinscr/{{i.inscription_id}}/">View single inscription</a></p>
-            <p style="clear:both;"></p>
-
-        </div>-->
 
     <div class="resultTitle">
       <p style="clear: both"><span class="short_header">{{i.inscription_id|upper}} - {{i.short_description}}</span></p>
@@ -22,7 +16,6 @@
     {% if session_authz_info.authorized %}
       <div id="action_buttons">
         <form action="{{ current_url }}" method="POST">{% csrf_token %}
-        <!-- <form action="/cds/projects/iip/viewinscr/{{ inscription_id }}/" method="POST"> -->
           <p>( current display status: '{{ chosen_display_status }}' )</p>
           <p>New Status:</p>
           {% ifequal chosen_display_status 'to_approve' %}

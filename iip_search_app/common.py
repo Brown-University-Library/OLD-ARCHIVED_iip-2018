@@ -52,45 +52,6 @@ def facetResults( facet ):
     except Exception as e:
         log.error( u'in common.facetResults(); exception, %s' % unicode(repr(e)) )
 
-
-## fetchBiblio
-
-def fetchBiblio( q_results, target ):
-    """ Takes a solr.core.Result and a target-string,
-            does a biblio solr lookup on each one,
-            returns a list of biblio key-value dicts.
-        Returns a list of dicts (usually 1 dict) of biblio key-value data.
-        Called by views._prepare_viewinscr_get_data() """
-    assert type(q_results) == solr.core.Results, type(q_results)
-    assert type(target) == str, type(target)
-    for r in q_results:
-        try:
-            biblios = _get_biblio_results( r, target )
-        except Exception as e:
-            log.error( u'in common.fetchBiblio(); id, %s; exception, %s -- but NOT stopping processing' % (u'n/a', unicode(repr(e))) )
-            biblios = []
-    return biblios
-
-def _get_biblio_results( r, target ):
-    """ Takes a single solr.core.Result entry and a target-string,
-            does a biblio solr lookup, and
-            returns a list of biblio key-value dicts.
-        Called by fetchBiblio() """
-    b = solr.SolrConnection( settings_app.BIBSOLR_URL )
-    biblios = []
-    for t in r[target]:
-        w = dict( (n,v) for n,v in (t.split('=') for t in t.split('|') ) )
-        u_query_string = u'biblioId:%s' % w['bibl']
-        bq = b.query( u_query_string )
-        for bqry in bq:
-            bqry['nType'] = w['nType']
-            bqry['n'] = w['n']
-            biblios.append(bqry)
-    return biblios
-
-##
-
-
 def get_log_identifier( request_session=None ):
     """ Returns a log_identifier unicode_string.
         Sets it in the request session if necessary. """

@@ -6,18 +6,6 @@ from .models import StaticPage
 from django.contrib import admin
 from .forms_admin import AdminStaticPageForm
 
-
-
-# class StaticPageAdmin( admin.ModelAdmin ):
-#     list_display = [ 'title' ]
-#     ordering = [ 'title' ]
-#     prepopulated_fields = {"slug": ("title",)}
-
-
-# admin.site.register( StaticPage, StaticPageAdmin )
-
-
-
 class StaticPageAdmin(admin.ModelAdmin):
     list_display = [ 'title' ]
     form = AdminStaticPageForm
