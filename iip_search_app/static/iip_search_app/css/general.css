@@ -423,7 +423,7 @@ tei-lb {
     margin-left: -3em;
 }
 
-tei-div[type=textpart]::before {
+#single_inscription tei-div[type=textpart]::before {
     display: block;
     margin-left: -1em;
     margin-top: 4px;

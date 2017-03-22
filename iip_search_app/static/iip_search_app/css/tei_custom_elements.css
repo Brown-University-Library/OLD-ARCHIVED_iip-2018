@@ -156,9 +156,6 @@ tei-note::after {
 tei-supplied::before {
     content: "[";
 }
-/*    [lang='heb'] tei-supplied::before {
-    content: "]";
-}*/
 
 tei-supplied::after {
     content: "]";
