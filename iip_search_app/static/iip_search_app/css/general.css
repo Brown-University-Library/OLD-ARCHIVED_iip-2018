@@ -439,20 +439,12 @@ tei-lb {
 	vertical-align: top;
 }
 
-td.transcription tei-div, td.translation tei-div {
+td.transcription > tei-div, td.translation > tei-div {
     display: block;
-    max-height: 240px;
-    overflow: scroll;
+    line-height: 1.1em;
+    max-height: calc(11em - 2px);
+    overflow-y: hidden;
     padding: 3px;
-    border-radius: 3px;
-}
-
-.even tei-div {
-    background-color: #ededed;
-}
-
-.odd tei-div {
-    background-color: #d3ddd6;
 }
 
 tr.short_result td.descColumn {
