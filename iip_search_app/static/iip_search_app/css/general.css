@@ -166,15 +166,21 @@ a.leftcol_search:hover {
 
 table.search_box, table#search_results {
 	border-collapse:collapse;
-	background-color:#d9e3d0;
 	width:98%;
 	min-width:550px;
 	max-width:1200px;
 	margin-top:10px;
 	border:0px;
 	text-align:left;
+}
 
-	}
+table.search_box {
+    background-color:#d9e3d0;
+}
+
+table#search_results th {
+    font-size: 1.2em;
+}
 
 .search_box td{
     vertical-align: top;

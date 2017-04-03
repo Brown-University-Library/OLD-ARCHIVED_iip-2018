@@ -23,6 +23,11 @@
     </div>
 
 <table id="search_results">
+<tr>
+    <th class="resultTitle">Inscription</th>
+    <th class="resultTitle">Transcription</th>
+    <th class="resultTitle">Translation</th>
+</tr>
 
 {% for inscription in iipResult.object_list %}
 	<tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %} short_result" id="{{inscription.inscription_id}}">
@@ -32,12 +37,8 @@
             </span>
             <br/><a class="xml_url" href="{% url xml_url inscription.inscription_id %}">[xml]</a>
         </td>
-        <td class="textColumn transcription">
-            <span class="resultTitle short_header">Transcription</span>
-        </td>
-        <td class="textColumn translation">
-            <span class="resultTitle short_header">Translation</span>
-        </td>
+        <td class="textColumn transcription"></td>
+        <td class="textColumn translation"></td>
 	</tr>
 {% endfor %}
 </table>
