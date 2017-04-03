@@ -189,12 +189,14 @@ tei-gap[reason='ellipsis'] {
 [lang='heb'] {
     unicode-bidi: bidi-override;
     direction: rtl;
+    text-align: right;
 }
 
 /* Aramaic */
 [lang='arc'] {
     unicode-bidi: bidi-override;
     direction: rtl;
+    text-align: right;
 }
 
 /* Latin */
