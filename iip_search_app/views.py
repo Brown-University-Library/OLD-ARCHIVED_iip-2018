@@ -38,7 +38,7 @@ def iip_results_z( request ):
         redirect_url = u'%s://%s%s?q=%s' % (request.META[u'wsgi.url_scheme'], request.get_host(), reverse(u'results_url'), qstring)
 
         return HttpResponseRedirect( redirect_url )
-    if request.method == u'GET' and request.GET.get(u'q', None):
+    if request.method == u'GET' and request.GET.get(u'q', None) != None:
         log.debug( 'GET, show search-form' )
         return render( request, u'iip_search_templates/base_zotero.html', _get_POST_context(request, log_id) )
     elif request.is_ajax():  # user has requested another page, a facet, etc.
