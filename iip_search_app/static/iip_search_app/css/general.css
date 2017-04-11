@@ -166,15 +166,21 @@ a.leftcol_search:hover {
 
 table.search_box, table#search_results {
 	border-collapse:collapse;
-	background-color:#d9e3d0;
 	width:98%;
 	min-width:550px;
-	max-width:800px;
+	max-width:1200px;
 	margin-top:10px;
 	border:0px;
 	text-align:left;
+}
 
-	}
+table.search_box {
+    background-color:#d9e3d0;
+}
+
+table#search_results th {
+    font-size: 1.2em;
+}
 
 .search_box td{
     vertical-align: top;
@@ -254,7 +260,7 @@ option {
 	float:left;
 	border-collapse:collapse;
 	width:100%;
-	max-width:1000px;
+	max-width:1400px;
 	min-width:450px;
 	border:0px;
 	text-align:left;
@@ -390,11 +396,69 @@ display: inline;
 	font-size: 1.1em;
 	}
 
+#single_inscription tei-div {
+    display: block;
+    margin-left: 3em;
+}
+
+#single_inscription tei-p {   
+    counter-reset: lines;
+    counter-increment: lines;
+}
+
+tei-lb {
+    counter-increment: lines 1;
+}
+
+#single_inscription tei-div:hover tei-lb::after, #single_inscription tei-div:hover tei-p::before {
+    display: block;
+    float: left;
+    opacity: 0.5;
+    content: counter(lines);
+    margin-left: -3em;
+}
+
+#single_inscription .translation tei-div:hover tei-p::before {
+    content: "";
+}
+
+#single_inscription tei-p tei-lb:nth-of-type(5n-1)::after {
+    display: block;
+    float: left;
+    content: counter(lines);
+    margin-left: -3em;
+}
+
+#single_inscription tei-div[type=textpart]::before {
+    display: block;
+    margin-left: -1em;
+    margin-top: 4px;
+    font-style: italic;
+    opacity: 0.7;
+    content: "Part " attr(n);
+}
+
 .resultTitle {
 	font-weight:bold;
 	font-size: 1.1em;
 	color:#6c3370;
 	vertical-align: top;
+}
+
+td.transcription > tei-div, td.translation > tei-div {
+    display: block;
+    line-height: 1.1em;
+    max-height: calc(11em - 2px);
+    overflow-y: hidden;
+    padding: 3px;
+}
+
+tr.short_result td.descColumn {
+    width: 26%;
+}
+
+tr.short_result td.textColumn {
+    width: 32%;
 }
 
 tr.viewinscr {
@@ -426,6 +490,10 @@ padding-top: 5px;
     color:#5E4F5F;
 }
 
+.xml_url {
+    color: gray;
+    font-size: 0.8em;
+}
 
 ul.bibliography {
     padding-left: 20px;

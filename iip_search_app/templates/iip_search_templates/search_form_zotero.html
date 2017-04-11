@@ -16,7 +16,6 @@
 							</label>
 							</div>
 							<div style="float: left; text-align: left;">
-              <!-- <div style="float: left; width: 200px; text-align: left;"> -->
 							{{ form.text }}
 							</div>
 							</td>
@@ -41,8 +40,9 @@
 							</td>
 							<td>
 							<div class="instructions">
-							<p><!--This field searches all metadata - information about the text and context of an inscription not accounted for in other search fields, such as the inscription ID number, thes specific location of an artifact and scholarly comments on its inscription. Searching "synagogue" will bring up any inscription documented to have been found in a synagogue (but not necessarily those explicitly mentioning a synagogue; for that use the Text/Translation search field); searching "daughter" will bring up any inscription whose content is thought to refer to a daughter as discussed in its scholarly publication. (This information corresponds to that contained in the field "Note" on our results pages.)
--->This field searches all metadata -- information about the text and context of an inscription not accounted for in other search fields, such as the specific location of an artifact and scholarly comments on its inscription. Searching "synagogue" will bring up any inscription documented to have been found in a synagogue (but not those explicitly mentioning a synagogue; for that use the Text/Translation search); searching "daughter" will bring up any inscription whose content is thought to refer to a daughter as discussed in its scholarly publication (in other words, information which would appear as a "Note" on our results page). This field also searches by inscription ID (such as "kede0002"). </p></div></td>
+							<p>
+                                This field searches all metadata -- information about the text and context of an inscription not accounted for in other search fields, such as the specific location of an artifact and scholarly comments on its inscription. Searching "synagogue" will bring up any inscription documented to have been found in a synagogue (but not those explicitly mentioning a synagogue; for that use the Text/Translation search); searching "daughter" will bring up any inscription whose content is thought to refer to a daughter as discussed in its scholarly publication (in other words, information which would appear as a "Note" on our results page). This field also searches by inscription ID (such as "kede0002").
+                                </p></div></td>
                     </tr>
                     <tr>
                     <td>
@@ -73,17 +73,6 @@
                             Place:
                         </h3>
                         <div style="padding-left: 10px;">
-					       <!-- <p style="float: left;">
-                                Region:<br />
-                                {{ form.region.errors}} {{ form.region }}
-                            </p>
-                            <p style="float: left; padding: 10px;"><strong> - Or - </strong></p>
-					        <p style="float: left;">
-                                City:<br />
-                                {{ form.city.errors}} {{ form.city }}
-                            </p>
-                            <p style="clear: none;"><br /></p>
-                            </div>-->
                             {{ form.place }}
 						</div>
 						<div style="float: left">

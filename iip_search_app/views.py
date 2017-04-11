@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import json, logging, os, pprint
-import redis, rq, solr
+import redis, requests, rq, solr
 from .models import StaticPage
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as django_login
+from django.contrib.auth import logout as django_logout
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, render_to_response
 from iip_search_app import common, models, settings_app
 from iip_search_app import forms
+from iip_search_app.libs.view_xml_helper import XmlPrepper
 from iip_search_app.utils import ajax_snippet
-
-from django.contrib.auth import authenticate
-from django.contrib.auth import login as django_login
-from django.contrib.auth import logout as django_logout
 
 
 log = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ def iip_results_z( request ):
         redirect_url = u'%s://%s%s?q=%s' % (request.META[u'wsgi.url_scheme'], request.get_host(), reverse(u'results_url'), qstring)
 
         return HttpResponseRedirect( redirect_url )
-    if request.method == u'GET' and request.GET.get(u'q', None):
+    if request.method == u'GET' and request.GET.get(u'q', None) != None:
         log.debug( 'GET, show search-form' )
         return render( request, u'iip_search_templates/base_zotero.html', _get_POST_context(request, log_id) )
     elif request.is_ajax():  # user has requested another page, a facet, etc.
@@ -55,9 +55,11 @@ def _get_POST_context( request, log_id ):
 
     form = forms.SearchForm( request.POST )  # form bound to the POST data
 
+    resultsPage = 1
     qstring_provided = None
     if request.method == u'GET':
         qstring_provided = request.GET.get("q", None)
+        resultsPage = int(request.GET.get('resultsPage', resultsPage))
 
     if form.is_valid() or qstring_provided:
         initial_qstring = ""
@@ -66,12 +68,12 @@ def _get_POST_context( request, log_id ):
         else:
             initial_qstring = form.generateSolrQuery()
 
-        resultsPage = 1
         updated_qstring = common.updateQstring(
             initial_qstring=initial_qstring, session_authz_dict=request.session['authz_info'], log_id=common.get_log_identifier(request.session) )['modified_qstring']
         context = common.paginateRequest( qstring=updated_qstring, resultsPage=resultsPage, log_id=common.get_log_identifier(request.session) )
         context[u'session_authz_info'] = request.session[u'authz_info']
         context[u'admin_links'] = common.make_admin_links( session_authz_dict=request.session[u'authz_info'], url_host=request.get_host(), log_id=log_id )
+        context[u'initial_qstring'] = initial_qstring
         return context
 
 def _get_ajax_unistring( request ):
@@ -84,7 +86,7 @@ def _get_ajax_unistring( request ):
     resultsPage = int( request.GET[u'resultsPage'] )
     context = common.paginateRequest(
         qstring=updated_qstring, resultsPage=resultsPage, log_id=log_id )
-    return_str = ajax_snippet.render_block_to_string(u'iip_search_templates/base_extend.html', u'content', context)
+    return_str = ajax_snippet.render_block_to_string(u'iip_search_templates/base_zotero.html', u'content', context)
     return unicode( return_str )
 
 def _get_GET_context( request, log_id ):
@@ -399,67 +401,16 @@ def logout( request ):
     return HttpResponseRedirect( redirect_url )
 
 
-## process ##  request.session['authz_info'] = { 'authorized': True, 'firstname': request.META['Shibboleth-givenName'] }
-
-# def process_new( request ):
-#     """ Triggers svn-update and processing of all new records. """
-#     log.info( u'in iip_search_app.views.process_new(); starting' )
-#     if request.session[u'authz_info'][u'authorized'] == False:
-#         log.info( u'in iip_search_app.views.process_new(); not authorized, returning Forbidden' )
-#         return HttpResponseForbidden( '403 / Forbidden' )
-#     q.enqueue_call( func=u'iip_search_app.models.run_call_svn_update', kwargs = {} )
-#     return HttpResponse( u'Started processing updated inscriptions.' )
+## process ##
 
 def process_orphans( request ):
     """ Returns confirmation-required response. """
     return HttpResponse( u'"delete orphans" functionality is under re-construction.' )
 
-# def process_orphans( request ):
-#     """ Triggers deletion of solr-inscription-ids that do not have corresponding repository ids. """
-#     log.info( u'in iip_search_app.views.process_orphans(); starting' )
-#     if request.session[u'authz_info'][u'authorized'] == False:
-#         log.info( u'in iip_search_app.views.process_orphans(); not authorized, returning Forbidden' )
-#         return HttpResponseForbidden( '403 / Forbidden' )
-#     q.enqueue_call( func=u'iip_search_app.models.run_delete_orphans', kwargs = {} )
-#     return HttpResponse( u'Started processing solr orphan deletion.' )
-
 def process_all( request ):
     """ Returns confirmation-required response. """
     log.info( u'in iip_search_app.views.process_all(); starting' )
     return HttpResponse( u'"process all" functionality is under re-construction.' )
-
-# def process_all( request ):
-#     """ Returns confirmation-required response. """
-#     log.info( u'in iip_search_app.views.process_all(); starting' )
-#     if request.session[u'authz_info'][u'authorized'] == False:
-#         log.info( u'in iip_search_app.views.process_all(); not authorized, returning Forbidden' )
-#         return HttpResponseForbidden( '403 / Forbidden' )
-#     request.session[u'process_all_initiated'] = True
-#     return HttpResponse( u'Please confirm: in url change `all` to `confirm_all`. This will not change proofreading status.' )
-
-# def process_confirm_all( request ):
-#     """ Triggers processing of all inscriptions. """
-#     if request.session[u'authz_info'][u'authorized'] == False:
-#         log.info( u'in iip_search_app.views.process_confirm_all(); not authorized, returning Forbidden' )
-#         return HttpResponseForbidden( '403 / Forbidden' )
-#     if request.session.get( u'process_all_initiated', False ) == True:  # if it doesn't exist, create and set to False
-#         request.session[u'process_all_initiated'] = False
-#         q.enqueue_call( func=u'iip_search_app.models.run_process_all_files', kwargs = {} )
-#         return HttpResponse( u'Started processing all inscriptions; all should be complete within an hour.' )
-#     else:
-#         return HttpResponse( u'Initial url must be `all`, not `confirm_all`.' )
-
-# def process_single( request, inscription_id ):
-#     """ Triggers, after instruction, processing of given iscription. """
-#     log.info( u'in iip_search_app.views.process_single(); starting; inscription_id, `%s`' % inscription_id )
-#     if request.session[u'authz_info'][u'authorized'] == False:
-#         log.info( u'in iip_search_app.views.process_single(); not authorized, returning Forbidden' )
-#         return HttpResponseForbidden( '403 / Forbidden' )
-#     if inscription_id == u'INSCRIPTION_ID':
-#         return HttpResponse( u'In url above, replace `INSCRIPTION_ID` with id to process, eg `ahma0002`. This will not change proofreading status.' )
-#     else:
-#         q.enqueue_call( func=u'iip_search_app.models.run_process_single_file', kwargs = {u'inscription_id': inscription_id} )
-#         return HttpResponse( u'Started processing inscription-id.' )
 
 def show_recent_errors( request ):
     """ Displays last x entries in the failed queue. """
@@ -483,19 +434,16 @@ def show_recent_errors( request ):
 ## view_xml ##
 
 def view_xml( request, inscription_id ):
-    """ Redirects to web-accessible inscription-xml. """
-    url = u'%s/%s.xml' % ( unicode(os.environ['IIP_SEARCH__XML_DIR_URL']), inscription_id )
-    return HttpResponseRedirect( url )
-
-# def view_xml( request, inscription_id ):
-#     """ Returns inscription xml. """
-#     log.info( u'in view_xml(); starting' )
-#     file_path = u'%s/%s.xml' % ( settings_app.XML_DIR_PATH, inscription_id )
-#     log.debug( u'in view_xml(); id, %s; file_path' % file_path )
-#     with open( file_path ) as f:
-#         xml_utf8 = f.read()
-#         xml = xml_utf8.decode(u'utf-8')
-#     return HttpResponse( xml, mimetype=u'text/xml' )
+    """ Returns inscription-xml from github lookup. """
+    xml_prepper = XmlPrepper()
+    ## lookup xml
+    xml_url = '%s/%s.xml' % ( unicode(os.environ['IIP_SEARCH__XML_DIR_URL']), inscription_id )
+    lookup_headers = xml_prepper.prep_lookup_headers( request.META )
+    lookup_response = requests.get( xml_url, headers=lookup_headers )  # eventually maybe offload this to helper class for a try/except to handle github's periodic downtime
+    ## prep response
+    response = HttpResponse()
+    enhanced_response = xml_prepper.enhance_response( response, lookup_response )
+    return enhanced_response
 
 
 ## static pages ##

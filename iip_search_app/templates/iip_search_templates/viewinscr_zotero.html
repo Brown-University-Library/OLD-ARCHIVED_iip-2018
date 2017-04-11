@@ -8,12 +8,6 @@
   {% for i in inscription %}
 
     {% autoescape off %}
-    <!--    <div class="resultTitle">
-            <p style="float:left"><span class="short_header">{{i.inscription_id|upper}} - {{i.short_description}}</span></p>
-            <p style="float:right"><a href="/iip/viewinscr/{{i.inscription_id}}/">View single inscription</a></p>
-            <p style="clear:both;"></p>
-
-        </div>-->
 
     <div class="resultTitle">
       <p style="clear: both"><span class="short_header">{{i.inscription_id|upper}} - {{i.short_description}}</span></p>
@@ -22,7 +16,6 @@
     {% if session_authz_info.authorized %}
       <div id="action_buttons">
         <form action="{{ current_url }}" method="POST">{% csrf_token %}
-        <!-- <form action="/cds/projects/iip/viewinscr/{{ inscription_id }}/" method="POST"> -->
           <p>( current display status: '{{ chosen_display_status }}' )</p>
           <p>New Status:</p>
           {% ifequal chosen_display_status 'to_approve' %}
@@ -40,13 +33,13 @@
 
     <div id="details">
 
-      <div class="insText">
+      <div class="insText" id="{{ i.inscription_id }}">
         <h4>Diplomatic:</h4>
-        <p>{%if i.diplomatic%}{{i.diplomatic}}{%else%}No diplomatic{%endif%}</p>
+        <p class="diplomatic">{%if i.diplomatic%}{{i.diplomatic}}{%else%}No diplomatic{%endif%}</p>
         <h4>Transcription:</h4>
-        <p>{%if i.transcription%}{{i.transcription}}{%else%}No transcription{%endif%}</p>
+        <p class="transcription">{%if i.transcription%}{{i.transcription}}{%else%}No transcription{%endif%}</p>
         <h4>Translation:</h4>
-        <p>{%if i.translation%}{{i.translation}}{%else%}No translation{%endif%}</p>
+        <p class="translation">{%if i.translation%}{{i.translation}}{%else%}No translation{%endif%}</p>
         {% if i.imageSource and biblioFull %}
         <h4>Images:</h4>
           {% for im in i.imageSource %}
