@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import json, logging, os, pprint
+import json, logging, os, pprint, re
 import redis, requests, rq, solr
 from .models import StaticPage
 from django.contrib.auth import authenticate
@@ -20,6 +20,17 @@ q = rq.Queue( u'iip', connection=redis.Redis() )
 
 
 ## search and results ##
+
+biblRegex = re.compile(r'bibl=(.*)\.xml\|nType=(.*)\|n=(.*)')
+
+def _bib_tuple_or_none(s):
+    t = biblRegex.match(s)
+    if t:
+        return t.groups()
+    elif s == "ms":
+        return ("ms", None, None)
+    else:
+        return None
 
 def iip_results_z( request ):
     """ Handles /search_zotero/ GET, POST, and ajax-GET. """
@@ -136,18 +147,20 @@ def _z_prepare_viewinscr_get_data (request, inscrid):
     log_id = common.get_log_identifier( request.session )
     q = _call_viewinsc_solr( inscrid )  # The results of the solr query to find the inscription. q.results is list of dictionaries of values.
     current_display_status = _update_viewinscr_display_status( request, q )
-    z_bibids_initial = [x.replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", "") for x in q.results[0]['bibl']]
+    z_bibids_initial = [_bib_tuple_or_none(x) for x in q.results[0]['bibl']]
     z_bibids = {}
     for entry in z_bibids_initial:
-        bibid, ntype, n = entry.split("|")
+        if not entry:
+            continue
+        bibid, ntype, n = entry
         if(not bibid in z_bibids):
             z_bibids[bibid] = []
         if(not (ntype, n) in z_bibids[bibid]):
             z_bibids[bibid].append((ntype, n))
     specific_sources = dict()
-    specific_sources['transcription'] = q.results[0]['biblTranscription'][0] if 'biblTranscription' in q.results[0] else ""
-    specific_sources['translation'] = q.results[0]['biblTranslation'][0] if 'biblTranslation' in q.results[0] else ""
-    specific_sources['diplomatic'] = q.results[0]['biblDiplomatic'][0] if 'biblDiplomatic' in q.results[0] else ""
+    specific_sources['transcription'] = _bib_tuple_or_none(q.results[0]['biblTranscription'][0]) if 'biblTranscription' in q.results[0] else ""
+    specific_sources['translation'] = _bib_tuple_or_none(q.results[0]['biblTranslation'][0]) if 'biblTranslation' in q.results[0] else ""
+    specific_sources['diplomatic'] = _bib_tuple_or_none(q.results[0]['biblDiplomatic'][0]) if 'biblDiplomatic' in q.results[0] else ""
 
     view_xml_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'xml_url', kwargs={u'inscription_id':inscrid})  )
     current_url = u'%s://%s%s' % (  request.META[u'wsgi.url_scheme'],  request.get_host(),  reverse(u'inscription_url_zotero', kwargs={u'inscrid':inscrid})  )
@@ -283,9 +296,9 @@ def _z_prepare_viewinscr_ajax_get_response( q, z_bibids, specific_sources, view_
     context = {
         'inscription': q,
         'z_ids': z_bibids,
-        'biblDiplomatic' : specific_sources['diplomatic'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
-        'biblTranscription' : specific_sources['transcription'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
-        'biblTranslation' : specific_sources['translation'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
+        'biblDiplomatic' : specific_sources['diplomatic'],
+        'biblTranscription' : specific_sources['transcription'],
+        'biblTranslation' : specific_sources['translation'],
         'biblioFull': False,
         'view_xml_url': view_xml_url }
     return_str = ajax_snippet.render_block_to_string( 'iip_search_templates/viewinscr_zotero.html', 'viewinscr', context )
@@ -299,9 +312,9 @@ def _z_prepare_viewinscr_plain_get_response( q, z_bibids, specific_sources, curr
     context = {
         'inscription': q,
         'z_ids': z_bibids,
-        'biblDiplomatic' : specific_sources['diplomatic'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
-        'biblTranscription' : specific_sources['transcription'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
-        'biblTranslation' : specific_sources['translation'].replace(".xml", "").replace("bibl=", "").replace("nType=", "").replace("n=", ""),
+        'biblDiplomatic' : specific_sources['diplomatic'],
+        'biblTranscription' : specific_sources['transcription'],
+        'biblTranslation' : specific_sources['translation'],
         'biblioFull': True,
         'chosen_display_status': current_display_status,
         'inscription_id': inscrid,
