@@ -185,6 +185,10 @@ tei-gap[reason='ellipsis'] {
     /*?*/
 }
 
+tei-div, tei-p {
+    display: block;
+}
+
 /* Hebrew */
 [lang='heb'] {
     unicode-bidi: bidi-override;
