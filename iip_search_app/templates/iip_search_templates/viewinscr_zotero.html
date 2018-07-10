@@ -65,26 +65,25 @@
         <p><strong>Note:</strong>&nbsp;&nbsp;{%if i.description%}{{i.description}}{%endif%}</p>
         <p><strong>Figures:</strong>&nbsp;&nbsp;{%for f in i.figure%}{{f}}<br />{%endfor%}</p>
 
-        {%if biblDiplomatic %}<p><strong>Source of Diplomatic:&nbsp;</strong><span id="diplomatic" class="biblToRetrieve">{{biblDiplomatic}}</span>{% endif %}
-        {%if biblTranscription %}<p><strong>Source of Transcription:&nbsp;</strong><span id="transcription" class="biblToRetrieve">{{biblTranscription}}</span>{% endif %}
-        {%if biblTranslation %}<p><strong>Source of Translation:&nbsp;</strong><span id="translation" class="biblToRetrieve">{{biblTranslation}}</span>{% endif %}
+
+        {%if biblDiplomatic %}<p><strong>Source of Diplomatic:&nbsp;</strong><span id="diplomatic" class="biblToRetrieve" bibl='{{biblDiplomatic.0}}' ntype='{{biblDiplomatic.1}}' n='{{biblDiplomatic.2}}'>{{biblDiplomatic}}</span>{% endif %}
+        {%if biblTranscription %}<p><strong>Source of Transcription:&nbsp;</strong><span id="transcription" class="biblToRetrieve" bibl='{{biblTranscription.0}}' ntype='{{biblTranscription.1}}' n='{{biblTranscription.2}}'>{{biblTranscription}}</span>{% endif %}
+        {%if biblTranslation %}<p><strong>Source of Translation:&nbsp;</strong><span id="translation" class="biblToRetrieve" bibl='{{biblTranslation.0}}' ntype='{{biblTranslation.1}}' n='{{biblTranslation.2}}'>{{biblTranslation}}</span>{% endif %}
         
           <p style="{% if not biblioFull %}display: none;{% endif %}"><strong>Bibliography:</strong>&nbsp;&nbsp;
           <ol style="{% if not biblioFull %}display: none;{% endif %}">
           {% for b,l in z_ids.items %}
             <li class="biblToRetrieve">
-            <span class='z_id'>{{ b }}</span>
-            <ul>
+            <span class='z_id' bibl='{{b}}'>{{b}}</span>
+            <ul style="list-style-type: initial;">
             {% for ntype,n in l %}
-              <li>{{ntype}}|{{n}}</li>
+              <li>{% if ntype == 'insc' %}insc. {% elif ntype == 'page' %}p. {% else %}{{ntype}} {% endif %}{{n}}</li>
             {%endfor%}
             </ul>
             </li>
           {%endfor%}
           </ol>
           </p>
-        
-
       </div>  <!-- end of div class="insMetadata" -->
 
       <div style="clear:both"></div>
@@ -97,10 +96,12 @@
     {% endautoescape %}
     {%if biblioFull %}
     <script type="text/javascript">
-      $(document).ready(render_bibliography);
+      $(".z_id").each(function(i, item) {
+        add_citation($(item).attr("bibl"));
+      });
+      $("[bibl=ms]").html("Supplied by Michael Satlow.");
     </script>
     {%endif%}
-
   {%endfor%}  {% comment %} end of '''for i in inscription''' {% endcomment %}
 
 </div> <!-- end div id="single_inscription" -->
