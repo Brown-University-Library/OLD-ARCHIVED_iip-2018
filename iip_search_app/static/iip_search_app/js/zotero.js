@@ -3,11 +3,13 @@
 var user = "1604128";
 //Collection U2J49649 is also called IIP
 var collection = "U2J49649";
+//IIP Group
+var GROUP = "180188";
 
 function retrieve_bib (id_list, callback) {
 	var tags = id_list.join(" || ");
 	var req = new XMLHttpRequest();
-	req.open("GET", "https://api.zotero.org/users/" + user + "/collections/" + collection + "/items?tag=" + tags + "&format=atom&content=bib,json", true);
+	req.open("GET", "https://api.zotero.org/groups/" + GROUP + "/items?tag=" + tags + "&format=atom&content=bib,json", true);
 	req.setRequestHeader("Zotero-API-Version", "2");
 	req.onload = callback;
 	req.send();
