@@ -2,7 +2,7 @@ django-markdown-deux==1.0.5
 Django==1.4.10
 envoy==0.0.2
 importlib==1.0.3
-lxml==3.3.0
+lxml==4.6.2
 mysolr==0.8
 requests==2.2.1
 rq-dashboard==0.3.3
